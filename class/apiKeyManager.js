@@ -223,14 +223,40 @@ class ApiKeyManager {
                 }
 
                 // Không retry với lỗi cú pháp code lập trình
-                if (e instanceof TypeError || e instanceof ReferenceError) {
-                    console.error(`❌ CODE BUG (NON-RETRYABLE): ${e.message}`, e.stack);
+                if (e instanceof TypeError || e instanceof ReferenceError || e instanceof SyntaxError) {
+                    console.error(`❌ CODE / SYNTAX BUG (NON-RETRYABLE): ${e.message}`, e.stack);
                     throw e;
+                }
+
+                // Kiểm tra xem lỗi có phải thực sự xuất phát từ Google API hay không
+                const isGoogleApiError = (
+                    typeof e.status === 'number' || 
+                    typeof e.status === 'string' || 
+                    typeof e.statusCode === 'number' || 
+                    !!e.httpMeta || 
+                    !!e.error?.code || 
+                    !!e.error?.status ||
+                    (typeof e.message === 'string' && (
+                        e.message.includes('GoogleGenAI') ||
+                        e.message.includes('RESOURCE_EXHAUSTED') ||
+                        e.message.includes('429') ||
+                        e.message.includes('503') ||
+                        e.message.includes('500') ||
+                        e.message.includes('quota') ||
+                        e.message.includes('overloaded') ||
+                        e.message.includes('API_KEY_INVALID') ||
+                        e.message.includes('PERMISSION_DENIED')
+                    ))
+                );
+
+                if (!isGoogleApiError) {
+                    console.error(`❌ APPLICATION LOGIC / PARSING ERROR (NOT GOOGLE API): ${e.message}`);
+                    throw e; // Ném ra ngay, KHÔNG phạt key, KHÔNG retry tốn quota!
                 }
 
                 const statusCode = typeof e.status === 'number' 
                     ? e.status 
-                    : (e.statusCode || e.httpMeta?.response?.status || (e.status === 'RESOURCE_EXHAUSTED' ? 429 : 500));
+                    : (e.statusCode || e.httpMeta?.response?.status || (e.status === 'RESOURCE_EXHAUSTED' ? 429 : 0));
                 const errorMessage = e.message || '';
 
                 let suspendMs = 0;

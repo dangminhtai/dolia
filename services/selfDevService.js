@@ -256,25 +256,25 @@ export default {
 }
 `;
 
-                    const response = await ai.models.generateContent({
-                        model: modelId,
-                        contents: `Lập trình tính năng sau cho Dolia: ${userPrompt}. Tên lệnh gợi ý: ${suggestedName}. Hãy viết code thật chất lượng và trả về định dạng JSON đúng chuẩn.`,
-                        config: {
-                            systemInstruction: systemInstruction,
-                            temperature: 0.2,
-                            responseMimeType: "application/json"
-                        }
-                    });
+                    const outputText = await ApiKeyManager.execute(modelId, async (apiKey) => {
+                        const ai = new GoogleGenAI({ apiKey });
+                        const response = await ai.models.generateContent({
+                            model: modelId,
+                            contents: `Lập trình tính năng sau cho Dolia: ${userPrompt}. Tên lệnh gợi ý: ${suggestedName}. Hãy viết code thật chất lượng và trả về định dạng JSON đúng chuẩn.`,
+                            config: {
+                                systemInstruction: systemInstruction,
+                                temperature: 0.2,
+                                responseMimeType: "application/json"
+                            }
+                        });
+                        return response.text || '';
+                    }, { timeoutMs: 60000 });
 
-                    const outputText = response.text || '';
                     Logger.info(`[SelfDev] ✅ Gemini Coding Model (${modelId}) đã phản hồi (${outputText.length} ký tự)!`);
+                    geminiModelService.reportModelSuccess(modelId);
 
                     const parsedData = SelfDevService.safeJsonParse(outputText);
                     return { data: this.normalizeGeneratedData(parsedData, suggestedName), usedModel: modelId };
-                }, { timeoutMs: 60000 });
-
-                geminiModelService.reportModelSuccess(modelId);
-                return result;
             } catch (modelErr) {
                 lastError = modelErr;
                 geminiModelService.reportModelFailure(modelId, modelErr.message);
@@ -319,8 +319,28 @@ export default {
                     const fixed = sub.replace(/\\([^"\\/bfnrtu])/g, '\\\\$1');
                     try {
                         return JSON.parse(fixed);
-                    } catch (finalErr) {
-                        throw new Error(`Lỗi cú pháp JSON từ model AI: ${finalErr.message}`);
+                    } catch (_) {
+                        // 4. Cố gắng trích xuất code content bằng Regex nếu chuỗi code JSON bị lỗi escape
+                        try {
+                            const codeMatch = clean.match(/"content"\s*:\s*"([\s\S]*?)"\s*\}\s*\]/m) ||
+                                              clean.match(/"content"\s*:\s*`([\s\S]*?)`/m);
+                            if (codeMatch) {
+                                const extractedCode = codeMatch[1]
+                                    .replace(/\\n/g, '\n')
+                                    .replace(/\\t/g, '\t')
+                                    .replace(/\\"/g, '"')
+                                    .replace(/\\\\/g, '\\');
+                                return {
+                                    command_name: '',
+                                    summary: 'Tự động trích xuất mã nguồn từ phản hồi của AI',
+                                    files: [{ path: '', content: extractedCode }]
+                                };
+                            }
+                        } catch (regexErr) {
+                            // Bỏ qua nếu regex cũng không khớp
+                        }
+
+                        throw new Error(`Lỗi cú pháp JSON từ model AI: ${firstErr.message}`);
                     }
                 }
             }

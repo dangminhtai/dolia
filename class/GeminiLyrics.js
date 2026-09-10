@@ -55,15 +55,15 @@ class GeminiLyrics {
                         config,
                     });
 
-                    const text = result.text || '';
-                    const jsonMatch = text.match(/\{[\s\S]*\}/);
-                    if (!jsonMatch) throw new Error("AI không trả về JSON hợp lệ.");
-
-                    return JSON.parse(jsonMatch[0]);
+                    return result.text || '';
                 });
 
                 geminiModelService.reportModelSuccess(modelId);
-                return songData;
+
+                const jsonMatch = text.match(/\{[\s\S]*\}/);
+                if (!jsonMatch) throw new Error("AI không trả về JSON hợp lệ.");
+
+                return JSON.parse(jsonMatch[0]);
             } catch (err) {
                 lastError = err;
                 geminiModelService.reportModelFailure(modelId, err.message, 2 * 60 * 1000);

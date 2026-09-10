@@ -91,6 +91,26 @@ async function runTests() {
     }
     assert.ok(didThrow, 'Phải ném lỗi khi tất cả các key đều đang cooldown');
 
+    console.log('\n✅ Test 5: Kiểm tra Lỗi Logic/Syntax nội bộ không bị phạt key hay retry');
+    apiKeyManager.suspensionCache.clear();
+    apiKeyManager.index = 0;
+    let localErrorAttempts = 0;
+
+    let caughtLocalError = null;
+    try {
+        await apiKeyManager.execute('gemini-flash', async (key) => {
+            localErrorAttempts++;
+            throw new Error('Lỗi cú pháp JSON từ model AI: Unexpected token');
+        }, { maxRetries: 3 });
+    } catch (e) {
+        caughtLocalError = e;
+    }
+
+    assert.ok(caughtLocalError, 'Phải ném lỗi logic ra ngoài ngay lập tức');
+    assert.strictEqual(localErrorAttempts, 1, 'Chỉ được gọi đúng 1 lần (KHÔNG ĐƯỢC RETRY làm tốn quota!)');
+    assert.strictEqual(apiKeyManager.suspensionCache.size, 0, 'Key hoàn toàn KHÔNG BỊ PHẠT COOLDOWN!');
+    console.log('  -> Lỗi logic nội bộ bị chặn chuẩn xác: không phạt key, không retry tốn quota!');
+
     console.log('\n🎉 TOÀN BỘ CÁC BÀI KIỂM THỬ ĐỀU ĐẠT CHUẨN 100%!');
 }
 
