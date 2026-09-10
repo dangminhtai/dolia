@@ -16,15 +16,50 @@ export class ManifestManager {
     /**
      * Tạo file đề xuất manifest ban đầu trong sandbox (Agent phase)
      */
-    createProposedManifest(summary, changes = []) {
+    createProposedManifest(summaryOrMeta, changes = []) {
+        let summary = 'Thay đổi được đề xuất bởi Dolia Agent';
+        let meta = {};
+
+        if (typeof summaryOrMeta === 'string') {
+            summary = summaryOrMeta;
+        } else if (summaryOrMeta && typeof summaryOrMeta === 'object') {
+            summary = summaryOrMeta.summary || summary;
+            meta = summaryOrMeta;
+        }
+
+        // Tự động quét các file trong sandbox nếu changes chưa được truyền vào
+        if (!Array.isArray(changes) || changes.length === 0) {
+            const sandboxFiles = sandboxManager.listFiles().filter(f => !path.basename(f).startsWith('.'));
+            changes = sandboxFiles.map(relPath => {
+                let target;
+                try {
+                    target = mappingRegistry.resolveTarget(relPath);
+                } catch (_) {
+                    target = relPath;
+                }
+                const fullSource = sandboxManager.resolveSafePath(relPath);
+                const stat = fs.existsSync(fullSource) ? fs.statSync(fullSource) : { size: 0 };
+
+                return {
+                    action: 'create',
+                    source: relPath,
+                    target: target,
+                    size: stat.size
+                };
+            });
+        }
+
         const manifest = {
+            manifestVersion: '1.0',
             status: 'ready',
-            summary: summary || 'Thay đổi được đề xuất bởi Dolia Agent',
+            summary,
+            meta,
             createdAt: new Date().toISOString(),
             changes: changes.map(ch => ({
                 action: ch.action || 'create', // 'create' | 'modify' | 'delete'
-                source: mappingRegistry.normalizePath(ch.source || ''),
-                target: ch.target ? mappingRegistry.normalizePath(ch.target) : mappingRegistry.resolveTarget(ch.source)
+                source: ch.source ? mappingRegistry.normalizePath(ch.source) : '',
+                target: ch.target ? mappingRegistry.normalizePath(ch.target) : mappingRegistry.resolveTarget(ch.source),
+                size: ch.size
             }))
         };
 

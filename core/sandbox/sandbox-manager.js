@@ -27,19 +27,20 @@ export class SandboxManager {
      * Ngăn chặn hoàn toàn Path Traversal (../, absolute path, symlink escape).
      */
     resolveSafePath(subPath) {
-        if (!subPath || typeof subPath !== 'string') {
+        if (typeof subPath !== 'string') {
             throw new Error('PATH_OUTSIDE_SANDBOX: Đường dẫn không hợp lệ.');
         }
 
         // Bỏ tiền tố sandbox/ nếu có
         let clean = subPath.trim().replace(/\\/g, '/');
         clean = clean.replace(/^(\.\/)+/, '');
+        if (clean === '.') clean = '';
         if (clean.startsWith('sandbox/')) {
             clean = clean.substring('sandbox/'.length);
         }
 
         // Resolve đường dẫn tuyệt đối
-        const resolved = path.resolve(this.sandboxRoot, clean);
+        const resolved = clean ? path.resolve(this.sandboxRoot, clean) : this.sandboxRoot;
 
         // Kiểm tra xem resolved path có nằm hoàn toàn bên trong sandboxRoot không
         const isInside = resolved === this.sandboxRoot || resolved.startsWith(this.sandboxRoot + path.sep);
@@ -147,6 +148,10 @@ export class SandboxManager {
     }
 
     getSandboxRoot() {
+        return this.sandboxRoot;
+    }
+
+    get sandboxDir() {
         return this.sandboxRoot;
     }
 }

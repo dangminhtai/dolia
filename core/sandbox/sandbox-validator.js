@@ -210,6 +210,56 @@ export class SandboxValidator {
         result.valid = result.errors.length === 0;
         return result;
     }
+
+    /**
+     * Kiểm tra hàng loạt tất cả các file trong một thư mục hoặc danh sách file
+     * @param {string | string[]} target - Thư mục hoặc danh sách đường dẫn file
+     * @returns {Promise<{ valid: boolean, errors: string[], fileResults: object[] }>}
+     */
+    async validateBatch(target) {
+        let files = [];
+
+        if (Array.isArray(target)) {
+            files = target;
+        } else if (typeof target === 'string') {
+            const dir = target;
+            if (fs.existsSync(dir)) {
+                if (fs.statSync(dir).isDirectory()) {
+                    const scan = (d) => {
+                        const entries = fs.readdirSync(d, { withFileTypes: true });
+                        for (const entry of entries) {
+                            const full = path.join(d, entry.name);
+                            if (entry.isDirectory()) {
+                                scan(full);
+                            } else if (entry.isFile() && !entry.name.startsWith('.')) {
+                                files.push(full);
+                            }
+                        }
+                    };
+                    scan(dir);
+                } else {
+                    files.push(dir);
+                }
+            }
+        }
+
+        const fileResults = [];
+        const allErrors = [];
+
+        for (const f of files) {
+            const res = await this.validateFile(f);
+            fileResults.push(res);
+            if (!res.valid) {
+                allErrors.push(...res.errors);
+            }
+        }
+
+        return {
+            valid: allErrors.length === 0,
+            errors: allErrors,
+            fileResults
+        };
+    }
 }
 
 export default new SandboxValidator();
