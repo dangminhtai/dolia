@@ -1,16 +1,24 @@
 {
-  "dm_not_supported": "🥺 Mình chưa biết nhắn tin trong DM đâu... Bạn thử trong server nha!",
-  "chat_error": "💦 Ui... đầu mình hơi quay quay rồi. Bạn thử lại sau nha!",
-  "command_not_found": "🤔 Mình không thấy lệnh đó nè...",
-  "command_error": "🥺 Có lỗi lúc mình làm lệnh này rồi. Thử lại giúp mình nha!",
-  "not_your_menu": "🤭 Menu này không dành cho bạn đâu nè!",
-  "server_running": "💖 Mình vẫn đang hoạt động nè!",
-  "guild_only": "🏠 Lệnh này chỉ dùng trong server thôi nha!",
-  "self_dev": {
-    "only_owner": "🥺 Chỉ có chủ nhân của Dolia mới có quyền yêu cầu tự lập trình tính năng mới nha!",
-    "in_progress": "🛠️ Dolia đang bắt tay vào lập trình tính năng mới theo yêu cầu của chủ nhân...",
-    "review_title": "✨ Tính năng mới đã hoàn thành & Sẵn sàng duyệt!",
-    "applied_success": "🎉 Tính năng mới đã được nạp thành công!",
-    "cancelled": "⏹️ Đã hủy bỏ phiên Self-Dev an toàn."
-  }
+    "dm_not_supported": "🥺 Mình chưa biết nhắn tin trong DM đâu... Bạn thử trong server nha!",
+    "chat_error": "💦 Ui... đầu mình hơi quay quay rồi. Bạn thử lại sau nha!",
+    "command_not_found": "🤔 Mình không thấy lệnh đó nè...",
+    "command_error": "🥺 Có lỗi lúc mình làm lệnh này rồi. Thử lại giúp mình nha!",
+    "not_your_menu": "🤭 Menu này không dành cho bạn đâu nè!",
+    "server_running": "💖 Mình vẫn đang hoạt động nè!",
+    "guild_only": "🏠 Lệnh này chỉ dùng trong server thôi nha!",
+    "self_dev": {
+        "only_owner": "🥺 Chỉ có chủ nhân của Dolia mới có quyền yêu cầu tự lập trình tính năng mới nha!",
+        "in_progress": "🛠️ Dolia đang bắt tay vào lập trình tính năng mới theo yêu cầu của chủ nhân...",
+        "review_title": "✨ Tính năng mới đã hoàn thành & Sẵn sàng duyệt!",
+        "applied_success": "🎉 Tính năng mới đã được nạp thành công!",
+        "cancelled": "⏹️ Đã hủy bỏ phiên Self-Dev an toàn."
+    },
+    "rps": {
+        "command_description": "Chơi Oẳn tù tì (Kéo - Búa - Bao) cùng Dolia",
+        "choose_prompt": "hãy chọn một nước đi bên dưới trong vòng **30 giây** nhé!",
+        "win_title": "🎉 Bạn đã chiến thắng!",
+        "lose_title": "😿 Dolia đã giành chiến thắng!",
+        "draw_title": "🤝 Hòa nhau rồi!",
+        "timeout_desc": "Bạn đã không ra đòn kịp thời gian quy định (30 giây). Ván đấu đã bị hủy!"
+    }
 }
