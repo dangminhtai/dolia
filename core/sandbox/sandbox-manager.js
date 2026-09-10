@@ -141,10 +141,15 @@ export class SandboxManager {
      * Dọn sạch toàn bộ sandbox/
      */
     cleanSandbox() {
-        if (fs.existsSync(this.sandboxRoot)) {
-            fs.rmSync(this.sandboxRoot, { recursive: true, force: true });
+        try {
+            if (fs.existsSync(this.sandboxRoot)) {
+                fs.rmSync(this.sandboxRoot, { recursive: true, force: true });
+            }
+            this.init();
+        } catch (err) {
+            console.warn(`[SandboxManager] Warning on cleanSandbox: ${err.message}`);
         }
-        this.init();
+        return this;
     }
 
     getSandboxRoot() {

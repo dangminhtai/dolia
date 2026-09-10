@@ -83,41 +83,76 @@ export class SelfDevService {
         }
 
         try {
-            // Bước 1: Dọn dẹp sạch sẽ môi trường sandbox trước khi bắt đầu
-            await sandboxManager.cleanSandbox();
+            const MAX_RETRIES = 3;
+            let attempt = 0;
+            let generatedData = null;
+            let usedModel = null;
+            let commandName = safeSlug;
+            let lastValidationErrors = [];
 
-            // Bước 2: Lấy model Gemini tốt nhất từ Database (Ưu tiên flash-lite trước rồi đến flash)
+            // Lấy model Gemini tốt nhất từ Database (Ưu tiên flash-lite trước rồi đến flash)
             const codingModelId = await geminiModelService.getActiveModel('flash-lite');
 
-            // Bước 3: Gọi Gemini Coding Model
-            const { data: generatedData, usedModel } = await this.callGeminiCodingModel(prompt, safeSlug, codingModelId);
-            const commandName = generatedData.command_name || safeSlug;
+            while (attempt < MAX_RETRIES) {
+                attempt++;
 
-            // Bước 4: Ghi các file được sinh vào Sandbox
-            for (const fileObj of generatedData.files) {
-                await sandboxManager.writeFile(fileObj.path, fileObj.content);
+                // Nếu là lần thử lại do phát hiện lỗi -> cập nhật giao diện thông báo đáng yêu
+                if (attempt > 1) {
+                    const fixEmbed = new EmbedBuilder()
+                        .setColor(0xF39C12)
+                        .setTitle('✨ Ấy da, mình xin lỗi nhé! 🥺')
+                        .setDescription(`Có vẻ như mình đang gặp chút trục trặc khi viết lệnh **\`/${commandName}\`**.\n` +
+                            `Bạn đợi một xíu nha, mình đang tự động phân tích và sửa lại ngay đây nè! 🛠️🫧 (Lần sửa ${attempt}/${MAX_RETRIES})`)
+                        .setTimestamp();
+                    await progressMsg.edit({ embeds: [fixEmbed] }).catch(() => { });
+                }
+
+                // Bước 1: Dọn dẹp sạch sẽ môi trường sandbox trước khi bắt đầu
+                sandboxManager.cleanSandbox();
+
+                // Bước 2: Gọi Gemini Coding Model (kèm feedback lỗi nếu retry)
+                const feedback = lastValidationErrors.length > 0 ? lastValidationErrors.join('\n') : null;
+                const prevCode = generatedData?.files?.[0]?.content || null;
+
+                const result = await this.callGeminiCodingModel(prompt, safeSlug, codingModelId, feedback, prevCode);
+                generatedData = result.data;
+                usedModel = result.usedModel;
+                commandName = generatedData.command_name || safeSlug;
+
+                // Bước 3: Ghi các file được sinh vào Sandbox
+                for (const fileObj of generatedData.files) {
+                    await sandboxManager.writeFile(fileObj.path, fileObj.content);
+                }
+
+                // Ghi file i18n vào sandbox nếu có
+                if (generatedData.i18n && generatedData.i18n.translations) {
+                    const i18nRelPath = `i18n/${commandName}.json`;
+                    await sandboxManager.writeFile(i18nRelPath, JSON.stringify(generatedData.i18n.translations, null, 4));
+                }
+
+                // Bước 4: Kiểm tra tính toàn vẹn và chất lượng mã nguồn (Multi-layer Verification trong Sandbox)
+                const validationResults = await sandboxValidator.validateBatch(sandboxManager.sandboxDir);
+                if (validationResults.valid) {
+                    lastValidationErrors = [];
+                    break; // Vượt qua kiểm thử 100%, sẵn sàng Apply!
+                } else {
+                    lastValidationErrors = validationResults.errors;
+                    Logger.warn(`[SelfDev] ⚠️ Kiểm thử Sandbox lượt ${attempt} thất bại: ${lastValidationErrors.join('; ')}`);
+                }
             }
 
-            // Ghi file i18n vào sandbox nếu có
-            if (generatedData.i18n && generatedData.i18n.translations) {
-                const i18nRelPath = `i18n/${commandName}.json`;
-                await sandboxManager.writeFile(i18nRelPath, JSON.stringify(generatedData.i18n.translations, null, 4));
+            if (lastValidationErrors.length > 0) {
+                throw new Error(`Kiểm thử chất lượng mã nguồn trong Sandbox chưa đạt chuẩn sau ${MAX_RETRIES} lần tự sửa:\n${lastValidationErrors.join('\n')}`);
             }
 
-            // Bước 5: Kiểm tra tính toàn vẹn và chất lượng mã nguồn (Multi-layer Verification trong Sandbox)
-            const validationResults = await sandboxValidator.validateBatch(sandboxManager.sandboxDir);
-            if (!validationResults.valid) {
-                throw new Error(`Kiểm thử chất lượng mã nguồn trong Sandbox thất bại:\n${validationResults.errors.join('\n')}`);
-            }
-
-            // Bước 6: Tạo Proposed Manifest từ các file trong sandbox
+            // Bước 5: Tạo Proposed Manifest từ các file trong sandbox
             const proposedManifest = await manifestManager.createProposedManifest({
                 agent: 'dolia-self-dev',
                 model: usedModel,
                 summary: generatedData.summary || prompt
             });
 
-            // Bước 7: TỰ ĐỘNG ÁP DỤNG (AUTO-APPLY) TỪ SANDBOX VÀO PRODUCTION
+            // Bước 6: TỰ ĐỘNG ÁP DỤNG (AUTO-APPLY) TỪ SANDBOX VÀO PRODUCTION
             Logger.info(`[SelfDev] 🚀 Tự động Apply mã nguồn cho lệnh /${commandName}...`);
             const applyResult = await applyEngine.apply(proposedManifest, {
                 isApproved: true,
@@ -131,9 +166,9 @@ export class SelfDevService {
             } catch (_) { }
 
             // Dọn dẹp sandbox sau khi apply thành công
-            await sandboxManager.cleanSandbox().catch(() => { });
+            sandboxManager.cleanSandbox();
 
-            // Bước 8: Tự động nạp lệnh vào RAM (Hot-Reload) và làm mới i18n
+            // Bước 7: Tự động nạp lệnh vào RAM (Hot-Reload) và làm mới i18n
             const commandPath = path.join(process.cwd(), 'commands', 'slash', `${commandName}.js`);
             if (fs.existsSync(commandPath)) {
                 try {
@@ -150,7 +185,7 @@ export class SelfDevService {
             }
             reloadI18n();
 
-            // Bước 9: Tự động deploy slash command lên Discord REST API
+            // Bước 8: Tự động deploy slash command lên Discord REST API
             if (client) {
                 try {
                     const loadResult = await loadCommands(path.join(process.cwd(), 'commands'), client);
@@ -161,7 +196,7 @@ export class SelfDevService {
                 }
             }
 
-            // Bước 10: Thông báo hoàn tất đúng phong cách Dolia (xưng mình - bạn, không nút bấm rườm rà)
+            // Bước 9: Thông báo hoàn tất đúng phong cách Dolia (xưng mình - bạn, không nút bấm rườm rà)
             const doneEmbed = new EmbedBuilder()
                 .setColor(0x2ECC71)
                 .setTitle('🎉 Hoàn tất rồi nè!')
@@ -179,13 +214,13 @@ export class SelfDevService {
 
             // Dọn dẹp sandbox nếu có lỗi
             try {
-                await sandboxManager.cleanSandbox();
+                sandboxManager.cleanSandbox();
             } catch (_) { }
 
             const errorEmbed = new EmbedBuilder()
                 .setColor(0xE74C3C)
-                .setTitle('Hic, có chút trục trặc nhỏ rồi... 🥺')
-                .setDescription(`Trong lúc viết lệnh **\`/${safeSlug}\`**, mình gặp chút lỗi nên chưa thể nạp được nè:\n\`\`\`${error.message || error}\`\`\`\nMình đã dọn dẹp an toàn rồi, bạn thử lại sau nhé!`)
+                .setTitle('Ấy da, có chút trục trặc nhỏ rồi... 🥺')
+                .setDescription(`Trong lúc viết lệnh **\`/${safeSlug}\`**, mình gặp chút lỗi nè:\n\`\`\`${error.message || error}\`\`\`\nMình đã dọn dẹp an toàn rồi, bạn thử lại sau nhé!`)
                 .setTimestamp();
 
             await progressMsg.edit({ embeds: [errorEmbed], components: [] }).catch(() => { });
@@ -195,7 +230,7 @@ export class SelfDevService {
     /**
      * Gọi Gemini Coding Model từ Database (Ưu tiên Flash-Lite trước rồi đến Flash)
      */
-    static async callGeminiCodingModel(userPrompt, suggestedName, preferredModelId = null) {
+    static async callGeminiCodingModel(userPrompt, suggestedName, preferredModelId = null, errorFeedback = null, previousCode = null) {
         const candidates = await geminiModelService.getCandidateModels('flash-lite');
         if (preferredModelId && !candidates.includes(preferredModelId)) {
             candidates.unshift(preferredModelId);
@@ -255,11 +290,16 @@ export default {
 }
 `;
 
+                let promptContent = `Lập trình tính năng sau cho Dolia: ${userPrompt}. Tên lệnh gợi ý: ${suggestedName}. Hãy viết code thật chất lượng và trả về định dạng JSON đúng chuẩn.`;
+                if (errorFeedback && previousCode) {
+                    promptContent += `\n\n[LƯU Ý SỬA LỖI TỰ ĐỘNG]: Lần sinh mã trước gặp lỗi kiểm thử sau:\n${errorFeedback}\n\nMã nguồn bị lỗi trước đó:\n\`\`\`javascript\n${previousCode}\n\`\`\`\nHãy phân tích nguyên nhân lỗi và sinh lại mã nguồn hoàn chỉnh, sửa triệt để tất cả các lỗi trên!`;
+                }
+
                 const outputText = await ApiKeyManager.execute(modelId, async (apiKey) => {
                     const ai = new GoogleGenAI({ apiKey });
                     const response = await ai.models.generateContent({
                         model: modelId,
-                        contents: `Lập trình tính năng sau cho Dolia: ${userPrompt}. Tên lệnh gợi ý: ${suggestedName}. Hãy viết code thật chất lượng và trả về định dạng JSON đúng chuẩn.`,
+                        contents: promptContent,
                         config: {
                             systemInstruction: systemInstruction,
                             temperature: 0.2,
@@ -466,7 +506,7 @@ export default {
                         .setTimestamp();
 
                     await message.edit({ embeds: [errEmbed], components: [] });
-                    await sandboxManager.cleanSandbox().catch(() => { });
+                    sandboxManager.cleanSandbox();
                     pendingSessions.delete(sessionData.sessionId);
                     collector.stop('apply_failed');
                 }
@@ -551,7 +591,7 @@ export default {
             } else if (customId === `selfdev_done_${sessionData.sessionId}`) {
                 await i.deferUpdate();
                 collector.stop('completed');
-                await sandboxManager.cleanSandbox().catch(() => { });
+                sandboxManager.cleanSandbox();
                 pendingSessions.delete(sessionData.sessionId);
 
                 const doneEmbed = new EmbedBuilder()
