@@ -5,7 +5,7 @@ import Logger from '../class/Logger.js';
  * Xử lý Function Calling 'agent_code' từ Gemini
  */
 export async function agent_code(args) {
-    const { prompt, feature_name, action, user, channel, guild } = args;
+    const { prompt, feature_name, action, user, channel, guild, message } = args;
 
     Logger.info(`[DevFunctions] agent_code tool invoked by user ${user?.id} (${user?.username}): action="${action}", prompt="${prompt}", feature_name="${feature_name}"`);
 
@@ -44,7 +44,8 @@ export async function agent_code(args) {
         featureName: feature_name,
         user,
         channel,
-        client
+        client,
+        originalMessage: message
     }).catch(err => {
         Logger.error('[DevFunctions] Error starting Self-Dev session:', err);
     });

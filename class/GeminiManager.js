@@ -39,7 +39,8 @@ class GeminiManager {
         const context = {
             guild: message.guild,
             channel: message.channel,
-            user: message.author
+            user: message.author,
+            message: message
         };
 
         const userId = message.author.id;

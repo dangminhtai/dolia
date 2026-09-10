@@ -8,9 +8,14 @@ import { pathToFileURL } from 'url';
 import { commandChanges } from './utils/compareCommands.js';
 import Command from './models/Command.js';
 
-async function loadCommands(dir, client) {
-    const commandsToDeploy = []; // This will hold ALL commands
+/**
+ * Quét đệ quy một thư mục lệnh và nạp vào danh sách
+ */
+async function scanCommandDirectory(dir, client, isSandbox = false) {
+    const commandsToDeploy = [];
     let hasChanges = false;
+
+    if (!fs.existsSync(dir)) return { commands: commandsToDeploy, hasChanges };
 
     const files = fs.readdirSync(dir, { withFileTypes: true });
 
@@ -18,25 +23,56 @@ async function loadCommands(dir, client) {
         const fullPath = path.join(dir, file.name);
 
         if (file.isDirectory()) {
-            const subResult = await loadCommands(fullPath, client);
+            const subResult = await scanCommandDirectory(fullPath, client, isSandbox);
             commandsToDeploy.push(...subResult.commands);
             if (subResult.hasChanges) hasChanges = true;
         } else if (file.isFile() && file.name.endsWith('.js')) {
-            const modulePath = pathToFileURL(fullPath).href;
-            const commandModule = await import(modulePath);
-            const cmd = commandModule.default ?? commandModule;
+            const modulePath = pathToFileURL(fullPath).href + `?t=${Date.now()}`;
+            try {
+                const commandModule = await import(modulePath);
+                const cmd = commandModule.default ?? commandModule;
 
-            if ('data' in cmd && 'execute' in cmd) {
-                client?.commands?.set(cmd.data.name, cmd);
+                if ('data' in cmd && 'execute' in cmd) {
+                    cmd.isSandbox = isSandbox;
+                    client?.commands?.set(cmd.data.name, cmd);
 
-                const cmdData = cmd.data.toJSON();
-                commandsToDeploy.push(cmdData);
+                    const cmdData = cmd.data.toJSON();
+                    commandsToDeploy.push(cmdData);
 
-                // Check if this specific command changed
-                const changed = await commandChanges(cmd);
-                if (changed) hasChanges = true;
+                    // So sánh xem lệnh này có thay đổi so với DB không
+                    const changed = await commandChanges(cmd);
+                    if (changed) hasChanges = true;
+                }
+            } catch (err) {
+                console.error(`❌ Lỗi nạp lệnh từ ${file.name}:`, err.message);
             }
         }
+    }
+
+    return { commands: commandsToDeploy, hasChanges };
+}
+
+/**
+ * Nạp toàn bộ lệnh từ cả hai nguồn:
+ * 1. Mã nguồn gốc của bot: commands/
+ * 2. Mã nguồn mở rộng do Dolia tạo trong sandbox: sandbox/slash/
+ */
+async function loadCommands(dir = null, client = null) {
+    const commandsToDeploy = [];
+    let hasChanges = false;
+
+    // 1. Thư mục mã nguồn gốc
+    const primaryDir = dir || path.join(process.cwd(), 'commands');
+    const primaryResult = await scanCommandDirectory(primaryDir, client, false);
+    commandsToDeploy.push(...primaryResult.commands);
+    if (primaryResult.hasChanges) hasChanges = true;
+
+    // 2. Thư mục mở rộng Sandbox (chứa các tính năng do Dolia tự sinh)
+    const sandboxDir = path.join(process.cwd(), 'sandbox', 'slash');
+    if (fs.existsSync(sandboxDir)) {
+        const sandboxResult = await scanCommandDirectory(sandboxDir, client, true);
+        commandsToDeploy.push(...sandboxResult.commands);
+        if (sandboxResult.hasChanges) hasChanges = true;
     }
 
     return { commands: commandsToDeploy, hasChanges };

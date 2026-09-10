@@ -1,7 +1,0 @@
-{
-    "title": "🎮 Trò Chơi Nối Từ",
-    "started": "Trò chơi đã bắt đầu với từ: **{word}**. Hãy nối tiếp từ bắt đầu bằng chữ cái cuối!",
-    "invalid_format": "Vui lòng nhập một cụm từ có ít nhất 2 chữ (ví dụ: 'học tập').",
-    "footer": "Dolia Word Chain - Nối từ thông minh",
-    "error": "Đã có lỗi xảy ra khi khởi tạo trò chơi."
-}

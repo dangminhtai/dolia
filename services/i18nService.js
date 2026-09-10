@@ -6,33 +6,52 @@ import { formatString } from '../helpers/placeHolder.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const RESOURCE_DIR = path.resolve(__dirname, '../resources/vi');
+const SANDBOX_I18N_DIR = path.resolve(__dirname, '../sandbox/i18n');
 
 let resources = {};
 let isInitialized = false;
 
 /**
- * Khởi tạo và load toàn bộ tài nguyên tiếng Việt
+ * Khởi tạo và load toàn bộ tài nguyên tiếng Việt (cả built-in và sandbox)
  */
 export function initI18n() {
     resources = {};
-    if (!fs.existsSync(RESOURCE_DIR)) {
-        console.warn(`[i18n] Thư mục tài nguyên không tồn tại: ${RESOURCE_DIR}`);
-        return;
-    }
+    const loadedFiles = [];
 
-    const files = fs.readdirSync(RESOURCE_DIR).filter(file => file.endsWith('.json'));
-    for (const file of files) {
-        const namespace = path.basename(file, '.json');
-        const filePath = path.join(RESOURCE_DIR, file);
-        try {
-            const content = fs.readFileSync(filePath, 'utf-8');
-            resources[namespace] = JSON.parse(content);
-        } catch (err) {
-            console.error(`[i18n] Lỗi đọc file tài nguyên: ${file}`, err);
+    // 1. Nạp tài nguyên gốc từ resources/vi
+    if (fs.existsSync(RESOURCE_DIR)) {
+        const files = fs.readdirSync(RESOURCE_DIR).filter(file => file.endsWith('.json'));
+        for (const file of files) {
+            const namespace = path.basename(file, '.json');
+            const filePath = path.join(RESOURCE_DIR, file);
+            try {
+                const content = fs.readFileSync(filePath, 'utf-8');
+                resources[namespace] = JSON.parse(content);
+                loadedFiles.push(file);
+            } catch (err) {
+                console.error(`[i18n] Lỗi đọc file tài nguyên: ${file}`, err);
+            }
         }
     }
+
+    // 2. Nạp tài nguyên động từ sandbox/i18n (do Dolia tạo)
+    if (fs.existsSync(SANDBOX_I18N_DIR)) {
+        const sandboxFiles = fs.readdirSync(SANDBOX_I18N_DIR).filter(file => file.endsWith('.json'));
+        for (const file of sandboxFiles) {
+            const namespace = path.basename(file, '.json');
+            const filePath = path.join(SANDBOX_I18N_DIR, file);
+            try {
+                const content = fs.readFileSync(filePath, 'utf-8');
+                resources[namespace] = JSON.parse(content);
+                loadedFiles.push(`sandbox/${file}`);
+            } catch (err) {
+                console.error(`[i18n] Lỗi đọc file tài nguyên sandbox: ${file}`, err);
+            }
+        }
+    }
+
     isInitialized = true;
-    console.log(`[i18n] Đã nạp ${files.length} file tài nguyên tiếng Việt (vi): ${files.join(', ')}`);
+    console.log(`[i18n] Đã nạp ${loadedFiles.length} file tài nguyên tiếng Việt (vi): ${loadedFiles.join(', ')}`);
 }
 
 /**

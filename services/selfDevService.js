@@ -55,7 +55,7 @@ export class SelfDevService {
     /**
      * Bắt đầu một phiên Self-Dev từ yêu cầu của người dùng trên môi trường Sandbox
      */
-    static async startSession({ prompt, featureName, user, channel, client, replyTarget = null }) {
+    static async startSession({ prompt, featureName, user, channel, client, replyTarget = null, originalMessage = null }) {
         if (!this.isOwner(user.id)) {
             const rejectMsg = t('self_dev.only_owner') || 'Chỉ có chủ nhân mới có thể yêu cầu mình tạo tính năng mới nha!';
             if (replyTarget) await replyTarget.reply(rejectMsg);
@@ -116,7 +116,7 @@ export class SelfDevService {
                 usedModel = result.usedModel;
                 commandName = generatedData.command_name || safeSlug;
 
-                // Bước 2: Ghi các file được sinh vào Sandbox
+                // Bước 2: Ghi các file được sinh vào Sandbox (CHỈ LƯU TRONG SANDBOX, KHÔNG LƯU VÀO CODE CHÍNH)
                 for (const fileObj of generatedData.files) {
                     await sandboxManager.writeFile(fileObj.path, fileObj.content);
                 }
@@ -135,7 +135,7 @@ export class SelfDevService {
                 const validationResults = await sandboxValidator.validateBatch(filesToValidate);
                 if (validationResults.valid) {
                     lastValidationErrors = [];
-                    break; // Vượt qua kiểm thử 100%, sẵn sàng Apply!
+                    break; // Vượt qua kiểm thử 100%, sẵn sàng chạy trực tiếp từ Sandbox!
                 } else {
                     lastValidationErrors = validationResults.errors;
                     Logger.warn(`[SelfDev] ⚠️ Kiểm thử Sandbox lượt ${attempt} thất bại: ${lastValidationErrors.join('; ')}`);
@@ -146,53 +146,19 @@ export class SelfDevService {
                 throw new Error(`Kiểm thử chất lượng trong Sandbox chưa đạt chuẩn sau ${MAX_RETRIES} lần tự sửa:\n${lastValidationErrors.join('\n')}`);
             }
 
-            // Bước 4: Tạo Proposed Manifest cho các file của lệnh này (giữ nguyên các lệnh khác trong sandbox)
-            const changes = [
-                { action: 'create', source: `slash/${commandName}.js`, target: `commands/slash/${commandName}.js` },
-                ...(generatedData.i18n && generatedData.i18n.translations ? [{ action: 'create', source: `i18n/${commandName}.json`, target: `resources/vi/${commandName}.json` }] : [])
-            ];
-            const proposedManifest = await manifestManager.createProposedManifest({
-                agent: 'dolia-self-dev',
-                model: usedModel,
-                summary: generatedData.summary || prompt
-            }, changes);
-
-            // Bước 5: TỰ ĐỘNG ÁP DỤNG (AUTO-APPLY) TỪ SANDBOX VÀO PRODUCTION
-            Logger.info(`[SelfDev] 🚀 Tự động Apply mã nguồn cho lệnh /${commandName}...`);
-            const applyResult = await applyEngine.apply(proposedManifest, {
-                isApproved: true,
-                approvedBy: user.id
-            });
-
-            // Tùy chọn git commit audit trên repo chính
-            try {
-                await execPromise('git add .');
-                await execPromise(`git commit -m "feat(auto): apply /${commandName} [tx: ${applyResult.transactionId}]"`);
-            } catch (_) { }
-
-            // BƯỚC 6: THÔNG BÁO HOÀN TẤT LÊN DISCORD NGAY LẬP TỨC (Không làm lộ đường dẫn code / từ ngữ kỹ thuật)
-            const doneEmbed = new EmbedBuilder()
-                .setColor(0x2ECC71)
-                .setTitle('🎉 Hoàn tất rồi nè!')
-                .setDescription(
-                    `Mình đã học xong tính năng mới **\`/${commandName}\`** cho bạn rồi đó!\n` +
-                    `Bây giờ bạn có thể gõ thử **\`/${commandName}\`** ngay nha~ 💖✨\n\n` +
-                    `📝 **Mô tả:** ${generatedData.summary || prompt}`
-                )
-                .setTimestamp();
-
-            await progressMsg.edit({ embeds: [doneEmbed], components: [] }).catch(() => { });
-
-            // Bước 7: Tự động nạp lệnh vào RAM (Hot-Reload) và làm mới i18n
-            const commandPath = path.join(process.cwd(), 'commands', 'slash', `${commandName}.js`);
+            // Bước 4: Tự động nạp lệnh vào RAM trực tiếp từ SANDBOX (Hot-Reload) và làm mới i18n
+            let loadedCmd = null;
+            const commandPath = path.join(process.cwd(), 'sandbox', 'slash', `${commandName}.js`);
             if (fs.existsSync(commandPath)) {
                 try {
                     const moduleUrl = pathToFileURL(commandPath).href + `?t=${Date.now()}`;
                     const importedModule = await import(moduleUrl);
                     const cmd = importedModule.default ?? importedModule;
                     if (cmd && cmd.data && client?.commands) {
+                        cmd.isSandbox = true;
                         client.commands.set(cmd.data.name, cmd);
-                        Logger.info(`[SelfDev] Successfully hot-reloaded command: /${cmd.data.name}`);
+                        loadedCmd = cmd;
+                        Logger.info(`[SelfDev] Successfully hot-reloaded command from sandbox: /${cmd.data.name}`);
                     }
                 } catch (loadErr) {
                     Logger.warn(`[SelfDev] Warning on hot-reload: ${loadErr.message}`);
@@ -200,16 +166,86 @@ export class SelfDevService {
             }
             reloadI18n();
 
-            // Bước 8: Tự động deploy slash command lên Discord REST API (forceDeploy: true)
+            // Bước 5: Tự động deploy slash command lên Discord REST API (forceDeploy: true)
             if (client) {
                 try {
-                    const loadResult = await loadCommands(path.join(process.cwd(), 'commands'), client);
+                    const loadResult = await loadCommands(null, client);
                     await deployCommands(loadResult, true);
                     Logger.info(`[SelfDev] Successfully deployed slash commands to Discord REST API`);
                 } catch (deployErr) {
                     Logger.warn(`[SelfDev] Warning on deploy commands: ${deployErr.message}`);
                 }
             }
+
+            // Bước 6: TỰ ĐỘNG KÍCH HOẠT VÀ HIỂN THỊ GIAO DIỆN TÍNH NĂNG/GAME TẠI CHỖ (Zero manual typing)
+            if (loadedCmd && typeof loadedCmd.execute === 'function') {
+                Logger.info(`[SelfDev] 🚀 Tự động kích hoạt tính năng /${commandName} cho người dùng ngay tại chỗ...`);
+                try {
+                    const mentionedUser = originalMessage?.mentions?.users?.first() || null;
+                    const adapter = {
+                        client,
+                        guild: channel?.guild || null,
+                        channel,
+                        user,
+                        member: channel?.guild ? (channel.guild.members.cache.get(user.id) || null) : null,
+                        deferred: true,
+                        replied: true,
+                        commandName: commandName,
+                        isChatInputCommand: () => true,
+                        isButton: () => false,
+                        isCommand: () => true,
+                        options: {
+                            getUser: (optName) => mentionedUser || user,
+                            getMember: (optName) => {
+                                const target = mentionedUser || user;
+                                return channel?.guild ? (channel.guild.members.cache.get(target.id) || null) : null;
+                            },
+                            getString: (optName) => prompt,
+                            getInteger: (optName) => 0,
+                            getNumber: (optName) => 0,
+                            getBoolean: (optName) => true,
+                            getSubcommand: () => null,
+                            getSubcommandGroup: () => null,
+                            get: (optName) => null
+                        },
+                        deferReply: async () => progressMsg,
+                        reply: async (payload) => {
+                            const data = typeof payload === 'string' ? { content: payload } : payload;
+                            return await progressMsg.edit(data);
+                        },
+                        editReply: async (payload) => {
+                            const data = typeof payload === 'string' ? { content: payload } : payload;
+                            return await progressMsg.edit(data);
+                        },
+                        followUp: async (payload) => {
+                            const data = typeof payload === 'string' ? { content: payload } : payload;
+                            return await channel.send(data);
+                        },
+                        deleteReply: async () => {
+                            return await progressMsg.delete().catch(() => {});
+                        }
+                    };
+
+                    await loadedCmd.execute(adapter);
+                    Logger.info(`[SelfDev] ✅ Đã tự động kích hoạt thành công tính năng /${commandName}!`);
+                    return; // Giao diện tính năng đã được render trực tiếp lên tin nhắn, hoàn tất quy trình!
+                } catch (execErr) {
+                    Logger.warn(`[SelfDev] Warning when auto-executing /${commandName}: ${execErr.message}`);
+                }
+            }
+
+            // Fallback nếu lệnh không tự render qua adapter
+            const fallbackEmbed = new EmbedBuilder()
+                .setColor(0x2ECC71)
+                .setTitle('🎉 Hoàn tất rồi nè!')
+                .setDescription(
+                    `Mình đã học xong tính năng mới **\`/${commandName}\`** cho bạn rồi đó!\n` +
+                    `Bây giờ bạn có thể thử ngay nha~ 💖✨\n\n` +
+                    `📝 **Mô tả:** ${generatedData.summary || prompt}`
+                )
+                .setTimestamp();
+
+            await progressMsg.edit({ embeds: [fallbackEmbed], components: [] }).catch(() => { });
 
         } catch (error) {
             Logger.error(`[SelfDev] Error in session ${sessionId}:`, error);
@@ -262,9 +298,9 @@ export default {
         .setIntegrationTypes(ApplicationIntegrationType.GuildInstall, ApplicationIntegrationType.UserInstall)
         .setContexts(InteractionContextType.Guild, InteractionContextType.BotDM, InteractionContextType.PrivateChannel),
     async execute(interaction) {
-        // Viết code logic hoàn chỉnh, có try/catch
-        // Sử dụng EmbedBuilder màu sắc đẹp (ví dụ 0x3498DB)
-        // Dùng interaction.reply hoặc interaction.deferReply nếu cần thời gian
+        // Luôn hỗ trợ chạy tự động: ưu tiên interaction.deferReply() và interaction.editReply()
+        // Luôn có giá trị fallback cho options nếu không được cung cấp (ví dụ: interaction.options?.getUser('target') || interaction.user)
+        // Thiết kế giao diện Embed + ActionRowBuilder (Buttons/Menu) đẹp mắt, có ComponentCollector lắng nghe sự kiện tương tác
     }
 };
 \`\`\`
@@ -712,90 +748,37 @@ export default {
     }
 
     /**
-     * Thực thi xóa file lệnh qua ApplyEngine với Transaction và Backup an toàn
+     * Thực thi xóa lệnh khỏi Sandbox với Backup an toàn
      */
     static async executeDeleteCommand({ targetName, user, confirmMsg, client }) {
         try {
-            Logger.info(`[SelfDev] 🗑️ Đang tiến hành xóa lệnh /${targetName} qua ApplyEngine...`);
-            const cmdRelPath = `commands/slash/${targetName}.js`;
-            const i18nRelPath = `resources/vi/${targetName}.json`;
+            Logger.info(`[SelfDev] 🗑️ Đang tiến hành xóa lệnh /${targetName} khỏi Sandbox...`);
 
-            const changes = [];
-            if (fs.existsSync(path.join(process.cwd(), cmdRelPath))) {
-                changes.push({
-                    action: 'delete',
-                    target: cmdRelPath
-                });
-            }
-            if (fs.existsSync(path.join(process.cwd(), i18nRelPath))) {
-                changes.push({
-                    action: 'delete',
-                    target: i18nRelPath
-                });
+            const sandboxCmd = path.join(process.cwd(), 'sandbox', 'slash', `${targetName}.js`);
+            const sandboxI18n = path.join(process.cwd(), 'sandbox', 'i18n', `${targetName}.json`);
+            const legacyCmd = path.join(process.cwd(), 'commands', 'slash', `${targetName}.js`);
+            const legacyI18n = path.join(process.cwd(), 'resources', 'vi', `${targetName}.json`);
+            const sandboxBackupDir = path.join(process.cwd(), 'sandbox', 'backup');
+
+            if (!fs.existsSync(sandboxBackupDir)) {
+                fs.mkdirSync(sandboxBackupDir, { recursive: true });
             }
 
-            // Dọn dẹp i18n trong common.json nếu có
-            const commonI18nPath = path.join(process.cwd(), 'resources/vi/common.json');
-            if (fs.existsSync(commonI18nPath)) {
-                try {
-                    const currentI18n = JSON.parse(fs.readFileSync(commonI18nPath, 'utf-8'));
-                    if (currentI18n[targetName]) {
-                        delete currentI18n[targetName];
-                        fs.writeFileSync(commonI18nPath, JSON.stringify(currentI18n, null, 4), 'utf-8');
-                    }
-                } catch (_) { }
+            // Sao lưu và xóa file lệnh (.js)
+            const sourceCmd = fs.existsSync(sandboxCmd) ? sandboxCmd : (fs.existsSync(legacyCmd) ? legacyCmd : null);
+            if (sourceCmd) {
+                fs.copyFileSync(sourceCmd, path.join(sandboxBackupDir, `${targetName}.js.bak`));
             }
+            if (fs.existsSync(sandboxCmd)) fs.rmSync(sandboxCmd, { force: true });
+            if (fs.existsSync(legacyCmd)) fs.rmSync(legacyCmd, { force: true });
 
-            let txId = 'manual';
-            if (changes.length > 0) {
-                const deleteManifest = {
-                    manifestVersion: '1.0',
-                    meta: {
-                        agent: 'owner-request',
-                        timestamp: new Date().toISOString(),
-                        action: 'delete'
-                    },
-                    changes
-                };
-
-                const applyResult = await applyEngine.apply(deleteManifest, {
-                    isApproved: true,
-                    approvedBy: user.id
-                });
-
-                txId = applyResult.transactionId;
-                Logger.info(`[SelfDev] ✅ Đã xóa lệnh qua ApplyEngine thành công [tx: ${txId}]`);
+            // Sao lưu và xóa file i18n (.json)
+            const sourceI18n = fs.existsSync(sandboxI18n) ? sandboxI18n : (fs.existsSync(legacyI18n) ? legacyI18n : null);
+            if (sourceI18n) {
+                fs.copyFileSync(sourceI18n, path.join(sandboxBackupDir, `${targetName}.json.bak`));
             }
-
-            // Commit thay đổi vào Git nếu có repo
-            try {
-                await execPromise('git add .');
-                await execPromise(`git commit -m "feat(auto): delete /${targetName} per owner request [tx: ${txId}]"`);
-            } catch (_) { }
-
-            // Sao lưu file bị xóa vào sandbox/backup/<targetName>.js.bak và <targetName>.json.bak
-            try {
-                const sandboxBackupDir = path.join(process.cwd(), 'sandbox', 'backup');
-                if (!fs.existsSync(sandboxBackupDir)) {
-                    fs.mkdirSync(sandboxBackupDir, { recursive: true });
-                }
-                const fullCmdPath = path.join(process.cwd(), cmdRelPath);
-                if (fs.existsSync(fullCmdPath)) {
-                    fs.copyFileSync(fullCmdPath, path.join(sandboxBackupDir, `${targetName}.js.bak`));
-                }
-                const fullI18nPath = path.join(process.cwd(), i18nRelPath);
-                if (fs.existsSync(fullI18nPath)) {
-                    fs.copyFileSync(fullI18nPath, path.join(sandboxBackupDir, `${targetName}.json.bak`));
-                }
-
-                // Dọn file tương ứng trong sandbox/slash/ và sandbox/i18n/
-                const sandboxCmd = path.join(process.cwd(), 'sandbox', 'slash', `${targetName}.js`);
-                if (fs.existsSync(sandboxCmd)) fs.rmSync(sandboxCmd, { force: true });
-                const sandboxI18n = path.join(process.cwd(), 'sandbox', 'i18n', `${targetName}.json`);
-                if (fs.existsSync(sandboxI18n)) fs.rmSync(sandboxI18n, { force: true });
-            } catch (backupErr) {
-                Logger.warn(`[SelfDev] Warning on sandbox backup: ${backupErr.message}`);
-            }
+            if (fs.existsSync(sandboxI18n)) fs.rmSync(sandboxI18n, { force: true });
+            if (fs.existsSync(legacyI18n)) fs.rmSync(legacyI18n, { force: true });
 
             // Xóa khỏi client.commands trong RAM
             if (client?.commands) {
@@ -814,7 +797,7 @@ export default {
             await confirmMsg.edit({ embeds: [successEmbed], components: [] });
 
             // Deploy lại commands lên Discord API (forceDeploy: true)
-            const loadResult = await loadCommands(path.join(process.cwd(), 'commands'), client);
+            const loadResult = await loadCommands(null, client);
             await deployCommands(loadResult, true);
             Logger.info(`[SelfDev] ✅ Đã đồng bộ lại danh sách lệnh lên Discord REST API`);
 
