@@ -5,13 +5,17 @@ class ApiKeyManager {
     constructor() {
         this.pool = [];
         this.isInitialized = false;
-        this.suspensionCache = new Map();
+        this.index = 0; // Round-Robin pointer
+        this.suspensionCache = new Map(); // `${key}_${modelId}` -> timestamp (ms)
     }
 
+    /**
+     * Nạp toàn bộ API key từ biến môi trường (.env) và Database
+     */
     async loadKeys() {
         const poolMap = new Map();
 
-        // 1. Nạp từ process.env (Cấu hình key giống Furina: GEMINI_*_KEY hoặc GEMINI_API_KEY)
+        // 1. Nạp từ process.env (hỗ trợ GEMINI_*_KEY và GEMINI_API_KEY)
         Object.entries(process.env).forEach(([envName, val]) => {
             if ((envName.startsWith('GEMINI_') && envName.endsWith('_KEY')) || envName === 'GEMINI_API_KEY') {
                 if (val && typeof val === 'string' && val.trim()) {
@@ -34,7 +38,7 @@ class ApiKeyManager {
                     if (k.key && !poolMap.has(k.key)) {
                         poolMap.set(k.key, {
                             key: k.key,
-                            name: k.name,
+                            name: k.name || 'DB_KEY',
                             exhausted: false,
                             lastUsed: 0
                         });
@@ -45,7 +49,15 @@ class ApiKeyManager {
             console.warn('⚠️ Could not query API Keys from Database:', error.message);
         }
 
-        this.pool = Array.from(poolMap.values());
+        // Giữ lại trạng thái exhausted nếu trước đó đã bị đánh dấu
+        const prevExhausted = new Set(this.pool.filter(p => p.exhausted).map(p => p.key));
+        this.pool = Array.from(poolMap.values()).map(entry => {
+            if (prevExhausted.has(entry.key)) {
+                entry.exhausted = true;
+            }
+            return entry;
+        });
+
         if (this.pool.length === 0) {
             console.warn('⚠️ No active API Keys found in Environment (.env) or Database.');
             return;
@@ -55,118 +67,162 @@ class ApiKeyManager {
         console.log(`✅ Loaded ${this.pool.length} API Keys (${poolMap.size} available from env/DB).`);
     }
 
+    /**
+     * Kiểm tra xem key có đang bị suspend trên model cụ thể hay không
+     */
+    isSuspended(key, modelId, now = Date.now()) {
+        const cacheKey = `${key}_${modelId}`;
+        const until = this.suspensionCache.get(cacheKey);
+        if (!until) return false;
+        if (now >= until) {
+            this.suspensionCache.delete(cacheKey);
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * Lấy key tiếp theo theo thuật toán Round-Robin tuần tự.
+     * Cân bằng tải hoàn hảo qua tất cả các key khả dụng mà không bị dồn tải.
+     */
     async _getNextKey(modelId) {
         if (!this.isInitialized || this.pool.length === 0) {
             await this.loadKeys();
         }
 
         if (this.pool.length === 0) {
-            throw new Error('No active API keys available.');
+            throw new Error('No active API keys available in environment or database.');
         }
 
-        const validKeys = [];
         const now = Date.now();
+        const activePool = this.pool.filter(e => !e.exhausted);
+        if (activePool.length === 0) {
+            throw new Error('All API keys are permanently exhausted or marked leaked.');
+        }
 
-        for (const entry of this.pool) {
+        // Quét tuần tự Round-Robin bắt đầu từ this.index
+        for (let i = 0; i < activePool.length; i++) {
+            const idx = (this.index + i) % activePool.length;
+            const entry = activePool[idx];
+
+            if (!this.isSuspended(entry.key, modelId, now)) {
+                this.index = (idx + 1) % activePool.length;
+                entry.lastUsed = now;
+                return entry.key;
+            }
+        }
+
+        // Nếu tất cả các keys đều đang cooldown cho model này:
+        let minUntil = Infinity;
+        for (const entry of activePool) {
             const cacheKey = `${entry.key}_${modelId}`;
-            const suspendedUntil = this.suspensionCache.get(cacheKey);
-
-            if (!suspendedUntil || suspendedUntil <= now) {
-                validKeys.push(entry);
+            const until = this.suspensionCache.get(cacheKey) || 0;
+            if (until < minUntil) {
+                minUntil = until;
             }
         }
 
-        if (validKeys.length === 0) {
-            console.warn('All keys suspended, forcing DB reload...');
-            await this.loadKeys();
-
-            // Re-check after reload
-            const retryValidKeys = [];
-            for (const entry of this.pool) {
-                const cacheKey = `${entry.key}_${modelId}`;
-                const suspendedUntil = this.suspensionCache.get(cacheKey);
-                if (!suspendedUntil || suspendedUntil <= now) {
-                    retryValidKeys.push(entry);
-                }
-            }
-
-            if (retryValidKeys.length === 0) {
-                // Desperation: Try random key
-                const desperateKey = this.pool[Math.floor(Math.random() * this.pool.length)];
-                console.warn("⚠️ All keys suspended. Trying a random key in desperation...");
-                return desperateKey.key;
-            }
-
-            validKeys.push(...retryValidKeys);
-        }
-
-        // --- FAIRNESS LOGIC: RANDOM SELECTION ---
-        const randomIndex = Math.floor(Math.random() * validKeys.length);
-        const entry = validKeys[randomIndex];
-        entry.lastUsed = now;
-        return entry.key;
+        const waitSec = Math.max(1, Math.round((minUntil - now) / 1000));
+        throw new Error(`ALL_KEYS_SUSPENDED: All ${activePool.length} keys are cooling down for model ${modelId} (shortest wait: ${waitSec}s).`);
     }
 
-    async suspendKey(key, modelId, ms, reason = 'RATE_LIMIT') {
+    /**
+     * Suspend key với thời gian xác định (ms)
+     * Lưu trữ in-memory và cập nhật MongoDB bất đồng bộ (non-blocking)
+     */
+    suspendKey(key, modelId, ms, reason = 'RATE_LIMIT') {
         const until = Date.now() + ms;
         const cacheKey = `${key}_${modelId}`;
         this.suspensionCache.set(cacheKey, until);
 
-        try {
-            await APIStatus.findOneAndUpdate(
-                { key, model: modelId },
-                { suspendedUntil: until, reason: reason },
-                { upsert: true }
-            );
-            console.warn(`⏳ Suspended key ...${key.slice(-4)} for ${Math.round(ms / 1000)}s on ${modelId} (${reason})`);
-        } catch (e) {
-            console.error('Failed to save APIStatus:', e);
-        }
+        // Non-blocking update to Database
+        APIStatus.findOneAndUpdate(
+            { key, model: modelId },
+            { suspendedUntil: until, reason: reason },
+            { upsert: true }
+        ).catch(e => console.warn(`[ApiKeyManager] Background APIStatus save error: ${e.message}`));
+
+        console.warn(`⏳ Suspended key ...${key.slice(-4)} for ${Math.round(ms / 1000)}s on ${modelId} (${reason})`);
     }
 
+    /**
+     * Vô hiệu hóa vĩnh viễn key bị rò rỉ hoặc không hợp lệ (403)
+     */
     async markLeaked(key) {
         try {
+            console.error(`🚫 Key ...${key.slice(-4)} marked as LEAKED/INVALID and disabled.`);
+            const entry = this.pool.find(e => e.key === key);
+            if (entry) entry.exhausted = true;
+            this.pool = this.pool.filter(e => e.key !== key);
             await APIKey.updateOne({ key }, { isActive: false, name: 'LEAKED - DISABLED' });
-            console.error(`🚫 Key ...${key.slice(-4)} marked as LEAKED and disabled.`);
-            await this.loadKeys();
         } catch (e) {
             console.error('Failed to mark key leaked:', e);
         }
     }
 
+    /**
+     * Thực thi tác vụ gọi API Gemini với:
+     * - Round-Robin load balancing
+     * - Chuyển key tức thì (100ms) khi gặp 429/503/timeout
+     * - Khớp thời gian cooldown 60s cho 429 (reset theo RPM của Google)
+     * - Timeout guard (mặc định 25s) qua Promise.race
+     * - Phát hiện quá tải 503 để kích hoạt model fallback
+     */
     async execute(modelId, task, options = {}) {
         if (!this.isInitialized || this.pool.length === 0) {
             await this.loadKeys();
         }
 
-        const MAX_RETRIES = options.maxRetries ?? Math.min(this.pool.length > 0 ? this.pool.length : 5, 3);
+        const maxRetries = options.maxRetries ?? Math.min(this.pool.length > 0 ? this.pool.length : 5, 5);
+        const timeoutMs = options.timeoutMs ?? 25000;
         let attempt = 0;
         let count503 = 0;
         let lastError = null;
 
-        while (attempt < MAX_RETRIES) {
+        while (attempt < maxRetries) {
             let key;
             try {
                 key = await this._getNextKey(modelId);
             } catch (e) {
-                console.warn(`⚠️ ${e.message}`);
+                // Toàn bộ key cho model này đang cooldown, throw để caller chuyển model fallback
                 throw e;
             }
 
             try {
-                const result = await task(key);
+                // Timeout Guard bằng Promise.race để ngăn chặn việc bị treo socket
+                let timer;
+                const timeoutPromise = new Promise((_, reject) => {
+                    timer = setTimeout(() => {
+                        reject(Object.assign(new Error(`KEY_TIMEOUT_${timeoutMs}ms`), { _isTimeout: true }));
+                    }, timeoutMs);
+                    timer.unref?.();
+                });
 
-                // --- SUCCESS UPDATE DB (Async) ---
-                // Fire and forget update to not block response
+                const result = await Promise.race([task(key), timeoutPromise]);
+                if (timer) clearTimeout(timer);
+
+                // Cập nhật thống kê sử dụng (Async non-blocking)
                 APIKey.updateOne({ key: key }, {
                     $inc: { usageCount: 1 },
                     $set: { lastUsed: Date.now() }
-                }).exec().catch(err => console.error('Failed to update Key usage stats:', err));
+                }).exec().catch(err => console.error('Failed to update Key usage stats:', err.message));
 
                 return result;
             } catch (e) {
                 lastError = e;
 
+                // Xử lý khi request bị timeout
+                if (e._isTimeout) {
+                    console.warn(`⏱️ Key ...${key.slice(-4)} timed out sau ${timeoutMs}ms trên ${modelId}. Chuyển key ngay...`);
+                    this.suspendKey(key, modelId, 30 * 1000, 'TIMEOUT_30s');
+                    attempt++;
+                    if (attempt < maxRetries) {
+                        await new Promise(r => setTimeout(r, 100));
+                    }
+                    continue;
+                }
+
+                // Không retry với lỗi cú pháp code lập trình
                 if (e instanceof TypeError || e instanceof ReferenceError) {
                     console.error(`❌ CODE BUG (NON-RETRYABLE): ${e.message}`, e.stack);
                     throw e;
@@ -181,38 +237,52 @@ class ApiKeyManager {
                 let reason = 'ERROR';
                 let shouldSuspend = false;
 
-                // --- PRIORITY ERROR LOGIC ---
+                // --- 429: Rate Limit / Quota ---
                 if (statusCode === 429 || errorMessage.includes('429') || errorMessage.includes('quota') || errorMessage.includes('RESOURCE_EXHAUSTED')) {
-                    suspendMs = 15 * 60 * 1000; // 15 mins
+                    let waitSeconds = 60; // Mặc định 60 giây (khớp chu kỳ 15 RPM/phút của Google)
+                    try {
+                        const retryInfo = e?.error?.details?.find?.(d => d['@type']?.includes('RetryInfo'));
+                        if (retryInfo?.retryDelay) {
+                            const parsed = parseFloat(retryInfo.retryDelay);
+                            if (!isNaN(parsed) && parsed > 0) {
+                                waitSeconds = Math.ceil(parsed) + 1;
+                            }
+                        }
+                    } catch (_) {}
+
+                    suspendMs = waitSeconds * 1000;
                     reason = 'RATE_LIMIT_429';
                     shouldSuspend = true;
                 }
+                // --- 400: Bad Request / Invalid Argument (Lỗi phía client/prompt) ---
                 else if (statusCode === 400 || errorMessage.includes('invalid_request') || errorMessage.includes('INVALID_ARGUMENT')) {
                     console.error(`❌ BAD REQUEST (NON-RETRYABLE): ${errorMessage}`);
-                    shouldSuspend = false;
-                    throw e; // Stop immediately
+                    throw e; // Dừng ngay, không thử key khác
                 }
-                else if (statusCode === 503 || errorMessage.includes('503') || errorMessage.includes('overloaded')) {
-                    suspendMs = 3 * 60 * 1000; // 3 mins
+                // --- 503: Service Unavailable / Overloaded (Phía Google bị nghẽn) ---
+                else if (statusCode === 503 || errorMessage.includes('503') || errorMessage.includes('overloaded') || errorMessage.includes('UNAVAILABLE')) {
+                    suspendMs = 60 * 1000; // 1 phút
                     reason = 'SERVICE_UNAVAILABLE_503';
                     shouldSuspend = true;
                     count503++;
                     if (count503 >= 2) {
-                        if (shouldSuspend && suspendMs > 0) {
-                            await this.suspendKey(key, modelId, suspendMs, reason);
-                        }
-                        throw new Error(`Model ${modelId} is currently overloaded (503 Service Unavailable).`);
+                        this.suspendKey(key, modelId, suspendMs, reason);
+                        throw new Error(`MODEL_OVERLOADED: Model ${modelId} is currently overloaded (503 Service Unavailable).`);
                     }
                 }
-                else if (statusCode === 500 || errorMessage.includes('500')) {
-                    suspendMs = 60 * 1000; // 1 min
+                // --- 500: Internal Server Error ---
+                else if (statusCode === 500 || errorMessage.includes('500') || errorMessage.includes('INTERNAL')) {
+                    suspendMs = 30 * 1000; // 30s
                     reason = 'INTERNAL_ERROR_500';
                     shouldSuspend = true;
                 }
+                // --- 403: Key bị thu hồi hoặc Permission Denied ---
                 else if (statusCode === 403 || errorMessage.includes('PERMISSION_DENIED') || errorMessage.includes('API_KEY_INVALID')) {
                     await this.markLeaked(key);
                     shouldSuspend = false;
-                } else {
+                }
+                // --- Lỗi khác ---
+                else {
                     const statusCodeText = statusCode ? statusCode.toString() : 'UNKNOWN';
                     console.warn(`⚠️ Generic error ${statusCodeText}: ${errorMessage}`);
                     suspendMs = 30 * 1000;
@@ -221,20 +291,20 @@ class ApiKeyManager {
                 }
 
                 if (shouldSuspend && suspendMs > 0) {
-                    await this.suspendKey(key, modelId, suspendMs, reason);
+                    this.suspendKey(key, modelId, suspendMs, reason);
                 }
 
                 attempt++;
 
-                const backoff = Math.min(1000 * Math.pow(1.5, attempt), 10000);
-                if (attempt < MAX_RETRIES) {
-                    console.log(`🔄 Retrying... (${attempt}/${MAX_RETRIES}) in ${Math.round(backoff)}ms`);
-                    await new Promise(r => setTimeout(r, backoff));
+                // Chuyển key kế tiếp tức thì chỉ sau 100ms (loại bỏ hoàn toàn exponential backoff vô lý)
+                if (attempt < maxRetries) {
+                    console.log(`🔄 Rotating key... (${attempt}/${maxRetries}) in 100ms`);
+                    await new Promise(r => setTimeout(r, 100));
                 }
             }
         }
 
-        throw new Error(`Failed after ${attempt} attempts. Last error: ${lastError?.message}`);
+        throw new Error(`Failed after ${attempt} attempts on model ${modelId}. Last error: ${lastError?.message}`);
     }
 }
 

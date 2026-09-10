@@ -271,7 +271,7 @@ export default {
 
                     const parsedData = SelfDevService.safeJsonParse(outputText);
                     return { data: this.normalizeGeneratedData(parsedData, suggestedName), usedModel: modelId };
-                });
+                }, { timeoutMs: 60000 });
 
                 geminiModelService.reportModelSuccess(modelId);
                 return result;

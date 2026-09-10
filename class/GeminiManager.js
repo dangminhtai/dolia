@@ -48,15 +48,13 @@ class GeminiManager {
 
         // 1. Get Session & History
         const chatSession = await ChatHelper.getChatSession(userId, channelId);
-        const contents = await ChatHelper.getHistory(userId, chatSession);
+        const baseHistory = await ChatHelper.getHistory(userId, chatSession);
 
         // 2. Add Current User Message
         const userTurn = {
             role: 'user',
             parts: [{ text: message.cleanContent }]
         };
-        contents.push(userTurn);
-        const newTurns = [userTurn];
 
         // 3. Prepare Music Data for Context
         let musicStatus = "Đang rảnh rỗi (Chưa vào voice)";
@@ -181,112 +179,130 @@ ${topSongsStr || "- Chưa có bài nào nổi bật"}
 
         const systemInstruction = loadSystemPrompt(replacements);
 
-        const modelId = await geminiModelService.getActiveModel('flash-lite');
+        const candidates = await geminiModelService.getCandidateModels('flash-lite');
+        let lastError = null;
 
-        return await ApiKeyManager.execute(modelId, async (key) => {
-            const ai = new GoogleGenAI({ apiKey: key });
-            // ... (Rest of logic remains same)
+        for (const modelId of candidates) {
+            try {
+                // Tạo bản sao độc lập cho turn hiện tại và danh sách newTurns
+                const contents = [...baseHistory.map(h => ({ role: h.role, parts: [...h.parts] })), { ...userTurn }];
+                const newTurns = [userTurn];
 
-            let functionCallAttempts = 0;
-            let finalResponseText = null;
+                const result = await ApiKeyManager.execute(modelId, async (key) => {
+                    const ai = new GoogleGenAI({ apiKey: key });
 
-            // Loop for Function Calling (Max 5 turns)
-            while (functionCallAttempts < 5) {
-                const response = await ai.models.generateContent({
-                    model: modelId,
-                    contents: contents,
-                    config: {
-                        tools: this.tools,
-                        systemInstruction: systemInstruction,
-                        temperature: 1.5,
-                        topK: 40,
-                        topP: 0.95
-                    }
-                });
+                    let functionCallAttempts = 0;
+                    let finalResponseText = null;
 
-                const candidate = response.candidates?.[0];
-                const content = candidate?.content;
-                const responseParts = content?.parts || [];
+                    // Loop for Function Calling (Max 5 turns)
+                    while (functionCallAttempts < 5) {
+                        const response = await ai.models.generateContent({
+                            model: modelId,
+                            contents: contents,
+                            config: {
+                                tools: this.tools,
+                                systemInstruction: systemInstruction,
+                                temperature: 1.5,
+                                topK: 40,
+                                topP: 0.95
+                            }
+                        });
 
-                const hasFunctionCall = responseParts.some(p => p.functionCall);
+                        const candidate = response.candidates?.[0];
+                        const content = candidate?.content;
+                        const responseParts = content?.parts || [];
 
-                if (hasFunctionCall) {
-                    const callNames = responseParts
-                        .filter(p => p.functionCall)
-                        .map(p => p.functionCall.name)
-                        .join(', ');
+                        const hasFunctionCall = responseParts.some(p => p.functionCall);
 
-                    this.logger.info(`Function Calls detected: ${callNames}`);
+                        if (hasFunctionCall) {
+                            const callNames = responseParts
+                                .filter(p => p.functionCall)
+                                .map(p => p.functionCall.name)
+                                .join(', ');
 
-                    // A. Save Model Call Turn
-                    const modelCallTurn = {
-                        role: 'model',
-                        parts: responseParts
-                    };
-                    contents.push(modelCallTurn);
-                    newTurns.push(modelCallTurn);
+                            this.logger.info(`Function Calls detected: ${callNames}`);
 
-                    // B. Execute Functions & Prepare Response
-                    const functionResponseParts = [];
+                            // A. Save Model Call Turn
+                            const modelCallTurn = {
+                                role: 'model',
+                                parts: responseParts
+                            };
+                            contents.push(modelCallTurn);
+                            newTurns.push(modelCallTurn);
 
-                    for (const part of responseParts) {
-                        if (part.functionCall) {
-                            const call = part.functionCall;
-                            const fn = this.functions[call.name];
-                            let apiResponse;
+                            // B. Execute Functions & Prepare Response
+                            const functionResponseParts = [];
 
-                            if (fn) {
-                                try {
-                                    const args = { ...call.args, ...context };
-                                    const result = await fn(args);
-                                    apiResponse = { result: result };
-                                } catch (error) {
-                                    apiResponse = { error: error.message };
-                                    console.error(`Error executing ${call.name}:`, error);
+                            for (const part of responseParts) {
+                                if (part.functionCall) {
+                                    const call = part.functionCall;
+                                    const fn = this.functions[call.name];
+                                    let apiResponse;
+
+                                    if (fn) {
+                                        try {
+                                            const args = { ...call.args, ...context };
+                                            const result = await fn(args);
+                                            apiResponse = { result: result };
+                                        } catch (error) {
+                                            apiResponse = { error: error.message };
+                                            console.error(`Error executing ${call.name}:`, error);
+                                        }
+                                    } else {
+                                        apiResponse = { error: `Function ${call.name} not found` };
+                                    }
+
+                                    // IMPORTANT: Include 'id' in functionResponse
+                                    functionResponseParts.push({
+                                        functionResponse: {
+                                            name: call.name,
+                                            response: apiResponse,
+                                            id: call.id
+                                        }
+                                    });
                                 }
-                            } else {
-                                apiResponse = { error: `Function ${call.name} not found` };
                             }
 
-                            // IMPORTANT: Include 'id' in functionResponse
-                            functionResponseParts.push({
-                                functionResponse: {
-                                    name: call.name,
-                                    response: apiResponse,
-                                    id: call.id
-                                }
+                            // C. Save User Response Turn
+                            const functionResponseTurn = {
+                                role: 'user',
+                                parts: functionResponseParts
+                            };
+                            contents.push(functionResponseTurn);
+                            newTurns.push(functionResponseTurn);
+
+                        } else {
+                            // No function call -> Final Text Response
+                            finalResponseText = response.text || responseParts.find(p => p.text)?.text || "";
+
+                            newTurns.push({
+                                role: 'model',
+                                parts: [{ text: finalResponseText }]
                             });
+                            break;
                         }
+                        functionCallAttempts++;
                     }
 
-                    // C. Save User Response Turn
-                    const functionResponseTurn = {
-                        role: 'user',
-                        parts: functionResponseParts
-                    };
-                    contents.push(functionResponseTurn);
-                    newTurns.push(functionResponseTurn);
+                    // 4. Save new turns to DB
+                    if (newTurns.length > 0) {
+                        await ChatHelper.saveInteraction(chatSession, newTurns);
+                    }
 
-                } else {
-                    // No function call -> Final Text Response
-                    finalResponseText = response.text || responseParts.find(p => p.text)?.text || "";
+                    return finalResponseText;
+                });
 
-                    newTurns.push({
-                        role: 'model',
-                        parts: [{ text: finalResponseText }]
-                    });
-                    break;
-                }
-                functionCallAttempts++;
+                // Model phản hồi thành công -> gỡ cooldown nếu có và return
+                geminiModelService.reportModelSuccess(modelId);
+                return result;
+            } catch (err) {
+                lastError = err;
+                geminiModelService.reportModelFailure(modelId, err.message, 2 * 60 * 1000);
+                this.logger.warn(`Model ${modelId} gặp sự cố: ${err.message}. Đang thử model tiếp theo...`);
             }
+        }
 
-            // 4. Save new turns to DB
-            if (newTurns.length > 0) {
-                await ChatHelper.saveInteraction(chatSession, newTurns);
-            }
-
-            return finalResponseText;
-        });
+        throw lastError || new Error('Tất cả các model Gemini đều không khả dụng lúc này.');
     }
 }
 
