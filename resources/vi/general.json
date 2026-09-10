@@ -5,14 +5,6 @@
     "generic_error": "🥺 Có lỗi mất rồi... thử lại sau nha!",
     "footer": "💖 Bạn {{username}} yêu cầu nè"
   },
-  "morning": {
-    "user_exists": "🌸 **{{username}}** có trong danh sách rồi nè!",
-    "user_not_found": "🥺 Mình không thấy **{{username}}** trong danh sách.",
-    "user_added": "✨ Xong rồi nè! Mình thêm **{{username}}** vào danh sách chào buổi sáng rồi!",
-    "user_removed": "🗑️ Okii! Mình xóa **{{username}}** khỏi danh sách rồi nha!",
-    "test_success": "💖 Mình gửi tin nhắn thử cho **{{username}}** thành công rồi!\n\n💌 *\"{{content}}\"*",
-    "test_failed": "🥺 Mình không gửi được tin nhắn cho **{{username}}**...\nCó thể bạn ấy tắt DM hoặc mình gặp lỗi mất rồi.\n\n💦 Chi tiết: `{{error}}`"
-  },
   "lyrics": {
     "modal_title": "🎵 Tìm lời bài hát",
     "input_label": "Nhập tên bài hoặc một đoạn lời nha",

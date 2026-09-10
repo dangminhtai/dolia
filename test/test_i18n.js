@@ -16,6 +16,5 @@ console.log('Test panel.buttons.pl_create:', t('panel.buttons.pl_create'));
 console.log('Test panel.modals.title_pl_create:', t('panel.modals.title_pl_create'));
 console.log('Test music.radio.track_not_found:', t('music.radio.track_not_found'));
 console.log('Test games.tictactoe.winner:', t('games.tictactoe.winner', { winner: 'Tai', symbol: 'X', selfComment: '(Tự kỷ đỉnh cao)' }));
-console.log('Test general.morning.user_added:', t('general.morning.user_added', { username: 'Dolia' }));
 
 console.log('\n--- ALL TESTS PASSED! ---');
