@@ -8,6 +8,7 @@
     "models",
     "resources",
     "schema",
+    "core",
     "services",
     "utils",
     "index.js",
@@ -16,6 +17,8 @@
   ],
   "ext": "js,mjs,cjs,json",
   "ignore": [
+    "sandbox/**",
+    ".apply/**",
     ".worktrees/**",
     ".worktrees/*",
     ".git/**",

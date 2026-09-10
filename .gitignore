@@ -33,4 +33,5 @@ desktop.ini
 
 # Self-dev sandboxes
 .worktrees/
-
+sandbox/
+.apply/
