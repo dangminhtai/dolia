@@ -3,6 +3,7 @@ import { poru } from '../../utils/LavalinkManager.js';
 import { applyAudioSettings } from '../../utils/AudioController.js';
 import GuildMusicQueue from '../../models/GuildMusicQueue.js';
 import User from '../../models/User.js';
+import { t } from '../../services/i18nService.js';
 
 export default {
     data: new SlashCommandBuilder()
@@ -46,7 +47,7 @@ export default {
 
         // Nếu tìm mọi cách mà vẫn không ra kênh voice nào (Server không tạo kênh Voice?)
         if (!voiceChannel) {
-            return interaction.editReply('❌ Bot không tìm thấy kênh Voice nào để vào cả!');
+            return interaction.editReply(t('music.errors.no_voice_channel'));
         }
         // ------------------------------------------
 
@@ -78,13 +79,13 @@ export default {
             res = await poru.resolve({ query: query, source: isUrl ? null : source, requester: interaction.user });
         } catch (error) {
             console.error('Lavalink Resolve Error:', error);
-            return interaction.editReply('❌ Lỗi kết nối Node nhạc (Bad Gateway).');
+            return interaction.editReply(t('music.errors.bad_gateway'));
         }
 
         if (!res || res.loadType === 'LOAD_FAILED') {
-            return interaction.editReply('❌ Lỗi tải nhạc.');
+            return interaction.editReply(t('music.errors.load_failed'));
         } else if (res.loadType === 'NO_MATCHES') {
-            return interaction.editReply('❌ Không tìm thấy bài nào!');
+            return interaction.editReply(t('music.errors.no_matches'));
         }
 
         // 3. Xử lý thêm nhạc & Lưu Database
@@ -113,10 +114,10 @@ export default {
                 for (let i = res.tracks.length - 1; i >= 0; i--) {
                     player.queue.unshift(res.tracks[i]);
                 }
-                msg = `⚡ **[ƯU TIÊN]** Đã chèn Playlist **${res.playlistInfo.name}** lên đầu!`;
+                msg = t('music.play.priority_playlist_simple', { name: res.playlistInfo.name });
             } else {
                 player.queue.add(res.tracks);
-                msg = `✅ Đã thêm Playlist **${res.playlistInfo.name}** vào hàng chờ.`;
+                msg = t('music.play.added_playlist_queue', { name: res.playlistInfo.name });
             }
         }
         else {
@@ -126,13 +127,13 @@ export default {
 
             if (isPriority) {
                 player.queue.unshift(track);
-                msg = `⚡ **[ƯU TIÊN]** Đã chèn **${track.info.title}** lên đầu!`;
+                msg = t('music.play.priority_track_simple', { title: track.info.title });
             } else {
                 player.queue.add(track);
                 if (player.isPlaying || player.isPaused) {
-                    msg = `✅ Đã thêm vào hàng chờ: **${track.info.title}**`;
+                    msg = t('music.play.added_to_queue_alt', { title: track.info.title });
                 } else {
-                    msg = `▶️ Đang phát: **${track.info.title}** tại kênh **${voiceChannel.name}**`;
+                    msg = t('music.play.now_playing_at', { title: track.info.title, channel: voiceChannel.name });
                 }
             }
         }

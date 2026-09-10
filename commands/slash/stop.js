@@ -1,5 +1,6 @@
 import { SlashCommandBuilder } from 'discord.js';
 import { poru } from '../../utils/LavalinkManager.js';
+import { t } from '../../services/i18nService.js';
 
 export default {
     data: new SlashCommandBuilder()
@@ -10,13 +11,13 @@ export default {
         const player = poru.players.get(interaction.guild.id);
 
         if (!player) {
-            return interaction.reply({ content: '❌ Bot có đang hát đâu?', ephemeral: true });
+            return interaction.reply({ content: t('music.errors.not_playing'), ephemeral: true });
         }
 
         // QUAN TRỌNG: Tắt cờ 24/7
         player.isAutoplay = false;
 
         player.destroy();
-        return interaction.reply('🛑 Đã dừng nhạc và tắt chế độ Radio 24/7.');
+        return interaction.reply(t('music.stop'));
     },
 };

@@ -1,6 +1,7 @@
 import { SlashCommandBuilder, EmbedBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder } from 'discord.js';
 import GeminiLyrics from '../../class/GeminiLyrics.js';
 import { sendSafeMessage } from '../../utils/messageHelper.js';
+import { t } from '../../services/i18nService.js';
 
 export default {
     data: new SlashCommandBuilder()
@@ -10,12 +11,12 @@ export default {
     async execute(interaction) {
         const modal = new ModalBuilder()
             .setCustomId('lyrics_modal')
-            .setTitle('Dolia Lyrics Search');
+            .setTitle(t('general.lyrics.modal_title'));
 
         const queryInput = new TextInputBuilder()
             .setCustomId('lyrics_query_input')
-            .setLabel("Nhập đoạn lời bài hát hoặc tên bài hát")
-            .setPlaceholder('Ví dụ: "Em của ngày hôm qua" hoặc "đừng làm trái tim anh đau"...')
+            .setLabel(t('general.lyrics.input_label'))
+            .setPlaceholder(t('general.lyrics.input_placeholder'))
             .setStyle(TextInputStyle.Paragraph) // Sử dụng Paragraph để nhập được nhiều dòng
             .setRequired(true)
             .setMinLength(5)

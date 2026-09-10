@@ -1,0 +1,29 @@
+{
+  "animal": {
+    "network_error": "Mạng thằng Admin bị lỗi, vui lòng chờ nó nạp 4G",
+    "image_error": "Lỗi 1 chút khi cố gắng lấy ảnh.",
+    "generic_error": "Có lỗi khi lấy ảnh.",
+    "footer": "Được yêu cầu bởi {{username}}"
+  },
+  "morning": {
+    "user_exists": "Người dùng **{{username}}** đã có trong danh sách rồi.",
+    "user_not_found": "Người dùng **{{username}}** không có trong danh sách.",
+    "user_added": "Thành công! Đã thêm **{{username}}** vào danh sách chào buổi sáng.",
+    "user_removed": "Thành công! Đã xóa **{{username}}** khỏi danh sách chào buổi sáng.",
+    "test_success": "✅ Đã gửi tin nhắn test thành công cho **{{username}}**!\nNội dung: *\"{{content}}\"*",
+    "test_failed": "❌ Không thể gửi tin nhắn cho **{{username}}**. Có thể người dùng đã chặn DM hoặc bot gặp lỗi.\nChi tiết: `{{error}}`"
+  },
+  "lyrics": {
+    "modal_title": "Dolia Lyrics Search",
+    "input_label": "Nhập đoạn lời bài hát hoặc tên bài hát",
+    "input_placeholder": "Ví dụ: \"Em của ngày hôm qua\" hoặc \"đừng làm trái tim anh đau\"...",
+    "not_found": "❌ Xin lỗi, tôi không tìm thấy bài hát nào khớp với nội dung: `{{query}}`",
+    "error": "❌ Đã xảy ra lỗi khi tìm kiếm lời bài hát. Hãy thử lại sau!",
+    "full_lyrics_hint": "*(Xem bản đầy đủ ở file đính kèm bên dưới)*",
+    "full_lyrics_header": "📜 Đây là lời bài hát đầy đủ cho bài **{{title}}**:",
+    "footer": "Dolia Lyrics Search",
+    "year_field": "📅 Năm phát hành",
+    "link_field": "🔗 Nghe nhạc tại",
+    "link_text": "Nhấp để mở Link"
+  }
+}

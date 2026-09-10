@@ -1,5 +1,6 @@
 import { SlashCommandBuilder, EmbedBuilder } from 'discord.js';
 import { poru } from '../../utils/LavalinkManager.js';
+import { t } from '../../services/i18nService.js';
 
 // Hàm helper để vẽ thanh process bar [======....]
 function createProgressBar(current, total, size = 15) {
@@ -28,7 +29,7 @@ export default {
         const player = poru.players.get(interaction.guild.id);
 
         if (!player || !player.currentTrack) {
-            return interaction.reply({ content: '❌ Không có nhạc nào đang phát!', ephemeral: true });
+            return interaction.reply({ content: t('music.errors.no_track_playing'), ephemeral: true });
         }
 
         const track = player.currentTrack;
@@ -37,24 +38,24 @@ export default {
 
         const embed = new EmbedBuilder()
             .setColor('#FF0000') // Màu đỏ YouTube
-            .setTitle('💿 Đang phát...')
+            .setTitle(t('music.nowplaying.title'))
             .setDescription(`[**${track.info.title}**](${track.info.uri})`)
             .setThumbnail(track.info.artworkUrl || track.info.image) // Ảnh thumbnail (Poru v5 tự lấy)
             .addFields(
-                { name: 'Ca sĩ/Kênh', value: track.info.author, inline: true },
-                { name: 'Người yêu cầu', value: track.info.requester?.tag || 'Radio 24/7', inline: true },
+                { name: t('music.nowplaying.field_artist'), value: track.info.author, inline: true },
+                { name: t('music.nowplaying.field_requester'), value: track.info.requester?.tag || 'Radio 24/7', inline: true },
                 {
-                    name: 'Thời gian',
+                    name: t('music.nowplaying.field_time'),
                     value: `\`${formatTime(currentPos)} / ${track.info.isStream ? 'LIVE' : formatTime(totalDuration)}\``,
                     inline: false
                 },
                 {
-                    name: 'Tiến độ',
+                    name: t('music.nowplaying.field_progress'),
                     value: `\`${createProgressBar(currentPos, totalDuration)}\``,
                     inline: false
                 }
             )
-            .setFooter({ text: `Volume: ${player.volume}% | Loop: ${player.loop === 'NONE' ? 'Tắt' : 'Bật'}` });
+            .setFooter({ text: t('music.nowplaying.footer', { volume: player.volume, loop: player.loop === 'NONE' ? t('panel.home.autoplay_off') : t('panel.home.autoplay_on') }) });
 
         return interaction.reply({ embeds: [embed] });
     },

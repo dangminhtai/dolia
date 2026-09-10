@@ -13,6 +13,10 @@ import sodium from 'libsodium-wrappers';
 import onReady from './events/client/onReady.js';
 import interactionCreate from './events/client/interactionCreate.js';
 import messageCreate from './events/client/messageCreate.js';
+import { initI18n, t } from './services/i18nService.js';
+
+// Khởi tạo hệ thống tài nguyên (Resource / i18n)
+initI18n();
 
 const client = new Client({
     intents: [
@@ -36,7 +40,7 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.get('/', (req, res) => {
-    res.send('Bot is running');
+    res.send(t('common.server_running'));
 });
 
 app.listen(PORT, () => {

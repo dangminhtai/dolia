@@ -1,7 +1,7 @@
-
 import { SlashCommandBuilder } from 'discord.js';
 import PanelState from '../../models/PanelState.js';
 import { renderMusicPanel } from '../../utils/PanelRenderer.js';
+import { t } from '../../services/i18nService.js';
 
 export default {
     data: new SlashCommandBuilder()
@@ -9,7 +9,7 @@ export default {
         .setDescription('Mở bảng điều khiển âm nhạc'),
 
     async execute(interaction) {
-        if (!interaction.guild) return interaction.reply({ content: 'Chỉ dùng trong Server!', ephemeral: true });
+        if (!interaction.guild) return interaction.reply({ content: t('common.guild_only'), ephemeral: true });
 
         await interaction.deferReply();
 

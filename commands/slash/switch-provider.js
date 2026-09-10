@@ -1,6 +1,7 @@
 
 import { SlashCommandBuilder } from 'discord.js';
 import User from '../../models/User.js';
+import { t } from '../../services/i18nService.js';
 
 export default {
     data: new SlashCommandBuilder()
@@ -38,11 +39,11 @@ export default {
                 'amsearch': 'Apple Music'
             };
 
-            await interaction.editReply(`✅ Đã chuyển nguồn phát nhạc sang: **${providerNames[source]}**`);
+            await interaction.editReply(t('music.switch_provider.success', { provider: providerNames[source] }));
 
         } catch (error) {
             console.error('Error switching provider:', error);
-            await interaction.editReply('❌ Có lỗi xảy ra khi lưu cài đặt.');
+            await interaction.editReply(t('music.switch_provider.error'));
         }
     },
 };

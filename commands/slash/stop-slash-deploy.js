@@ -1,6 +1,6 @@
-
 import { SlashCommandBuilder, PermissionFlagsBits } from "discord.js";
 import { setConfig } from "../../utils/childConfigUtils.js";
+import { t } from "../../services/i18nService.js";
 
 export default {
     data: new SlashCommandBuilder()
@@ -17,9 +17,12 @@ export default {
         // Cập nhật vào Database (ChildBotConfig)
         await setConfig('stop_deploy', status);
 
-        const statusText = status ? 'ĐÃ BẬT 🔴' : 'ĐÃ TẮT 🟢';
+        const statusText = status ? t('common.status_on') : t('common.status_off');
         await interaction.reply({
-            content: `[Child Bot] Chế độ chặn Deploy (Linux): ${statusText}.\nTừ giờ bot Linux sẽ ${status ? 'không phản hồi' : 'phản hồi bình thường'}.`,
+            content: t('common.deploy_blocked', {
+                status: statusText,
+                action: status ? t('common.action_blocked') : t('common.action_normal')
+            }),
             ephemeral: true
         });
     },

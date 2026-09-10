@@ -8,6 +8,7 @@ import {
 import { poru } from '../../utils/LavalinkManager.js';
 import MusicSetting from '../../models/MusicSetting.js';
 import { applyAudioSettings } from '../../utils/AudioController.js';
+import { t } from '../../services/i18nService.js';
 
 export default {
     data: new SlashCommandBuilder()
@@ -25,35 +26,35 @@ export default {
         const renderMenu = (s) => {
             const embed = new EmbedBuilder()
                 .setColor('#FF00FF')
-                .setTitle('🎛️ STUDIO ÂM THANH')
-                .setDescription(`Cài đặt sẽ được **LƯU VĨNH VIỄN** cho server này.`)
+                .setTitle(t('music.settings.title'))
+                .setDescription(t('music.settings.description'))
                 .addFields(
                     { name: '🔊 Volume', value: `${s.volume}%`, inline: true },
                     { name: '⏩ Speed', value: `${s.speed.toFixed(1)}x`, inline: true },
                     { name: '🗣️ Pitch', value: `${s.pitch.toFixed(1)}x`, inline: true },
-                    { name: '🐿️ Nightcore', value: s.nightcore ? '✅ Bật' : '❌ Tắt', inline: true },
-                    { name: '🥁 Bassboost', value: s.bassboost ? '✅ Bật' : '❌ Tắt', inline: true },
+                    { name: '🐿️ Nightcore', value: s.nightcore ? t('panel.settings.nightcore_on') : t('panel.settings.nightcore_off'), inline: true },
+                    { name: '🥁 Bassboost', value: s.bassboost ? t('panel.settings.bassboost_on') : t('panel.settings.bassboost_off'), inline: true },
                 )
-                .setFooter({ text: 'Bấm nút để chỉnh. Bot sẽ tự cập nhật ngay lập tức.' });
+                .setFooter({ text: t('music.settings.footer') });
 
             // Hàng 1: Volume
             const rowVol = new ActionRowBuilder().addComponents(
-                new ButtonBuilder().setCustomId('vol_down').setLabel('Vol -10').setStyle(ButtonStyle.Secondary).setEmoji('🔉'),
-                new ButtonBuilder().setCustomId('vol_up').setLabel('Vol +10').setStyle(ButtonStyle.Secondary).setEmoji('🔊')
+                new ButtonBuilder().setCustomId('vol_down').setLabel(t('panel.buttons.vol_down')).setStyle(ButtonStyle.Secondary).setEmoji('🔉'),
+                new ButtonBuilder().setCustomId('vol_up').setLabel(t('panel.buttons.vol_up')).setStyle(ButtonStyle.Secondary).setEmoji('🔊')
             );
 
             // Hàng 2: Speed (Tốc độ)
             const rowSpeed = new ActionRowBuilder().addComponents(
                 new ButtonBuilder().setCustomId('speed_down').setLabel('Speed -0.1').setStyle(ButtonStyle.Primary),
-                new ButtonBuilder().setCustomId('speed_reset').setLabel('Speed Chuẩn').setStyle(ButtonStyle.Success),
+                new ButtonBuilder().setCustomId('speed_reset').setLabel(t('panel.buttons.speed_reset')).setStyle(ButtonStyle.Success),
                 new ButtonBuilder().setCustomId('speed_up').setLabel('Speed +0.1').setStyle(ButtonStyle.Primary)
             );
 
             // Hàng 3: Hiệu ứng đặc biệt
             const rowEffect = new ActionRowBuilder().addComponents(
-                new ButtonBuilder().setCustomId('toggle_nc').setLabel('Nightcore').setStyle(s.nightcore ? ButtonStyle.Success : ButtonStyle.Secondary).setEmoji('🐿️'),
-                new ButtonBuilder().setCustomId('toggle_bass').setLabel('Bassboost').setStyle(s.bassboost ? ButtonStyle.Success : ButtonStyle.Secondary).setEmoji('🥁'),
-                new ButtonBuilder().setCustomId('reset_all').setLabel('Reset All').setStyle(ButtonStyle.Danger).setEmoji('🧹')
+                new ButtonBuilder().setCustomId('toggle_nc').setLabel(t('panel.buttons.nightcore')).setStyle(s.nightcore ? ButtonStyle.Success : ButtonStyle.Secondary).setEmoji('🐿️'),
+                new ButtonBuilder().setCustomId('toggle_bass').setLabel(t('panel.buttons.bassboost')).setStyle(s.bassboost ? ButtonStyle.Success : ButtonStyle.Secondary).setEmoji('🥁'),
+                new ButtonBuilder().setCustomId('reset_all').setLabel(t('panel.buttons.reset_all')).setStyle(ButtonStyle.Danger).setEmoji('🧹')
             );
 
             return { embeds: [embed], components: [rowVol, rowSpeed, rowEffect] };
@@ -64,7 +65,7 @@ export default {
         const collector = msg.createMessageComponentCollector({ time: 120000 }); // 2 phút
 
         collector.on('collect', async (i) => {
-            if (i.user.id !== interaction.user.id) return i.reply({ content: 'Không phải việc của ông!', ephemeral: true });
+            if (i.user.id !== interaction.user.id) return i.reply({ content: t('common.not_your_menu'), ephemeral: true });
 
             // Cập nhật DB dựa trên nút bấm
             switch (i.customId) {

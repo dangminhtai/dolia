@@ -1,0 +1,6 @@
+{
+  "no_permission": "❌ Bạn không có quyền sử dụng lệnh này. Chỉ Bot Admin mới có quyền quản lý.",
+  "database_error": "Lỗi khi truy cập Database hoặc gửi tin nhắn, vui lòng kiểm tra log.",
+  "generic_error": "Có lỗi xảy ra!",
+  "invalid_number": "❌ Vui lòng nhập số hợp lệ!"
+}

@@ -1,5 +1,6 @@
 import { SlashCommandBuilder } from 'discord.js';
 import { poru } from '../../utils/LavalinkManager.js';
+import { t } from '../../services/i18nService.js';
 
 export default {
     data: new SlashCommandBuilder()
@@ -10,12 +11,12 @@ export default {
         const player = poru.players.get(interaction.guild.id);
 
         if (!player || !player.currentTrack) {
-            return interaction.reply({ content: '❌ Không có nhạc để skip!', ephemeral: true });
+            return interaction.reply({ content: t('music.errors.no_track_to_skip'), ephemeral: true });
         }
 
         // CHÍNH XÁC: Hàm này có trong danh sách debug
         player.skip();
 
-        return interaction.reply(`⏭️ Đã bỏ qua bài: **${player.currentTrack.info.title}**`);
+        return interaction.reply(t('music.skip', { title: player.currentTrack.info.title }));
     },
 };

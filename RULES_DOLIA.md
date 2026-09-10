@@ -1,0 +1,1 @@
+- Tuyệt đối không hard-code các giá trị có thể thay đổi trong tương lai. Hãy ưu tiên sử dụng hệ thống config/resource hiện có. Nếu cần thêm một key hoặc cấu hình mới, phải hỏi và được người dùng đồng ý trước khi thực hiện.

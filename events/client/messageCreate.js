@@ -1,5 +1,6 @@
 import { Events } from 'discord.js';
 import GeminiManager from '../../class/GeminiManager.js';
+import { t } from '../../services/i18nService.js';
 
 export default (client) => {
     client.on(Events.MessageCreate, async (message) => {
@@ -8,7 +9,7 @@ export default (client) => {
 
         // 1.5 Handle DM
         if (message.channel.type === 1) { // 1 = ChannelType.DM
-            return message.reply('Bot chưa được phát triển ở DM để nhắn tin, vui lòng thử lại sau');
+            return message.reply(t('common.dm_not_supported'));
         }
 
         if (message.channel.name !== 'dolia') return; // Chỉ chat trong kênh 'dolia'
@@ -33,7 +34,7 @@ export default (client) => {
             }
         } catch (error) {
             console.error('Gemini Chat Error:', error);
-            await message.reply('❌ Dolia đang bị đau đầu, thử lại sau nhé!');
+            await message.reply(t('common.chat_error'));
         }
     });
 };

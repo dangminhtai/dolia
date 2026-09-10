@@ -1,9 +1,9 @@
-
 import { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder } from 'discord.js';
 import { poru } from './LavalinkManager.js';
 import MusicSetting from '../models/MusicSetting.js';
 import RadioSong from '../models/RadioSong.js';
 import UserPlaylist from '../models/UserPlaylist.js';
+import { t } from '../services/i18nService.js';
 
 function createProgressBar(current, total, size = 15) {
     if (!total || total === 0) return '🔴 LIVE STREAM';
@@ -28,20 +28,24 @@ export async function renderMusicPanel(guildId, state, userIdForPlaylist = null)
     if (currentTab === 'home') {
         if (player && currentTrack) {
             embed.setColor('#0099ff')
-                .setTitle('💿 TRÌNH PHÁT NHẠC')
+                .setTitle(t('panel.home.title_playing'))
                 .setDescription(`**[${currentTrack?.info?.title || 'Unknown Title'}](${currentTrack?.info?.uri || '#'})**`)
                 .setThumbnail(currentTrack?.info?.artworkUrl || currentTrack?.info?.image || 'https://i.imgur.com/7R8Zq0D.png')
                 .addFields(
-                    { name: 'Ca sĩ', value: currentTrack?.info?.author || 'Unknown Artist', inline: true },
-                    { name: 'Người yêu cầu', value: currentTrack?.info?.requester?.tag || 'System', inline: true },
+                    { name: t('panel.home.field_artist'), value: currentTrack?.info?.author || 'Unknown Artist', inline: true },
+                    { name: t('panel.home.field_requester'), value: currentTrack?.info?.requester?.tag || 'System', inline: true },
                     {
-                        name: `Thời gian (${formatTime(player.position)} / ${formatTime(currentTrack?.info?.length || 0)})`,
+                        name: t('panel.home.field_time', { current: formatTime(player.position), total: formatTime(currentTrack?.info?.length || 0) }),
                         value: createProgressBar(player.position, currentTrack?.info?.length || 0),
                         inline: false
                     },
                     {
-                        name: 'Trạng thái',
-                        value: `Vol: **${player.volume}%** | Loop: **${player.loop}** | 24/7: **${player.isAutoplay ? 'BẬT' : 'TẮT'}**`,
+                        name: t('panel.home.field_status'),
+                        value: t('panel.home.status_value', {
+                            volume: player.volume,
+                            loop: player.loop,
+                            autoplay: player.isAutoplay ? t('panel.home.autoplay_on') : t('panel.home.autoplay_off')
+                        }),
                         inline: false
                     }
                 );
@@ -56,8 +60,8 @@ export async function renderMusicPanel(guildId, state, userIdForPlaylist = null)
             components.push(rowControls);
         } else {
             embed.setColor('#808080')
-                .setTitle('💤 BOT ĐANG NGHỈ NGƠI')
-                .setDescription('Hiện không có nhạc.\nDùng các Tab bên dưới để bật nhạc hoặc dùng lệnh `/play`.');
+                .setTitle(t('panel.home.title_idle'))
+                .setDescription(t('panel.home.desc_idle'));
         }
     }
 
@@ -67,34 +71,34 @@ export async function renderMusicPanel(guildId, state, userIdForPlaylist = null)
         if (!setting) setting = await MusicSetting.create({ guildId: guildId });
 
         embed.setColor('#9900ff')
-            .setTitle('🎛️ CÀI ĐẶT ÂM THANH')
-            .setDescription('Điều chỉnh hiệu ứng. Cài đặt sẽ được **LƯU** vĩnh viễn.')
+            .setTitle(t('panel.settings.title'))
+            .setDescription(t('panel.settings.description'))
             .addFields(
                 { name: '🔊 Volume', value: `${setting.volume}%`, inline: true },
                 { name: '⏩ Speed', value: `${setting.speed.toFixed(1)}x`, inline: true },
                 { name: '🗣️ Pitch', value: `${setting.pitch?.toFixed(1) || '1.0'}x`, inline: true },
-                { name: '🐿️ Nightcore', value: setting.nightcore ? '✅ Bật' : '❌ Tắt', inline: true },
-                { name: '🥁 Bassboost', value: setting.bassboost ? '✅ Bật' : '❌ Tắt', inline: true }
+                { name: '🐿️ Nightcore', value: setting.nightcore ? t('panel.settings.nightcore_on') : t('panel.settings.nightcore_off'), inline: true },
+                { name: '🥁 Bassboost', value: setting.bassboost ? t('panel.settings.bassboost_on') : t('panel.settings.bassboost_off'), inline: true }
             );
 
         // Hàng 1: Volume
         const rowVol = new ActionRowBuilder().addComponents(
-            new ButtonBuilder().setCustomId('music_set_vol_down').setLabel('Vol -10').setStyle(ButtonStyle.Secondary).setEmoji('🔉'),
-            new ButtonBuilder().setCustomId('music_set_vol_up').setLabel('Vol +10').setStyle(ButtonStyle.Secondary).setEmoji('🔊'),
-            new ButtonBuilder().setCustomId('music_set_reset').setLabel('Reset All').setStyle(ButtonStyle.Danger).setEmoji('🧹')
+            new ButtonBuilder().setCustomId('music_set_vol_down').setLabel(t('panel.buttons.vol_down')).setStyle(ButtonStyle.Secondary).setEmoji('🔉'),
+            new ButtonBuilder().setCustomId('music_set_vol_up').setLabel(t('panel.buttons.vol_up')).setStyle(ButtonStyle.Secondary).setEmoji('🔊'),
+            new ButtonBuilder().setCustomId('music_set_reset').setLabel(t('panel.buttons.reset_all')).setStyle(ButtonStyle.Danger).setEmoji('🧹')
         );
 
         // Hàng 2: Speed (giống lệnh)
         const rowSpeed = new ActionRowBuilder().addComponents(
-            new ButtonBuilder().setCustomId('music_set_speed_down').setLabel('Speed -').setStyle(ButtonStyle.Primary),
-            new ButtonBuilder().setCustomId('music_set_speed_reset').setLabel('Speed Chuẩn').setStyle(ButtonStyle.Success),
-            new ButtonBuilder().setCustomId('music_set_speed_up').setLabel('Speed +').setStyle(ButtonStyle.Primary)
+            new ButtonBuilder().setCustomId('music_set_speed_down').setLabel(t('panel.buttons.speed_down')).setStyle(ButtonStyle.Primary),
+            new ButtonBuilder().setCustomId('music_set_speed_reset').setLabel(t('panel.buttons.speed_reset')).setStyle(ButtonStyle.Success),
+            new ButtonBuilder().setCustomId('music_set_speed_up').setLabel(t('panel.buttons.speed_up')).setStyle(ButtonStyle.Primary)
         );
 
         // Hàng 3: Effect (giống lệnh)
         const rowEffect = new ActionRowBuilder().addComponents(
-            new ButtonBuilder().setCustomId('music_set_nightcore').setLabel('Nightcore').setStyle(setting.nightcore ? ButtonStyle.Success : ButtonStyle.Secondary).setEmoji('🐿️'),
-            new ButtonBuilder().setCustomId('music_set_bass').setLabel('Bassboost').setStyle(setting.bassboost ? ButtonStyle.Success : ButtonStyle.Secondary).setEmoji('🥁')
+            new ButtonBuilder().setCustomId('music_set_nightcore').setLabel(t('panel.buttons.nightcore')).setStyle(setting.nightcore ? ButtonStyle.Success : ButtonStyle.Secondary).setEmoji('🐿️'),
+            new ButtonBuilder().setCustomId('music_set_bass').setLabel(t('panel.buttons.bassboost')).setStyle(setting.bassboost ? ButtonStyle.Success : ButtonStyle.Secondary).setEmoji('🥁')
         );
 
         components.push(rowVol, rowSpeed, rowEffect);
@@ -116,50 +120,46 @@ export async function renderMusicPanel(guildId, state, userIdForPlaylist = null)
 
         const listString = songs.length > 0
             ? songs.map((s, i) => `**${(page - 1) * itemsPerPage + i + 1}.** [${s.title}](${s.url})`).join('\n')
-            : '*(Kho nhạc trống)*';
+            : t('panel.radio.empty_list');
 
         embed.setColor('#00ff00')
-            .setTitle(`📻 QUẢN LÝ RADIO 24/7 (Tổng: ${totalSongs})`)
-            .setDescription(`**Trạng thái 24/7:** ${player?.isAutoplay ? '✅ Đang chạy' : '❌ Đang tắt'}\n\n${listString}`)
-            .setFooter({ text: `Trang ${page}/${totalPages}` });
+            .setTitle(t('panel.radio.title', { total: totalSongs }))
+            .setDescription(`**Trạng thái 24/7:** ${player?.isAutoplay ? t('panel.radio.status_running') : t('panel.radio.status_stopped')}\n\n${listString}`)
+            .setFooter({ text: t('panel.radio.footer_page', { page, totalPages }) });
 
         const rowRadioControls = new ActionRowBuilder().addComponents(
             new ButtonBuilder().setCustomId('music_radio_prev').setEmoji('⬅️').setStyle(ButtonStyle.Secondary).setDisabled(page === 1),
-            new ButtonBuilder().setCustomId('music_radio_toggle').setLabel(player?.isAutoplay ? 'Tắt 24/7' : 'Bật 24/7').setStyle(player?.isAutoplay ? ButtonStyle.Danger : ButtonStyle.Success),
+            new ButtonBuilder().setCustomId('music_radio_toggle').setLabel(player?.isAutoplay ? t('panel.radio.toggle_on') : t('panel.radio.toggle_off')).setStyle(player?.isAutoplay ? ButtonStyle.Danger : ButtonStyle.Success),
             new ButtonBuilder().setCustomId('music_radio_next').setEmoji('➡️').setStyle(ButtonStyle.Secondary).setDisabled(page === totalPages)
         );
 
         const rowRadioManage = new ActionRowBuilder().addComponents(
-            new ButtonBuilder().setCustomId('music_radio_add_current').setLabel('Thêm bài đang phát').setStyle(ButtonStyle.Secondary).setDisabled(!player?.currentTrack),
-            new ButtonBuilder().setCustomId('music_radio_add_query').setLabel('🔍 Thêm Link/Tên').setStyle(ButtonStyle.Primary),
-            new ButtonBuilder().setCustomId('music_radio_remove').setLabel('🗑️ Xóa (Index)').setStyle(ButtonStyle.Danger)
+            new ButtonBuilder().setCustomId('music_radio_add_current').setLabel(t('panel.buttons.radio_add_current')).setStyle(ButtonStyle.Secondary).setDisabled(!player?.currentTrack),
+            new ButtonBuilder().setCustomId('music_radio_add_query').setLabel(t('panel.buttons.radio_add_query')).setStyle(ButtonStyle.Primary),
+            new ButtonBuilder().setCustomId('music_radio_remove').setLabel(t('panel.buttons.radio_remove')).setStyle(ButtonStyle.Danger)
         );
         components.push(rowRadioControls, rowRadioManage);
     }
 
     // ==================== TAB: PLAYLIST ====================
     else if (currentTab === 'playlist') {
-        // Lưu ý: ở đây ta sử dụng userId được truyền vào (người click nút) hoặc mặc định
-        // Nếu bot restart, ta có thể không biết user là ai nếu chỉ dựa vào rendering, nhưng interaction sẽ cung cấp user ID.
-        // Tuy nhiên render độc lập thì cần userId.
-
         let userPlaylists = [];
         if (userIdForPlaylist) {
             userPlaylists = await UserPlaylist.find({ userId: userIdForPlaylist });
         }
 
-        embed.setColor('#ffaa00').setTitle('💾 PLAYLIST CỦA BẠN');
+        embed.setColor('#ffaa00').setTitle(t('panel.playlist.title'));
 
         if (userPlaylists.length === 0) {
-            embed.setDescription(userIdForPlaylist ? 'Bạn chưa có playlist nào. Bấm **Tạo Mới** để bắt đầu.' : 'Bấm nút playlist để xem danh sách của bạn.');
+            embed.setDescription(userIdForPlaylist ? t('panel.playlist.no_playlist') : t('panel.playlist.click_to_view'));
             const rowCreate = new ActionRowBuilder().addComponents(
-                new ButtonBuilder().setCustomId('music_pl_create').setLabel('✨ Tạo Playlist Mới').setStyle(ButtonStyle.Success)
+                new ButtonBuilder().setCustomId('music_pl_create').setLabel(t('panel.buttons.pl_create')).setStyle(ButtonStyle.Success)
             );
             components.push(rowCreate);
         } else {
             const options = userPlaylists.map(pl => ({ label: pl.name, value: pl._id.toString(), description: `${pl.tracks.length} bài hát` }));
             const rowSelect = new ActionRowBuilder().addComponents(
-                new StringSelectMenuBuilder().setCustomId('music_pl_select').setPlaceholder('Chọn Playlist của bạn').addOptions(options)
+                new StringSelectMenuBuilder().setCustomId('music_pl_select').setPlaceholder(t('panel.playlist.select_placeholder')).addOptions(options)
             );
             components.push(rowSelect);
 
@@ -167,22 +167,22 @@ export async function renderMusicPanel(guildId, state, userIdForPlaylist = null)
                 const selectedPl = userPlaylists.find(pl => pl._id.toString() === selectedPlaylistId);
                 if (selectedPl) {
                     const trackList = selectedPl.tracks.slice(0, 5).map((t, i) => `${i + 1}. ${t.title}`).join('\n');
-                    embed.setDescription(`**Đang chọn: ${selectedPl.name}**\n${trackList}\n...(và ${selectedPl.tracks.length - 5} bài khác)`);
+                    embed.setDescription(t('panel.playlist.selected_info', { name: selectedPl.name, trackList, remaining: selectedPl.tracks.length - 5 }));
 
                     const rowPlActions = new ActionRowBuilder().addComponents(
-                        new ButtonBuilder().setCustomId('music_pl_play').setLabel('▶️ Phát').setStyle(ButtonStyle.Success),
-                        new ButtonBuilder().setCustomId('music_pl_add_current').setLabel('➕ Thêm bài này').setStyle(ButtonStyle.Secondary).setDisabled(!player?.currentTrack),
-                        new ButtonBuilder().setCustomId('music_pl_add_query').setLabel('🔍 Thêm tên/link').setStyle(ButtonStyle.Primary),
-                        new ButtonBuilder().setCustomId('music_pl_delete').setLabel('🗑️ Xóa PL').setStyle(ButtonStyle.Danger)
+                        new ButtonBuilder().setCustomId('music_pl_play').setLabel(t('panel.buttons.pl_play')).setStyle(ButtonStyle.Success),
+                        new ButtonBuilder().setCustomId('music_pl_add_current').setLabel(t('panel.buttons.pl_add_current')).setStyle(ButtonStyle.Secondary).setDisabled(!player?.currentTrack),
+                        new ButtonBuilder().setCustomId('music_pl_add_query').setLabel(t('panel.buttons.pl_add_query')).setStyle(ButtonStyle.Primary),
+                        new ButtonBuilder().setCustomId('music_pl_delete').setLabel(t('panel.buttons.pl_delete')).setStyle(ButtonStyle.Danger)
                     );
                     components.push(rowPlActions);
                 } else {
-                    embed.setDescription('Playlist đã chọn không còn tồn tại.');
+                    embed.setDescription(t('panel.playlist.not_found'));
                 }
             } else {
-                embed.setDescription('Hãy chọn một playlist từ menu bên dưới.');
+                embed.setDescription(t('panel.playlist.select_prompt'));
             }
-            components.push(new ActionRowBuilder().addComponents(new ButtonBuilder().setCustomId('music_pl_create').setLabel('✨ Tạo Mới').setStyle(ButtonStyle.Secondary)));
+            components.push(new ActionRowBuilder().addComponents(new ButtonBuilder().setCustomId('music_pl_create').setLabel(t('panel.buttons.pl_create_short')).setStyle(ButtonStyle.Secondary)));
         }
     }
 
@@ -200,33 +200,37 @@ export async function renderMusicPanel(guildId, state, userIdForPlaylist = null)
 
         const listString = queueSlice.length > 0
             ? queueSlice.map((t, i) => `**${(page - 1) * itemsPerPage + i + 1}.** [${t.info.title.substring(0, 50)}](${t.info.uri}) \`[${formatTime(t.info.length)}]\` - <@${t.info.requester?.id || 'System'}>`).join('\n')
-            : '*(Hàng chờ trống)*';
+            : t('panel.queue.empty');
 
         embed.setColor('#FFA500')
-            .setTitle(`📜 HÀNG CHỜ NHẠC (${queue.length} bài)`)
-            .setDescription(`**Đang phát:** [${player?.currentTrack?.info.title}](${player?.currentTrack?.info.uri}) \n\n${listString}`)
-            .setFooter({ text: `Trang ${page}/${totalPages} | Tổng thời lượng: ${formatTime(queue.reduce((acc, t) => acc + t.info.length, 0))}` });
+            .setTitle(t('panel.queue.title', { count: queue.length }))
+            .setDescription(t('panel.queue.now_playing_desc', {
+                title: player?.currentTrack?.info.title || '',
+                uri: player?.currentTrack?.info.uri || '#',
+                list: listString
+            }))
+            .setFooter({ text: t('panel.queue.footer', { page, totalPages, totalTime: formatTime(queue.reduce((acc, t) => acc + t.info.length, 0)) }) });
 
         const rowQueue = new ActionRowBuilder().addComponents(
             new ButtonBuilder().setCustomId('music_queue_prev').setEmoji('⬅️').setStyle(ButtonStyle.Secondary).setDisabled(page === 1),
             new ButtonBuilder().setCustomId('music_queue_next').setEmoji('➡️').setStyle(ButtonStyle.Secondary).setDisabled(page === totalPages),
-            new ButtonBuilder().setCustomId('music_queue_shuffle').setLabel('Trộn').setStyle(ButtonStyle.Secondary).setEmoji('🔀').setDisabled(queue.length < 2),
-            new ButtonBuilder().setCustomId('music_queue_clear').setLabel('Xóa').setStyle(ButtonStyle.Danger).setEmoji('💥').setDisabled(queue.length === 0)
+            new ButtonBuilder().setCustomId('music_queue_shuffle').setLabel(t('panel.buttons.queue_shuffle')).setStyle(ButtonStyle.Secondary).setEmoji('🔀').setDisabled(queue.length < 2),
+            new ButtonBuilder().setCustomId('music_queue_clear').setLabel(t('panel.buttons.queue_clear')).setStyle(ButtonStyle.Danger).setEmoji('💥').setDisabled(queue.length === 0)
         );
         const rowQueue2 = new ActionRowBuilder().addComponents(
-            new ButtonBuilder().setCustomId('music_queue_add_priority').setLabel('Hát Ngay').setStyle(ButtonStyle.Primary).setEmoji('🚀'),
-            new ButtonBuilder().setCustomId('music_nav_settings').setLabel('Settings').setEmoji('🎛️').setStyle(currentTab === 'settings' ? ButtonStyle.Primary : ButtonStyle.Secondary).setDisabled(currentTab === 'settings')
+            new ButtonBuilder().setCustomId('music_queue_add_priority').setLabel(t('panel.buttons.queue_add_priority')).setStyle(ButtonStyle.Primary).setEmoji('🚀'),
+            new ButtonBuilder().setCustomId('music_nav_settings').setLabel(t('panel.buttons.nav_settings')).setEmoji('🎛️').setStyle(currentTab === 'settings' ? ButtonStyle.Primary : ButtonStyle.Secondary).setDisabled(currentTab === 'settings')
         );
         components.push(rowQueue, rowQueue2);
     }
 
     // ==================== NAV ====================
     const rowNav = new ActionRowBuilder().addComponents(
-        new ButtonBuilder().setCustomId('music_nav_home').setLabel('Home').setEmoji('🏠').setStyle(currentTab === 'home' ? ButtonStyle.Primary : ButtonStyle.Secondary).setDisabled(currentTab === 'home'),
-        new ButtonBuilder().setCustomId('music_nav_queue').setLabel('Queue').setEmoji('📜').setStyle(currentTab === 'queue' ? ButtonStyle.Primary : ButtonStyle.Secondary).setDisabled(currentTab === 'queue'),
-        new ButtonBuilder().setCustomId('music_nav_radio').setLabel('Radio').setEmoji('📻').setStyle(currentTab === 'radio' ? ButtonStyle.Primary : ButtonStyle.Secondary).setDisabled(currentTab === 'radio'),
-        new ButtonBuilder().setCustomId('music_nav_playlist').setLabel('Playlist').setEmoji('💾').setStyle(currentTab === 'playlist' ? ButtonStyle.Primary : ButtonStyle.Secondary).setDisabled(currentTab === 'playlist'),
-        new ButtonBuilder().setCustomId('music_nav_close').setLabel('Đóng').setEmoji('🗑️').setStyle(ButtonStyle.Danger)
+        new ButtonBuilder().setCustomId('music_nav_home').setLabel(t('panel.buttons.nav_home')).setEmoji('🏠').setStyle(currentTab === 'home' ? ButtonStyle.Primary : ButtonStyle.Secondary).setDisabled(currentTab === 'home'),
+        new ButtonBuilder().setCustomId('music_nav_queue').setLabel(t('panel.buttons.nav_queue')).setEmoji('📜').setStyle(currentTab === 'queue' ? ButtonStyle.Primary : ButtonStyle.Secondary).setDisabled(currentTab === 'queue'),
+        new ButtonBuilder().setCustomId('music_nav_radio').setLabel(t('panel.buttons.nav_radio')).setEmoji('📻').setStyle(currentTab === 'radio' ? ButtonStyle.Primary : ButtonStyle.Secondary).setDisabled(currentTab === 'radio'),
+        new ButtonBuilder().setCustomId('music_nav_playlist').setLabel(t('panel.buttons.nav_playlist')).setEmoji('💾').setStyle(currentTab === 'playlist' ? ButtonStyle.Primary : ButtonStyle.Secondary).setDisabled(currentTab === 'playlist'),
+        new ButtonBuilder().setCustomId('music_nav_close').setLabel(t('panel.buttons.nav_close')).setEmoji('🗑️').setStyle(ButtonStyle.Danger)
     );
     components.push(rowNav);
 

@@ -1,5 +1,6 @@
 import { SlashCommandBuilder, PermissionFlagsBits } from 'discord.js';
 import RadioSong from '../../models/RadioSong.js';
+import { t } from '../../services/i18nService.js';
 
 export default {
     data: new SlashCommandBuilder()
@@ -17,7 +18,7 @@ export default {
         const songs = await RadioSong.find();
 
         if (index < 1 || index > songs.length) {
-            return interaction.editReply(`❌ Số thứ tự không hợp lệ! Chỉ có từ 1 đến ${songs.length}.`);
+            return interaction.editReply(t('music.errors.index_out_of_range_simple', { max: songs.length }));
         }
 
         // Lấy bài hát cần xóa (Mảng bắt đầu từ 0 nên phải trừ 1)
@@ -26,6 +27,6 @@ export default {
         // 2. Xóa khỏi DB
         await RadioSong.findByIdAndDelete(songToDelete._id);
 
-        return interaction.editReply(`🗑️ Đã xóa bài số **${index}**: **${songToDelete.title}** khỏi kho nhạc.`);
+        return interaction.editReply(t('music.radio.removed_indexed', { index, title: songToDelete.title }));
     },
 };

@@ -1,0 +1,14 @@
+{
+  "dm_not_supported": "Bot chưa được phát triển ở DM để nhắn tin, vui lòng thử lại sau",
+  "chat_error": "❌ Dolia đang bị đau đầu, thử lại sau nhé!",
+  "command_not_found": "Lệnh không tìm thấy.",
+  "command_error": "Có lỗi xảy ra khi thực hiện lệnh này!",
+  "not_your_menu": "Không phải việc của ông!",
+  "server_running": "Bot is running",
+  "guild_only": "Chỉ dùng trong Server!",
+  "deploy_blocked": "[Child Bot] Chế độ chặn Deploy (Linux): {{status}}.\nTừ giờ bot Linux sẽ {{action}}.",
+  "status_on": "ĐÃ BẬT 🔴",
+  "status_off": "ĐÃ TẮT 🟢",
+  "action_blocked": "không phản hồi",
+  "action_normal": "phản hồi bình thường"
+}

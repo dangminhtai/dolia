@@ -16,6 +16,7 @@ import { executePlay } from '../../utils/PlayUtils.js';
 import { ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder, EmbedBuilder } from 'discord.js';
 import GeminiLyrics from '../../class/GeminiLyrics.js';
 import { sendSafeMessage } from '../../utils/messageHelper.js';
+import { t } from '../../services/i18nService.js';
 
 export default (client) => {
     client.on(Events.InteractionCreate, async interaction => {
@@ -40,7 +41,7 @@ export default (client) => {
                     if (customId === 'music_modal_pl_create') {
                         const name = interaction.fields.getTextInputValue('pl_name_input');
                         await UserPlaylist.create({ userId: interaction.user.id, name: name, tracks: [] });
-                        await interaction.editReply({ content: `✅ Đã tạo playlist **${name}**!` });
+                        await interaction.editReply({ content: t('music.playlist.created', { name }) });
 
                         // Refresh UI Panel (nếu tìm được tin nhắn gốc)
                         const state = await PanelState.findOne({ messageId: interaction.message?.id });
@@ -74,21 +75,21 @@ export default (client) => {
                         try {
                             res = await poru.resolve({ query: query, source: isUrl ? null : 'ytsearch', requester: interaction.user });
                         } catch (e) {
-                            return interaction.editReply('❌ Lỗi kết nối tìm nhạc.');
+                            return interaction.editReply(t('music.errors.connection_error_search'));
                         }
 
                         if (!res || res.loadType === 'LOAD_FAILED' || res.loadType === 'NO_MATCHES') {
-                            return interaction.editReply('❌ Không tìm thấy bài nào.');
+                            return interaction.editReply(t('music.errors.no_matches'));
                         }
 
                         // Get Playlist ID from State (state đã được tìm ở trên, nhưng cần load lại để chắc chắn)
                         const state = await PanelState.findOne({ messageId: interaction.message?.id });
                         if (!state || !state.selectedPlaylistId) {
-                            return interaction.editReply('❌ Không xác định được Playlist đang chọn. Hãy chọn lại!');
+                            return interaction.editReply(t('music.playlist.no_selected'));
                         }
 
                         const pl = await UserPlaylist.findById(state.selectedPlaylistId);
-                        if (!pl) return interaction.editReply('❌ Playlist không tồn tại!');
+                        if (!pl) return interaction.editReply(t('music.playlist.not_found'));
 
                         let count = 0;
                         if (res.loadType === 'PLAYLIST_LOADED') {
@@ -102,7 +103,7 @@ export default (client) => {
                             count = 1;
                         }
                         await pl.save();
-                        await interaction.editReply(`✅ Đã thêm **${count}** bài vào Playlist **${pl.name}**!`);
+                        await interaction.editReply(t('music.playlist.added_tracks', { count, name: pl.name }));
 
                         // Refresh UI
                         if (state) {
@@ -117,15 +118,15 @@ export default (client) => {
                         let res;
                         try {
                             res = await poru.resolve({ query: query, source: isUrl ? null : 'ytsearch', requester: interaction.user });
-                        } catch (e) { return interaction.editReply('❌ Lỗi kết nối.'); }
+                        } catch (e) { return interaction.editReply(t('music.errors.connection_error')); }
 
                         if (!res || res.loadType === 'LOAD_FAILED' || res.loadType === 'NO_MATCHES') {
-                            return interaction.editReply('❌ Không tìm thấy bài nào.');
+                            return interaction.editReply(t('music.errors.no_matches'));
                         }
 
-                        const t = res.tracks[0];
-                        await RadioSong.create({ url: t.info.uri, title: t.info.title, addedBy: interaction.user.tag });
-                        await interaction.editReply(`✅ Đã thêm **${t.info.title}** vào Radio 24/7!`);
+                        const tTrack = res.tracks[0];
+                        await RadioSong.create({ url: tTrack.info.uri, title: tTrack.info.title, addedBy: interaction.user.tag });
+                        await interaction.editReply(t('music.radio.added_247', { title: tTrack.info.title }));
 
                         // Refresh UI
                         const state = await PanelState.findOne({ messageId: interaction.message?.id });
@@ -138,14 +139,14 @@ export default (client) => {
                     else if (customId === 'music_modal_radio_remove') {
                         const indexStr = interaction.fields.getTextInputValue('radio_index_input');
                         const index = parseInt(indexStr);
-                        if (isNaN(index)) return interaction.editReply('❌ Vui lòng nhập số hợp lệ!');
+                        if (isNaN(index)) return interaction.editReply(t('music.errors.invalid_index'));
 
                         const songs = await RadioSong.find();
-                        if (index < 1 || index > songs.length) return interaction.editReply(`❌ Index không hợp lệ! (1 - ${songs.length})`);
+                        if (index < 1 || index > songs.length) return interaction.editReply(t('music.errors.index_out_of_range', { max: songs.length }));
 
                         const song = songs[index - 1];
                         await RadioSong.findByIdAndDelete(song._id);
-                        await interaction.editReply(`🗑️ Đã xóa bài **${song.title}**!`);
+                        await interaction.editReply(t('music.radio.removed', { title: song.title }));
 
                         // Refresh UI
                         const state = await PanelState.findOne({ messageId: interaction.message?.id });
@@ -162,7 +163,7 @@ export default (client) => {
                     // 1. Check State xem còn sống không
                     let state = await PanelState.findOne({ messageId: interaction.message.id });
                     if (!state && customId !== 'music_nav_close') {
-                        return interaction.reply({ content: '❌ Panel lỗi data. Hãy tạo mới!', ephemeral: true });
+                        return interaction.reply({ content: t('panel.errors.data_error'), ephemeral: true });
                     }
 
                     // 2. Handle đặc biệt: Đóng Panel
@@ -174,32 +175,32 @@ export default (client) => {
 
                     // 3. Handle đặc biệt: Mở Modal (KHÔNG ĐƯỢC DEFER UPDATE)
                     if (customId === 'music_pl_create') {
-                        const modal = new ModalBuilder().setCustomId('music_modal_pl_create').setTitle('Tạo Playlist Mới');
-                        const nameInput = new TextInputBuilder().setCustomId('pl_name_input').setLabel("Tên Playlist").setStyle(TextInputStyle.Short);
+                        const modal = new ModalBuilder().setCustomId('music_modal_pl_create').setTitle(t('panel.modals.title_pl_create'));
+                        const nameInput = new TextInputBuilder().setCustomId('pl_name_input').setLabel(t('panel.modals.label_pl_name')).setStyle(TextInputStyle.Short);
                         modal.addComponents(new ActionRowBuilder().addComponents(nameInput));
                         return interaction.showModal(modal);
                     }
                     if (customId === 'music_queue_add_priority') {
-                        const modal = new ModalBuilder().setCustomId('music_modal_queue_add_priority').setTitle('Hát Ngay');
-                        const urlInput = new TextInputBuilder().setCustomId('q_url_input').setLabel("Link / Tên bài hát").setStyle(TextInputStyle.Short);
+                        const modal = new ModalBuilder().setCustomId('music_modal_queue_add_priority').setTitle(t('panel.modals.title_queue_priority'));
+                        const urlInput = new TextInputBuilder().setCustomId('q_url_input').setLabel(t('panel.modals.label_query')).setStyle(TextInputStyle.Short);
                         modal.addComponents(new ActionRowBuilder().addComponents(urlInput));
                         return interaction.showModal(modal);
                     }
                     if (customId === 'music_pl_add_query') {
-                        const modal = new ModalBuilder().setCustomId('music_modal_pl_add_query').setTitle('Thêm vào Playlist');
-                        const urlInput = new TextInputBuilder().setCustomId('pl_query_input').setLabel("Link / Tên bài hát").setStyle(TextInputStyle.Short);
+                        const modal = new ModalBuilder().setCustomId('music_modal_pl_add_query').setTitle(t('panel.modals.title_pl_add'));
+                        const urlInput = new TextInputBuilder().setCustomId('pl_query_input').setLabel(t('panel.modals.label_query')).setStyle(TextInputStyle.Short);
                         modal.addComponents(new ActionRowBuilder().addComponents(urlInput));
                         return interaction.showModal(modal);
                     }
                     if (customId === 'music_radio_add_query') {
-                        const modal = new ModalBuilder().setCustomId('music_modal_radio_add').setTitle('Thêm bài Radio 24/7');
-                        const urlInput = new TextInputBuilder().setCustomId('radio_query_input').setLabel("Link / Tên bài hát").setStyle(TextInputStyle.Short);
+                        const modal = new ModalBuilder().setCustomId('music_modal_radio_add').setTitle(t('panel.modals.title_radio_add'));
+                        const urlInput = new TextInputBuilder().setCustomId('radio_query_input').setLabel(t('panel.modals.label_query')).setStyle(TextInputStyle.Short);
                         modal.addComponents(new ActionRowBuilder().addComponents(urlInput));
                         return interaction.showModal(modal);
                     }
                     if (customId === 'music_radio_remove') {
-                        const modal = new ModalBuilder().setCustomId('music_modal_radio_remove').setTitle('Xóa bài Radio 24/7');
-                        const indexInput = new TextInputBuilder().setCustomId('radio_index_input').setLabel("Số thứ tự (Index)").setStyle(TextInputStyle.Short);
+                        const modal = new ModalBuilder().setCustomId('music_modal_radio_remove').setTitle(t('panel.modals.title_radio_remove'));
+                        const indexInput = new TextInputBuilder().setCustomId('radio_index_input').setLabel(t('panel.modals.label_radio_index')).setStyle(TextInputStyle.Short);
                         modal.addComponents(new ActionRowBuilder().addComponents(indexInput));
                         return interaction.showModal(modal);
                     }
@@ -262,7 +263,7 @@ export default (client) => {
                         }
                         if (customId === 'music_radio_add_current' && player?.currentTrack) {
                             await RadioSong.create({ url: player.currentTrack.info.uri, title: player.currentTrack.info.title, addedBy: interaction.user.tag });
-                            await interaction.followUp({ content: '✅ Đã thêm vài Radio!', ephemeral: true });
+                            await interaction.followUp({ content: t('music.radio.added_short'), ephemeral: true });
                         }
                     }
 
@@ -291,7 +292,7 @@ export default (client) => {
                             if (pl) {
                                 pl.tracks.push({ title: player.currentTrack.info.title, url: player.currentTrack.info.uri, author: player.currentTrack.info.author, duration: player.currentTrack.info.length });
                                 await pl.save();
-                                await interaction.followUp({ content: `✅ Đã thêm vào **${pl.name}**!`, ephemeral: true });
+                                await interaction.followUp({ content: t('music.playlist.added_to_selected', { name: pl.name }), ephemeral: true });
                             }
                         }
                         if (customId === 'music_pl_play' && state.selectedPlaylistId) {
@@ -317,7 +318,7 @@ export default (client) => {
                                         targetPlayer = poru.createConnection({ guildId: interaction.guild.id, voiceChannel: voice.id, textChannel: interaction.channel.id, deaf: false });
                                         await applyAudioSettings(targetPlayer);
                                     } else {
-                                        return interaction.followUp({ content: '❌ Không tìm thấy kênh Voice để phát nhạc!', ephemeral: true });
+                                        return interaction.followUp({ content: t('music.errors.no_voice_play'), ephemeral: true });
                                     }
                                 }
 
@@ -327,14 +328,14 @@ export default (client) => {
 
                                     const tracksToAdd = [];
 
-                                    for (const t of pl.tracks) {
+                                    for (const tTrack of pl.tracks) {
                                         try {
-                                            const res = await poru.resolve({ query: t.url, source: 'ytsearch', requester: interaction.user });
+                                            const res = await poru.resolve({ query: tTrack.url, source: 'ytsearch', requester: interaction.user });
                                             if (res.tracks.length > 0) {
                                                 const track = res.tracks[0];
                                                 track.info.requester = interaction.user;
                                                 targetPlayer.queue.add(track);
-                                                tracksToAdd.push({ title: t.title, url: t.url, author: t.author, duration: t.duration, requester: interaction.user.tag, addedAt: new Date() });
+                                                tracksToAdd.push({ title: tTrack.title, url: tTrack.url, author: tTrack.author, duration: tTrack.duration, requester: interaction.user.tag, addedAt: new Date() });
                                             }
                                         } catch (e) { console.error("Error resolving playlist track:", e); }
                                     }
@@ -344,13 +345,13 @@ export default (client) => {
                                         else targetPlayer.play();
 
                                         await GuildMusicQueue.updateOne({ guildId: interaction.guild.id }, { $set: { tracks: tracksToAdd, updatedAt: new Date() } }, { upsert: true });
-                                        await interaction.followUp({ content: `▶️ Đang phát Playlist: **${pl.name}**`, ephemeral: true });
+                                        await interaction.followUp({ content: t('music.playlist.playing', { name: pl.name }), ephemeral: true });
                                     } else {
-                                        await interaction.followUp({ content: '❌ Không tải được bài hát nào trong Playlist này.', ephemeral: true });
+                                        await interaction.followUp({ content: t('music.playlist.load_failed'), ephemeral: true });
                                     }
                                 }
                             } else {
-                                await interaction.followUp({ content: '❌ Playlist trống!', ephemeral: true });
+                                await interaction.followUp({ content: t('music.playlist.empty'), ephemeral: true });
                             }
                         }
                     }
@@ -364,8 +365,8 @@ export default (client) => {
             } catch (err) {
                 console.error("Music Panel Error:", err);
                 // Cố gắng reply nếu chưa reply
-                if (!interaction.replied && !interaction.deferred) await interaction.reply({ content: '⚠️ Lỗi xử lý!', ephemeral: true }).catch(() => { });
-                else if (interaction.deferred) await interaction.followUp({ content: '⚠️ Lỗi xử lý!', ephemeral: true }).catch(() => { });
+                if (!interaction.replied && !interaction.deferred) await interaction.reply({ content: t('panel.errors.process_error'), ephemeral: true }).catch(() => { });
+                else if (interaction.deferred) await interaction.followUp({ content: t('panel.errors.process_error'), ephemeral: true }).catch(() => { });
             }
             return; // STOP
         }
@@ -379,36 +380,36 @@ export default (client) => {
                 try {
                     const data = await GeminiLyrics.findLyrics(query);
                     if (!data.is_found) {
-                        return interaction.editReply(`❌ Xin lỗi, tôi không tìm thấy bài hát nào khớp với nội dung: \`${query}\``);
+                        return interaction.editReply(t('general.lyrics.not_found', { query }));
                     }
                     const embed = new EmbedBuilder()
                         .setTitle(`🎵 ${data.song_title}`)
                         .setAuthor({ name: data.artist })
                         .setColor(0x1DB954)
                         .setThumbnail(data.thumbnail_url || 'https://cdn-icons-png.flaticon.com/512/3844/3844724.png')
-                        .setFooter({ text: 'Dolia Lyrics Search' })
+                        .setFooter({ text: t('general.lyrics.footer') })
                         .setTimestamp();
                     if (data.release_year) {
-                        embed.addFields({ name: '📅 Năm phát hành', value: String(data.release_year), inline: true });
+                        embed.addFields({ name: t('general.lyrics.year_field'), value: String(data.release_year), inline: true });
                     }
                     if (data.song_link) {
-                        embed.addFields({ name: '🔗 Nghe nhạc tại', value: `[Nhấp để mở Link](${data.song_link})`, inline: true });
+                        embed.addFields({ name: t('general.lyrics.link_field'), value: `[${t('general.lyrics.link_text')}](${data.song_link})`, inline: true });
                     }
                     if (data.lyrics.length <= 2000) {
                         embed.setDescription(data.lyrics);
                         await interaction.editReply({ embeds: [embed] });
                     } else {
-                        embed.setDescription(data.lyrics.substring(0, 1900) + '...\n\n*(Xem bản đầy đủ ở file đính kèm bên dưới)*');
+                        embed.setDescription(data.lyrics.substring(0, 1900) + '...\n\n' + t('general.lyrics.full_lyrics_hint'));
                         await interaction.editReply({ embeds: [embed] });
                         await sendSafeMessage(interaction, data.lyrics, {
                             forceFile: true,
                             fileName: `${data.song_title}_lyrics.md`.replace(/\s+/g, '_'),
-                            fileContent: `📜 Đây là lời bài hát đầy đủ cho bài **${data.song_title}**:`
+                            fileContent: t('general.lyrics.full_lyrics_header', { title: data.song_title })
                         });
                     }
                 } catch (error) {
                     console.error('Lyrics Modal Error:', error);
-                    await interaction.editReply('❌ Đã xảy ra lỗi khi tìm kiếm lời bài hát. Hãy thử lại sau!');
+                    await interaction.editReply(t('general.lyrics.error'));
                 }
             }
             return;
@@ -529,7 +530,7 @@ export default (client) => {
             const command = client.commands.get(interaction.commandName);
             if (!command) {
                 try {
-                    await interaction.reply({ content: 'Lệnh không tìm thấy.', flags: MessageFlags.Ephemeral });
+                    await interaction.reply({ content: t('common.command_not_found'), flags: MessageFlags.Ephemeral });
                 } catch (_) { }
                 return;
             }
@@ -540,9 +541,9 @@ export default (client) => {
                 console.error("Command Execution Error:", error);
                 try {
                     if (interaction.deferred) {
-                        await interaction.editReply({ content: 'Có lỗi xảy ra khi thực hiện lệnh này!' }).catch(() => { });
+                        await interaction.editReply({ content: t('common.command_error') }).catch(() => { });
                     } else if (!interaction.replied) {
-                        await interaction.reply({ content: 'Có lỗi xảy ra khi thực hiện lệnh này!', flags: MessageFlags.Ephemeral }).catch(() => { });
+                        await interaction.reply({ content: t('common.command_error'), flags: MessageFlags.Ephemeral }).catch(() => { });
                     }
                 } catch (_) { }
             }

@@ -1,6 +1,7 @@
 import { SlashCommandBuilder, PermissionFlagsBits } from 'discord.js';
 import { poru } from '../../utils/LavalinkManager.js';
 import RadioSong from '../../models/RadioSong.js';
+import { t } from '../../services/i18nService.js';
 
 export default {
     data: new SlashCommandBuilder()
@@ -17,7 +18,7 @@ export default {
         const res = await poru.resolve({ query: query, source: 'ytsearch', requester: interaction.user });
 
         if (res.loadType === 'LOAD_FAILED' || res.loadType === 'NO_MATCHES') {
-            return interaction.editReply('❌ Không tìm thấy bài hát này!');
+            return interaction.editReply(t('music.radio.track_not_found'));
         }
 
         const track = res.tracks[0];
@@ -29,6 +30,6 @@ export default {
             addedBy: interaction.user.tag
         });
 
-        return interaction.editReply(`✅ Đã thêm **${track.info.title}** vào kho nhạc Radio!`);
+        return interaction.editReply(t('music.radio.added', { title: track.info.title }));
     },
 };

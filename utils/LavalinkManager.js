@@ -2,6 +2,7 @@ import { Poru } from 'poru';
 import RadioSong from '../models/RadioSong.js';
 import MusicLog from '../models/MusicLog.js';
 import GuildMusicQueue from '../models/GuildMusicQueue.js';
+import { t } from '../services/i18nService.js';
 
 // Chỉ giữ lại Node "vàng" đã kết nối thành công
 const nodes = [
@@ -71,7 +72,7 @@ export function initLavalink(discordClient) {
             const requester = track.info.requester?.tag || client.user.tag;
 
             // Gửi tin nhắn (Catch lỗi nếu bot thiếu quyền gửi tin)
-            channel.send(`🎶 Đang phát: **${track.info.title}** \`[${timeString}]\`\n👤 Yêu cầu bởi: **${requester}**`).catch(e => console.error("Không gửi được tin nhắn trackStart:", e.message));
+            channel.send(t('music.track_start', { title: track.info.title, time: timeString, requester: requester })).catch(e => console.error("Không gửi được tin nhắn trackStart:", e.message));
         }
 
         // Đồng bộ Queue DB
@@ -100,14 +101,13 @@ export function initLavalink(discordClient) {
 
     // --- SỰ KIỆN TRACK ERROR (NHẠC LỖI) ---
     // Cái này cực quan trọng: Nếu bài hát lỗi, nó sẽ không crash mà tự gọi queueEnd hoặc skip
-    // --- SỰ KIỆN TRACK ERROR (NHẠC LỖI) ---
     poru.on('trackError', async (player, track, error) => {
         console.error(`⚠️ Track Lỗi [${track.info.title}]:`, error);
 
         // Gửi thông báo lỗi cho người dùng
         const channel = await getSafeChannel(player.textChannel);
         if (channel) {
-            channel.send(`⚠️ Lỗi tải bài hát **${track.info.title}**. Đang tự động bỏ qua...`).catch(() => { });
+            channel.send(t('music.track_error', { title: track.info.title })).catch(() => { });
         }
 
         // Tự động skip sang bài khác (nếu còn) hoặc queueEnd sẽ tự chạy
@@ -125,7 +125,7 @@ export function initLavalink(discordClient) {
 
         const channel = await getSafeChannel(player.textChannel);
         if (channel) {
-            channel.send(`⚠️ Bài hát **${track.info.title}** bị kẹt (mạng lag or YouTube chặn). Bot tự động chuyển bài tiếp theo!`).catch(() => { });
+            channel.send(t('music.track_stuck', { title: track.info.title })).catch(() => { });
         }
 
         // Bắt buộc dừng player để kích hoạt sự kiện tiếp theo
@@ -149,7 +149,7 @@ export function initLavalink(discordClient) {
             const songData = await getRandomTrack();
 
             if (!songData) {
-                if (channel) channel.send('⚠️ Kho nhạc Radio đang trống! Tắt chế độ 24/7.');
+                if (channel) channel.send(t('music.radio_empty'));
                 player.isAutoplay = false;
                 player.destroy();
                 return;
@@ -165,7 +165,7 @@ export function initLavalink(discordClient) {
                 player.queue.add(track);
                 player.play();
 
-                if (channel) channel.send(`📻 **Radio 24/7:** Tự động phát: **${songData.title}**`).catch(() => { });
+                if (channel) channel.send(t('music.radio_auto_play', { title: songData.title })).catch(() => { });
                 return; // QUAN TRỌNG: Return để không chạy code bên dưới
             } else {
                 // Nếu bài lấy từ DB bị lỗi link -> Thử lấy bài khác ngay lập tức (Đệ quy nhẹ)
@@ -175,7 +175,7 @@ export function initLavalink(discordClient) {
         }
 
         // 2. Nếu thực sự hết nhạc và không cứu được
-        if (channel) channel.send('👋 Hết nhạc rồi, bot đi ngủ đây!').catch(() => { });
+        if (channel) channel.send(t('music.queue_end')).catch(() => { });
 
         await GuildMusicQueue.deleteOne({ guildId: player.guildId }).catch(() => { });
         player.destroy();

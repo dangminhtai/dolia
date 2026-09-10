@@ -1,6 +1,7 @@
 import { SlashCommandBuilder, ApplicationIntegrationType, InteractionContextType, AttachmentBuilder, EmbedBuilder } from 'discord.js';
 import axios from 'axios';
 import sharp from 'sharp';
+import { t } from '../../services/i18nService.js';
 
 // CẤU HÌNH CÁC "KHO" ẢNH (SUBREDDITS)
 // Ông muốn thêm con gì cứ tìm tên subreddit của con đó ném vào mảng
@@ -107,7 +108,7 @@ export default {
         }
 
         if (!redditData) {
-            return await interaction.editReply('Mạng thằng Admin bị lỗi, vui lòng chờ nó nạp 4G');
+            return await interaction.editReply(t('general.animal.network_error'));
         }
 
         try {
@@ -154,10 +155,10 @@ export default {
                 .setTitle(redditData.title.length > 256 ? redditData.title.substring(0, 253) + '...' : redditData.title) // Cắt nếu title quá dài
                 .setURL(redditData.permalink) // Bấm vào tiêu đề nhảy ra bài gốc
                 .setImage(`attachment://${fileName}`)
-                        .setFooter({
-            text: `Được yêu cầu bởi ${interaction.user.username}`,
-            iconURL: interaction.user.displayAvatarURL({ dynamic: true })
-            })
+                .setFooter({
+                    text: t('general.animal.footer', { username: interaction.user.username }),
+                    iconURL: interaction.user.displayAvatarURL({ dynamic: true })
+                })
                 .setTimestamp();
 
             await interaction.editReply({
@@ -167,15 +168,15 @@ export default {
 
         } catch (error) {
             console.error("Lỗi xử lý ảnh:", error);
-            await interaction.editReply({ content: 'Lỗi 1 chút khi cố gắng lấy ảnh.' }).catch(() => {});
+            await interaction.editReply({ content: t('general.animal.image_error') }).catch(() => {});
         }
         } catch (e) {
             console.error('[animal]', e);
             try {
                 if (interaction.deferred) {
-                    await interaction.editReply({ content: 'Có lỗi khi lấy ảnh.' }).catch(() => {});
+                    await interaction.editReply({ content: t('general.animal.generic_error') }).catch(() => {});
                 } else if (!interaction.replied) {
-                    await interaction.reply({ content: 'Có lỗi khi lấy ảnh.', ephemeral: true }).catch(() => {});
+                    await interaction.reply({ content: t('general.animal.generic_error'), ephemeral: true }).catch(() => {});
                 }
             } catch (_) {}
         }

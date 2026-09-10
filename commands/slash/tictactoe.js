@@ -1,5 +1,6 @@
 // commands/slash/tictactoe.js
 import { SlashCommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ComponentType, ApplicationIntegrationType, InteractionContextType } from 'discord.js';
+import { t } from '../../services/i18nService.js';
 
 export default {
     data: new SlashCommandBuilder()
@@ -63,7 +64,7 @@ export default {
                 controlRow.addComponents(
                     new ButtonBuilder()
                         .setCustomId('ttt_join')
-                        .setLabel('Tham gia (Join)') // Sửa typo "Nham gia"
+                        .setLabel(t('games.tictactoe.join_button'))
                         .setStyle(ButtonStyle.Success)
                 );
             }
@@ -82,16 +83,21 @@ export default {
                 // Logic hiển thị người thắng cuộc đơn giản hóa
                 // Vì turn đã đổi sau nước đi cuối cùng, người thắng là người của turn trước đó
                 const winner = state.turn === 'X' ? state.player2 : state.player1;
-                return `🏁 **Trò chơi kết thúc!**`;
+                return t('games.tictactoe.game_over');
             }
 
             if (!state.player2) {
-                return `**Tic-Tac-Toe**: ${state.player1} (X) đang chờ đối thủ... \nHãy bấm nút xác nhận bên dưới để chơi!`;
+                return t('games.tictactoe.waiting', { player1: state.player1 });
             }
 
             //  - Minh họa giao diện game
             const currentPlayer = state.turn === 'X' ? state.player1 : state.player2;
-            return `**Tic-Tac-Toe**: ${state.player1} (X) vs ${state.player2} (O)\n👉 Lượt của: ${currentPlayer} (${state.turn})`;
+            return t('games.tictactoe.turn', {
+                player1: state.player1,
+                player2: state.player2,
+                current: currentPlayer,
+                symbol: state.turn
+            });
         }
 
         // Initial Reply preparation
@@ -130,7 +136,7 @@ export default {
         collector.on('collect', async i => {
             // 1. Join Request
             if (i.customId === 'ttt_join') {
-                if (gameState.player2) return i.reply({ content: 'Phòng đã đầy!', ephemeral: true });
+                if (gameState.player2) return i.reply({ content: t('games.tictactoe.room_full'), ephemeral: true });
 
                 gameState.player2 = i.user;
 
@@ -149,7 +155,7 @@ export default {
                 const currentUser = gameState.turn === 'X' ? gameState.player1 : gameState.player2;
 
                 if (i.user.id !== currentUser.id) {
-                    return i.reply({ content: 'Chưa tới lượt của bạn!', ephemeral: true });
+                    return i.reply({ content: t('games.tictactoe.not_your_turn'), ephemeral: true });
                 }
 
                 const index = parseInt(i.customId.split('_')[2]);
@@ -163,7 +169,11 @@ export default {
                     gameState.isGameOver = true;
                     const finalRows = createBoardComponents(gameState, true).rowsWithBoard;
                     await i.update({
-                        content: `🎉 **CHÚC MỪNG!** ${i.user} (${gameState.turn}) đã chiến thắng! 🏆\n${gameState.player1.id === gameState.player2.id ? '(Tự kỷ đỉnh cao là đây)' : ''}`,
+                        content: t('games.tictactoe.winner', {
+                            winner: i.user,
+                            symbol: gameState.turn,
+                            selfComment: gameState.player1.id === gameState.player2.id ? t('games.tictactoe.self_comment') : ''
+                        }),
                         components: finalRows
                     });
                     collector.stop();
@@ -175,7 +185,7 @@ export default {
                     gameState.isGameOver = true;
                     const finalRows = createBoardComponents(gameState, true).rowsWithBoard;
                     await i.update({
-                        content: `🤝 **HÒA!** Bất phân thắng bại`,
+                        content: t('games.tictactoe.draw'),
                         components: finalRows
                     });
                     collector.stop();
@@ -197,7 +207,7 @@ export default {
                 try {
                     if (!gameState.isGameOver) {
                         await interaction.editReply({
-                            content: `⏳ **Hết giờ!** Trò chơi đã bị hủy.`,
+                            content: t('games.tictactoe.timeout'),
                             components: []
                         });
                     }
@@ -224,9 +234,9 @@ export default {
             console.error('[tictactoe]', err);
             try {
                 if (!interaction.replied && !interaction.deferred) {
-                    await interaction.reply({ content: 'Có lỗi khi tạo game.', ephemeral: true }).catch(() => {});
+                    await interaction.reply({ content: t('games.tictactoe.error'), ephemeral: true }).catch(() => {});
                 } else if (interaction.deferred) {
-                    await interaction.editReply({ content: 'Có lỗi khi tạo game.' }).catch(() => {});
+                    await interaction.editReply({ content: t('games.tictactoe.error'), ephemeral: true }).catch(() => {});
                 }
             } catch (_) {}
         }

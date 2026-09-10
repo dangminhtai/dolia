@@ -1,0 +1,15 @@
+{
+  "tictactoe": {
+    "waiting": "**Tic-Tac-Toe**: {{player1}} (X) đang chờ đối thủ... \nHãy bấm nút xác nhận bên dưới để chơi!",
+    "turn": "**Tic-Tac-Toe**: {{player1}} (X) vs {{player2}} (O)\n👉 Lượt của: {{current}} ({{symbol}})",
+    "winner": "🎉 **CHÚC MỪNG!** {{winner}} ({{symbol}}) đã chiến thắng! 🏆\n{{selfComment}}",
+    "self_comment": "(Tự kỷ đỉnh cao là đây)",
+    "draw": "🤝 **HÒA!** Bất phân thắng bại",
+    "game_over": "🏁 **Trò chơi kết thúc!**",
+    "room_full": "Phòng đã đầy!",
+    "not_your_turn": "Chưa tới lượt của bạn!",
+    "timeout": "⏳ **Hết giờ!** Trò chơi đã bị hủy.",
+    "error": "Có lỗi khi tạo game.",
+    "join_button": "Tham gia (Join)"
+  }
+}

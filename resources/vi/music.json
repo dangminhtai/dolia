@@ -1,0 +1,88 @@
+{
+  "track_start": "🎶 Đang phát: **{{title}}** `[{{time}}]`\n👤 Yêu cầu bởi: **{{requester}}**",
+  "track_error": "⚠️ Lỗi tải bài hát **{{title}}**. Đang tự động bỏ qua...",
+  "track_stuck": "⚠️ Bài hát **{{title}}** bị kẹt (mạng lag or YouTube chặn). Bot tự động chuyển bài tiếp theo!",
+  "queue_end": "👋 Hết nhạc rồi, bot đi ngủ đây!",
+  "radio_empty": "⚠️ Kho nhạc Radio đang trống! Tắt chế độ 24/7.",
+  "radio_auto_play": "📻 **Radio 24/7:** Tự động phát: **{{title}}**",
+
+  "errors": {
+    "no_voice_channel": "❌ Bot không tìm thấy kênh Voice nào để vào cả!",
+    "no_voice_user": "❌ Vui lòng vào voice trước khi sử dụng lệnh này!",
+    "no_voice_play": "❌ Không tìm thấy kênh Voice để phát nhạc!",
+    "load_failed": "❌ Lỗi tải nhạc.",
+    "load_failed_alt": "❌ Lỗi khi tải nhạc.",
+    "no_matches": "❌ Không tìm thấy bài nào!",
+    "connection_error": "❌ Lỗi kết nối.",
+    "connection_error_search": "❌ Lỗi kết nối tìm nhạc.",
+    "bad_gateway": "❌ Lỗi kết nối Node nhạc (Bad Gateway).",
+    "lavalink_error": "❌ Lỗi kết nối Lavalink!",
+    "not_playing": "❌ Bot có đang hát đâu?",
+    "no_track_to_skip": "❌ Không có nhạc để skip!",
+    "no_track_playing": "❌ Không có nhạc nào đang phát!",
+    "invalid_index": "❌ Vui lòng nhập số hợp lệ!",
+    "index_out_of_range": "❌ Index không hợp lệ! (1 - {{max}})",
+    "index_out_of_range_simple": "❌ Số thứ tự không hợp lệ! Chỉ có từ 1 đến {{max}}."
+  },
+
+  "play": {
+    "priority_playlist": "🚀 **[ƯU TIÊN]** Đã chèn Playlist **{{name}}** ({{count}} bài) lên đầu!",
+    "priority_playlist_simple": "⚡ **[ƯU TIÊN]** Đã chèn Playlist **{{name}}** lên đầu!",
+    "added_playlist": "✅ Đã thêm Playlist **{{name}}** ({{count}} bài).",
+    "added_playlist_queue": "✅ Đã thêm Playlist **{{name}}** vào hàng chờ.",
+    "priority_track": "🚀 **[ƯU TIÊN]** Đã chèn bài **{{title}}**!",
+    "priority_track_simple": "⚡ **[ƯU TIÊN]** Đã chèn **{{title}}** lên đầu!",
+    "added_to_queue": "✅ Đã thêm **{{title}}** vào hàng chờ.",
+    "added_to_queue_alt": "✅ Đã thêm vào hàng chờ: **{{title}}**",
+    "now_playing": "▶️ Đang phát: **{{title}}**",
+    "now_playing_at": "▶️ Đang phát: **{{title}}** tại kênh **{{channel}}**"
+  },
+
+  "stop": "🛑 Đã dừng nhạc và tắt chế độ Radio 24/7.",
+  "skip": "⏭️ Đã bỏ qua bài: **{{title}}**",
+
+  "radio": {
+    "added": "✅ Đã thêm **{{title}}** vào kho nhạc Radio!",
+    "added_247": "✅ Đã thêm **{{title}}** vào Radio 24/7!",
+    "added_short": "✅ Đã thêm vài Radio!",
+    "removed": "🗑️ Đã xóa bài **{{title}}**!",
+    "removed_indexed": "🗑️ Đã xóa bài số **{{index}}**: **{{title}}** khỏi kho nhạc.",
+    "empty_list": "❌ Kho nhạc đang trống trơn! Dùng `/radio-add` thêm vào đi.",
+    "empty_list_prompt": "❌ Kho nhạc đang trống! Dùng `/radio-add` thêm bài trước đã.",
+    "invalid_page": "❌ Chỉ có tổng cộng **{{totalPages}}** trang thôi ông ơi.",
+    "mode_enabled": "📻 **Đã bật chế độ 24/7!**\nSẽ phát ngẫu nhiên từ kho nhạc (**{{count}}** bài).\n▶️ Mở bát bằng bài: **{{title}}**",
+    "list_title": "📻 KHO NHẠC RADIO 24/7 (Tổng: {{total}} bài)",
+    "list_footer": "Trang {{page}}/{{totalPages}} • Dùng /radio-remove [số thứ tự] để xóa"
+  },
+
+  "playlist": {
+    "created": "✅ Đã tạo playlist **{{name}}**!",
+    "added_tracks": "✅ Đã thêm **{{count}}** bài vào Playlist **{{name}}**!",
+    "added_to_selected": "✅ Đã thêm vào **{{name}}**!",
+    "playing": "▶️ Đang phát Playlist: **{{name}}**",
+    "empty": "❌ Playlist trống!",
+    "load_failed": "❌ Không tải được bài hát nào trong Playlist này.",
+    "not_found": "❌ Playlist không tồn tại!",
+    "no_selected": "❌ Không xác định được Playlist đang chọn. Hãy chọn lại!"
+  },
+
+  "switch_provider": {
+    "success": "✅ Đã chuyển nguồn phát nhạc sang: **{{provider}}**",
+    "error": "❌ Có lỗi xảy ra khi lưu cài đặt."
+  },
+
+  "settings": {
+    "title": "🎛️ STUDIO ÂM THANH",
+    "description": "Cài đặt sẽ được **LƯU VĨNH VIỄN** cho server này.",
+    "footer": "Bấm nút để chỉnh. Bot sẽ tự cập nhật ngay lập tức."
+  },
+
+  "nowplaying": {
+    "title": "💿 Đang phát...",
+    "field_artist": "Ca sĩ/Kênh",
+    "field_requester": "Người yêu cầu",
+    "field_time": "Thời gian",
+    "field_progress": "Tiến độ",
+    "footer": "Volume: {{volume}}% | Loop: {{loop}}"
+  }
+}

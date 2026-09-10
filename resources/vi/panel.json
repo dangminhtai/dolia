@@ -1,0 +1,89 @@
+{
+  "home": {
+    "title_playing": "💿 TRÌNH PHÁT NHẠC",
+    "title_idle": "💤 BOT ĐANG NGHỈ NGƠI",
+    "desc_idle": "Hiện không có nhạc.\nDùng các Tab bên dưới để bật nhạc hoặc dùng lệnh `/play`.",
+    "field_artist": "Ca sĩ",
+    "field_requester": "Người yêu cầu",
+    "field_time": "Thời gian ({{current}} / {{total}})",
+    "field_status": "Trạng thái",
+    "status_value": "Vol: **{{volume}}%** | Loop: **{{loop}}** | 24/7: **{{autoplay}}**",
+    "autoplay_on": "BẬT",
+    "autoplay_off": "TẮT"
+  },
+  "settings": {
+    "title": "🎛️ CÀI ĐẶT ÂM THANH",
+    "description": "Điều chỉnh hiệu ứng. Cài đặt sẽ được **LƯU** vĩnh viễn.",
+    "nightcore_on": "✅ Bật",
+    "nightcore_off": "❌ Tắt",
+    "bassboost_on": "✅ Bật",
+    "bassboost_off": "❌ Tắt",
+    "footer": "Bấm nút để chỉnh. Bot sẽ tự cập nhật ngay lập tức."
+  },
+  "radio": {
+    "title": "📻 QUẢN LÝ RADIO 24/7 (Tổng: {{total}})",
+    "status_running": "✅ Đang chạy",
+    "status_stopped": "❌ Đang tắt",
+    "empty_list": "*(Kho nhạc trống)*",
+    "footer_page": "Trang {{page}}/{{totalPages}}",
+    "toggle_on": "Tắt 24/7",
+    "toggle_off": "Bật 24/7"
+  },
+  "playlist": {
+    "title": "💾 PLAYLIST CỦA BẠN",
+    "no_playlist": "Bạn chưa có playlist nào. Bấm **Tạo Mới** để bắt đầu.",
+    "click_to_view": "Bấm nút playlist để xem danh sách của bạn.",
+    "select_placeholder": "Chọn Playlist của bạn",
+    "selected_info": "**Đang chọn: {{name}}**\n{{trackList}}\n...(và {{remaining}} bài khác)",
+    "not_found": "Playlist đã chọn không còn tồn tại.",
+    "select_prompt": "Hãy chọn một playlist từ menu bên dưới."
+  },
+  "queue": {
+    "title": "📜 HÀNG CHỜ NHẠC ({{count}} bài)",
+    "now_playing_desc": "**Đang phát:** [{{title}}]({{uri}}) \n\n{{list}}",
+    "empty": "*(Hàng chờ trống)*",
+    "footer": "Trang {{page}}/{{totalPages}} | Tổng thời lượng: {{totalTime}}"
+  },
+  "buttons": {
+    "vol_down": "Vol -10",
+    "vol_up": "Vol +10",
+    "reset_all": "Reset All",
+    "speed_down": "Speed -",
+    "speed_reset": "Speed Chuẩn",
+    "speed_up": "Speed +",
+    "nightcore": "Nightcore",
+    "bassboost": "Bassboost",
+    "radio_add_current": "Thêm bài đang phát",
+    "radio_add_query": "🔍 Thêm Link/Tên",
+    "radio_remove": "🗑️ Xóa (Index)",
+    "pl_create": "✨ Tạo Playlist Mới",
+    "pl_create_short": "✨ Tạo Mới",
+    "pl_play": "▶️ Phát",
+    "pl_add_current": "➕ Thêm bài này",
+    "pl_add_query": "🔍 Thêm tên/link",
+    "pl_delete": "🗑️ Xóa PL",
+    "queue_shuffle": "Trộn",
+    "queue_clear": "Xóa",
+    "queue_add_priority": "Hát Ngay",
+    "nav_settings": "Settings",
+    "nav_home": "Home",
+    "nav_queue": "Queue",
+    "nav_radio": "Radio",
+    "nav_playlist": "Playlist",
+    "nav_close": "Đóng"
+  },
+  "modals": {
+    "title_pl_create": "Tạo Playlist Mới",
+    "label_pl_name": "Tên Playlist",
+    "title_queue_priority": "Hát Ngay",
+    "label_query": "Link / Tên bài hát",
+    "title_pl_add": "Thêm vào Playlist",
+    "title_radio_add": "Thêm bài Radio 24/7",
+    "title_radio_remove": "Xóa bài Radio 24/7",
+    "label_radio_index": "Số thứ tự (Index)"
+  },
+  "errors": {
+    "data_error": "❌ Panel lỗi data. Hãy tạo mới!",
+    "process_error": "⚠️ Lỗi xử lý!"
+  }
+}

@@ -1,5 +1,6 @@
 import { SlashCommandBuilder, EmbedBuilder } from 'discord.js';
 import RadioSong from '../../models/RadioSong.js';
+import { t } from '../../services/i18nService.js';
 
 export default {
     data: new SlashCommandBuilder()
@@ -22,14 +23,14 @@ export default {
 
         // Check nếu kho trống
         if (totalSongs === 0) {
-            return interaction.editReply('❌ Kho nhạc đang trống trơn! Dùng `/radio-add` thêm vào đi.');
+            return interaction.editReply(t('music.radio.empty_list'));
         }
 
         const totalPages = Math.ceil(totalSongs / itemsPerPage);
 
         // Check nếu nhập trang tào lao
         if (page > totalPages) {
-            return interaction.editReply(`❌ Chỉ có tổng cộng **${totalPages}** trang thôi ông ơi.`);
+            return interaction.editReply(t('music.radio.invalid_page', { totalPages }));
         }
 
         // 3. Tạo danh sách hiển thị
@@ -43,9 +44,9 @@ export default {
         // 4. Tạo Embed đẹp
         const embed = new EmbedBuilder()
             .setColor('#00FF00')
-            .setTitle(`📻 KHO NHẠC RADIO 24/7 (Tổng: ${totalSongs} bài)`)
+            .setTitle(t('music.radio.list_title', { total: totalSongs }))
             .setDescription(description)
-            .setFooter({ text: `Trang ${page}/${totalPages} • Dùng /radio-remove [số thứ tự] để xóa` });
+            .setFooter({ text: t('music.radio.list_footer', { page, totalPages }) });
 
         return interaction.editReply({ embeds: [embed] });
     },

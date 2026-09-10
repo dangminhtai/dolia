@@ -2,6 +2,8 @@ import { SlashCommandBuilder } from 'discord.js';
 import { poru } from '../../utils/LavalinkManager.js';
 import RadioSong from '../../models/RadioSong.js';
 import { applyAudioSettings } from '../../utils/AudioController.js';
+import { t } from '../../services/i18nService.js';
+
 export default {
     data: new SlashCommandBuilder()
         .setName('play-247')
@@ -12,13 +14,13 @@ export default {
         const voiceChannel = member.voice.channel;
 
         if (!voiceChannel) {
-            return interaction.reply({ content: '❌ Vui lòng vào voice trước khi sử dụng lệnh này!', ephemeral: true });
+            return interaction.reply({ content: t('music.errors.no_voice_user'), ephemeral: true });
         }
 
         // Kiểm tra DB có bài nào chưa
         const count = await RadioSong.countDocuments();
         if (count === 0) {
-            return interaction.reply({ content: '❌ Kho nhạc đang trống! Dùng `/radio-add` thêm bài trước đã.', ephemeral: true });
+            return interaction.reply({ content: t('music.radio.empty_list_prompt'), ephemeral: true });
         }
 
         await interaction.deferReply();
@@ -54,6 +56,6 @@ export default {
         player.queue.add(track);
         player.play();
 
-        return interaction.editReply(`📻 **Đã bật chế độ 24/7!**\nSẽ phát ngẫu nhiên từ kho nhạc (**${count}** bài).\n▶️ Mở bát bằng bài: **${songData.title}**`);
+        return interaction.editReply(t('music.radio.mode_enabled', { count, title: songData.title }));
     },
 };

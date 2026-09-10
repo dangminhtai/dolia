@@ -1,6 +1,7 @@
 import { SlashCommandBuilder } from 'discord.js';
 import MorningGreeting from '../../models/MorningGreeting.js';
 import { sendGreetingToUser } from '../../utils/morningGreeting.js';
+import { t } from '../../services/i18nService.js';
 
 export default {
     data: new SlashCommandBuilder()
@@ -24,7 +25,7 @@ export default {
         // Kiểm tra quyền Bot Admin
         const botAdminId = '1149477475001323540';
         if (interaction.user.id !== botAdminId) {
-            return interaction.reply({ content: '❌ Bạn không có quyền sử dụng lệnh này. Chỉ Bot Admin mới có quyền quản lý.', ephemeral: true });
+            return interaction.reply({ content: t('errors.no_permission'), ephemeral: true });
         }
 
         const targetUser = interaction.options.getUser('user');
@@ -34,7 +35,7 @@ export default {
             if (action === 'add') {
                 const existing = await MorningGreeting.findOne({ userId: targetUser.id });
                 if (existing) {
-                    return interaction.reply({ content: `Người dùng **${targetUser.username}** đã có trong danh sách rồi.`, ephemeral: true });
+                    return interaction.reply({ content: t('general.morning.user_exists', { username: targetUser.username }), ephemeral: true });
                 }
 
                 await MorningGreeting.create({
@@ -43,16 +44,16 @@ export default {
                     addedBy: interaction.user.id
                 });
 
-                return interaction.reply(`Thành công! Đã thêm **${targetUser.username}** vào danh sách chào buổi sáng.`);
+                return interaction.reply(t('general.morning.user_added', { username: targetUser.username }));
             }
 
             else if (action === 'remove') {
                 const result = await MorningGreeting.findOneAndDelete({ userId: targetUser.id });
                 if (!result) {
-                    return interaction.reply({ content: `Người dùng **${targetUser.username}** không có trong danh sách.`, ephemeral: true });
+                    return interaction.reply({ content: t('general.morning.user_not_found', { username: targetUser.username }), ephemeral: true });
                 }
 
-                return interaction.reply(`Thành công! Đã xóa **${targetUser.username}** khỏi danh sách chào buổi sáng.`);
+                return interaction.reply(t('general.morning.user_removed', { username: targetUser.username }));
             }
 
             else if (action === 'test') {
@@ -60,15 +61,15 @@ export default {
 
                 try {
                     const result = await sendGreetingToUser(interaction.client, targetUser.id);
-                    return interaction.editReply(`✅ Đã gửi tin nhắn test thành công cho **${result.username}**!\nNội dung: *"${result.content}"*`);
+                    return interaction.editReply(t('general.morning.test_success', { username: result.username, content: result.content }));
                 } catch (err) {
-                    return interaction.editReply(`❌ Không thể gửi tin nhắn cho **${targetUser.username}**. Có thể người dùng đã chặn DM hoặc bot gặp lỗi.\nChi tiết: \`${err.message}\``);
+                    return interaction.editReply(t('general.morning.test_failed', { username: targetUser.username, error: err.message }));
                 }
             }
 
         } catch (error) {
             console.error('Error in manage_morning_user:', error);
-            return interaction.reply({ content: 'Lỗi khi truy cập Database hoặc gửi tin nhắn, vui lòng kiểm tra log.', ephemeral: true });
+            return interaction.reply({ content: t('errors.database_error'), ephemeral: true });
         }
     },
 };
