@@ -1,174 +1,166 @@
 import { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ApplicationIntegrationType, InteractionContextType, ComponentType } from 'discord.js';
 import { t } from '../../services/i18nService.js';
 
-const CHOICES = [
-    { id: 'rock', emoji: '🪨', name: 'Búa' },
-    { id: 'paper', emoji: '📄', name: 'Bao' },
-    { id: 'scissors', emoji: '✂️', name: 'Kéo' }
-];
-
-const OUTCOMES = {
-    rock: { scissors: 'win', paper: 'lose', rock: 'draw' },
-    paper: { rock: 'win', scissors: 'lose', paper: 'draw' },
-    scissors: { paper: 'win', rock: 'lose', scissors: 'draw' }
-};
-
 export default {
     data: new SlashCommandBuilder()
         .setName('rps')
-        .setDescription('Chơi Oẳn tù tì (Kéo - Búa - Bao) cùng Dolia')
+        .setDescription('Chơi oẳn tù tì với Bot Dolia')
         .setIntegrationTypes(ApplicationIntegrationType.GuildInstall, ApplicationIntegrationType.UserInstall)
         .setContexts(InteractionContextType.Guild, InteractionContextType.BotDM, InteractionContextType.PrivateChannel),
 
     async execute(interaction) {
         try {
-            const initialRow = new ActionRowBuilder().addComponents(
-                new ButtonBuilder()
-                    .setCustomId('rps_rock')
-                    .setLabel('Búa')
-                    .setEmoji('🪨')
-                    .setStyle(ButtonStyle.Primary),
-                new ButtonBuilder()
-                    .setCustomId('rps_paper')
-                    .setLabel('Bao')
-                    .setEmoji('📄')
-                    .setStyle(ButtonStyle.Primary),
-                new ButtonBuilder()
-                    .setCustomId('rps_scissors')
-                    .setLabel('Kéo')
-                    .setEmoji('✂️')
-                    .setStyle(ButtonStyle.Primary)
-            );
-
-            const startEmbed = new EmbedBuilder()
-                .setColor(0x3498DB)
-                .setTitle('🎮 Oẳn Tù Tì Cùng Dolia')
-                .setDescription(`${interaction.user}, hãy chọn một nước đi bên dưới trong vòng **30 giây** nhé!\n\n*Dolia đã chọn nước đi của mình rồi đó, đố bạn thắng được tôi!*`)
-                .setFooter({ text: 'Dolia Games • Oẳn tù tì', iconURL: interaction.client.user.displayAvatarURL() })
-                .setTimestamp();
-
-            const response = await interaction.reply({
-                embeds: [startEmbed],
-                components: [initialRow],
-                fetchReply: true
-            });
-
-            const collector = response.createMessageComponentCollector({
-                componentType: ComponentType.Button,
-                filter: (i) => i.user.id === interaction.user.id,
-                time: 30000,
-                max: 1
-            });
-
-            collector.on('collect', async (btnInteraction) => {
-                const playerChoiceId = btnInteraction.customId.replace('rps_', '');
-                const playerChoice = CHOICES.find((c) => c.id === playerChoiceId);
-                const botChoice = CHOICES[Math.floor(Math.random() * CHOICES.length)];
-
-                const result = OUTCOMES[playerChoice.id][botChoice.id];
-
-                let resultTitle = '';
-                let resultColor = 0x3498DB;
-                let resultQuote = '';
-
-                if (result === 'win') {
-                    resultTitle = '🎉 Bạn đã chiến thắng!';
-                    resultColor = 0x2ECC71;
-                    resultQuote = 'Đỉnh thật đấy! Lần sau Dolia nhất định sẽ gỡ lại!';
-                } else if (result === 'lose') {
-                    resultTitle = '😿 Dolia đã giành chiến thắng!';
-                    resultColor = 0xE74C3C;
-                    resultQuote = 'Lêu lêu~ Thần may mắn hôm nay đứng về phía Dolia rồi!';
-                } else {
-                    resultTitle = '🤝 Hòa nhau rồi!';
-                    resultColor = 0xF1C40F;
-                    resultQuote = 'Tâm đầu ý hợp ghê chưa, hai đứa mình chọn giống nhau nè!';
-                }
-
-                const disabledRow = new ActionRowBuilder().addComponents(
-                    CHOICES.map((choice) => {
-                        const isPlayerPick = choice.id === playerChoice.id;
-                        let style = ButtonStyle.Secondary;
-                        if (isPlayerPick) {
-                            style = result === 'win' ? ButtonStyle.Success : result === 'lose' ? ButtonStyle.Danger : ButtonStyle.Primary;
-                        }
-                        return new ButtonBuilder()
-                            .setCustomId(`rps_disabled_${choice.id}`)
-                            .setLabel(choice.name)
-                            .setEmoji(choice.emoji)
-                            .setStyle(style)
-                            .setDisabled(true);
-                    })
-                );
-
-                const resultEmbed = new EmbedBuilder()
-                    .setColor(resultColor)
-                    .setTitle(resultTitle)
-                    .setDescription(`> *"${resultQuote}"*`)
-                    .addFields(
-                        {
-                            name: `👤 ${interaction.user.displayName}`,
-                            value: `${playerChoice.emoji} **${playerChoice.name}**`,
-                            inline: true
-                        },
-                        {
-                            name: '⚡ Đối thủ',
-                            value: 'vs',
-                            inline: true
-                        },
-                        {
-                            name: `🤖 ${interaction.client.user.username}`,
-                            value: `${botChoice.emoji} **${botChoice.name}**`,
-                            inline: true
-                        }
-                    )
-                    .setFooter({ text: 'Dolia Games • Cảm ơn bạn đã chơi cùng tôi!', iconURL: interaction.client.user.displayAvatarURL() })
-                    .setTimestamp();
-
-                await btnInteraction.update({
-                    embeds: [resultEmbed],
-                    components: [disabledRow]
-                });
-            });
-
-            collector.on('end', async (collected, reason) => {
-                if (reason === 'time') {
-                    const timeoutRow = new ActionRowBuilder().addComponents(
-                        CHOICES.map((choice) =>
-                            new ButtonBuilder()
-                                .setCustomId(`rps_timeout_${choice.id}`)
-                                .setLabel(choice.name)
-                                .setEmoji(choice.emoji)
-                                .setStyle(ButtonStyle.Secondary)
-                                .setDisabled(true)
-                        )
-                    );
-
-                    const timeoutEmbed = new EmbedBuilder()
-                        .setColor(0x95A5A6)
-                        .setTitle('⌛ Hết thời gian!')
-                        .setDescription('Bạn đã không ra đòn kịp thời gian quy định (30 giây). Ván đấu đã bị hủy!')
-                        .setFooter({ text: 'Dolia Games • Hết giờ', iconURL: interaction.client.user.displayAvatarURL() });
-
-                    await interaction.editReply({
-                        embeds: [timeoutEmbed],
-                        components: [timeoutRow]
-                    }).catch(() => null);
-                }
-            });
+            await runGame(interaction);
         } catch (error) {
-            console.error('Error executing /rps command:', error);
-            if (interaction.replied || interaction.deferred) {
-                await interaction.followUp({
-                    content: 'Đã xảy ra lỗi khi khởi động ván cược Oẳn tù tì. Vui lòng thử lại!',
-                    ephemeral: true
-                });
+            console.error('Error in RPS command:', error);
+            if (interaction.deferred || interaction.replied) {
+                await interaction.followUp({ content: 'Đã xảy ra lỗi khi thực hiện trò chơi này!', ephemeral: true });
             } else {
-                await interaction.reply({
-                    content: 'Đã xảy ra lỗi khi khởi động ván cược Oẳn tù tì. Vui lòng thử lại!',
-                    ephemeral: true
-                });
+                await interaction.reply({ content: 'Đã xảy ra lỗi khi thực hiện trò chơi này!', ephemeral: true });
             }
         }
     }
 };
+
+async function runGame(interaction, buttonInteraction = null) {
+    const user = buttonInteraction ? buttonInteraction.user : interaction.user;
+    const guildId = interaction.guildId;
+
+    const choices = {
+        rock: { emoji: '✊', label: t(guildId, 'rps.rock') || 'Búa', beats: 'scissors' },
+        paper: { emoji: '✋', label: t(guildId, 'rps.paper') || 'Bao', beats: 'rock' },
+        scissors: { emoji: '✌️', label: t(guildId, 'rps.scissors') || 'Kéo', beats: 'paper' }
+    };
+
+    const embed = new EmbedBuilder()
+        .setTitle(t(guildId, 'rps.title') || '✊ Oẳn Tù Tì ✌️')
+        .setDescription(t(guildId, 'rps.choose_prompt') || 'Hãy chọn một trong các lựa chọn dưới đây để đấu với Bot!')
+        .setColor(0x3498DB)
+        .setTimestamp();
+
+    const row = new ActionRowBuilder().addComponents(
+        new ButtonBuilder().setCustomId('rps_rock').setLabel(choices.rock.label).setEmoji(choices.rock.emoji).setStyle(ButtonStyle.Primary),
+        new ButtonBuilder().setCustomId('rps_paper').setLabel(choices.paper.label).setEmoji(choices.paper.emoji).setStyle(ButtonStyle.Primary),
+        new ButtonBuilder().setCustomId('rps_scissors').setLabel(choices.scissors.label).setEmoji(choices.scissors.emoji).setStyle(ButtonStyle.Primary)
+    );
+
+    let message;
+    if (buttonInteraction) {
+        message = await buttonInteraction.update({ embeds: [embed], components: [row], fetchReply: true });
+    } else {
+        message = await interaction.reply({ embeds: [embed], components: [row], fetchReply: true });
+    }
+
+    const filter = async (i) => {
+        if (i.user.id !== user.id) {
+            await i.reply({
+                content: t(guildId, 'rps.only_author') || 'Chỉ người kích hoạt lệnh mới có thể tương tác!',
+                ephemeral: true
+            });
+            return false;
+        }
+        return true;
+    };
+
+    const collector = message.createMessageComponentCollector({
+        filter,
+        componentType: ComponentType.Button,
+        time: 30000
+    });
+
+    collector.on('collect', async (i) => {
+        if (!i.customId.startsWith('rps_')) return;
+        collector.stop('played');
+
+        const userChoiceKey = i.customId.replace('rps_', '');
+        const botChoiceKey = Object.keys(choices)[Math.floor(Math.random() * 3)];
+
+        const userChoice = choices[userChoiceKey];
+        const botChoice = choices[botChoiceKey];
+
+        let resultMessage = '';
+        let color = 0x3498DB;
+
+        if (userChoiceKey === botChoiceKey) {
+            resultMessage = t(guildId, 'rps.draw') || 'Hòa rồi! 🤝';
+            color = 0xF1C40F;
+        } else if (userChoice.beats === botChoiceKey) {
+            resultMessage = t(guildId, 'rps.win') || 'Bạn đã thắng! 🎉';
+            color = 0x2ECC71;
+        } else {
+            resultMessage = t(guildId, 'rps.lose') || 'Bạn đã thua! 😢';
+            color = 0xE74C3C;
+        }
+
+        const resultDescTemplate = t(guildId, 'rps.result_desc') || 'Bạn chọn: {userEmoji} **{userLabel}**\nBot chọn: {botEmoji} **{botLabel}**\n\n**Kết quả:** {result}';
+        const resultDesc = resultDescTemplate
+            .replace('{userEmoji}', userChoice.emoji)
+            .replace('{userLabel}', userChoice.label)
+            .replace('{botEmoji}', botChoice.emoji)
+            .replace('{botLabel}', botChoice.label)
+            .replace('{result}', resultMessage);
+
+        const resultEmbed = new EmbedBuilder()
+            .setTitle(t(guildId, 'rps.title') || '✊ Oẳn Tù Tì ✌️')
+            .setDescription(resultDesc)
+            .setColor(color)
+            .setTimestamp();
+
+        const playAgainRow = new ActionRowBuilder().addComponents(
+            new ButtonBuilder()
+                .setCustomId('rps_play_again')
+                .setLabel(t(guildId, 'rps.play_again') || 'Chơi lại')
+                .setEmoji('🔄')
+                .setStyle(ButtonStyle.Success)
+        );
+
+        const resultMsg = await i.update({ embeds: [resultEmbed], components: [playAgainRow], fetchReply: true });
+
+        const playAgainCollector = resultMsg.createMessageComponentCollector({
+            filter,
+            componentType: ComponentType.Button,
+            time: 15000
+        });
+
+        playAgainCollector.on('collect', async (playAgainInt) => {
+            if (playAgainInt.customId === 'rps_play_again') {
+                playAgainCollector.stop('restarted');
+                await runGame(interaction, playAgainInt);
+            }
+        });
+
+        playAgainCollector.on('end', async (collected, reason) => {
+            if (reason !== 'restarted') {
+                const disabledRow = new ActionRowBuilder().addComponents(
+                    new ButtonBuilder()
+                        .setCustomId('rps_play_again')
+                        .setLabel(t(guildId, 'rps.play_again') || 'Chơi lại')
+                        .setEmoji('🔄')
+                        .setStyle(ButtonStyle.Success)
+                        .setDisabled(true)
+                );
+                try {
+                    await resultMsg.edit({ components: [disabledRow] });
+                } catch (err) {
+                    // Ignore if message was deleted
+                }
+            }
+        });
+    });
+
+    collector.on('end', async (collected, reason) => {
+        if (reason === 'time') {
+            const timeoutEmbed = new EmbedBuilder()
+                .setTitle(t(guildId, 'rps.title') || '✊ Oẳn Tù Tì ✌️')
+                .setDescription(t(guildId, 'rps.timeout') || 'Hết thời gian lựa chọn!')
+                .setColor(0x95A5A6)
+                .setTimestamp();
+
+            try {
+                await message.edit({ embeds: [timeoutEmbed], components: [] });
+            } catch (err) {
+                // Ignore if message was deleted
+            }
+        }
+    });
+}
