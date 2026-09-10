@@ -39,6 +39,8 @@ export async function getHistory(userId, chatSession) {
                 if (partData.text) cleanPart.text = partData.text;
                 if (partData.functionCall) cleanPart.functionCall = partData.functionCall;
                 if (partData.functionResponse) cleanPart.functionResponse = partData.functionResponse;
+                if (partData.thoughtSignature) cleanPart.thoughtSignature = partData.thoughtSignature;
+                if (partData.thought !== undefined) cleanPart.thought = partData.thought;
 
                 return Object.keys(cleanPart).length > 0 ? cleanPart : null;
             }).filter(p => p !== null);
@@ -104,6 +106,8 @@ export async function saveInteraction(chatSession, newContents) {
                 if (p.text) part.text = p.text;
                 if (p.functionCall) part.functionCall = p.functionCall;
                 if (p.functionResponse) part.functionResponse = p.functionResponse;
+                if (p.thoughtSignature) part.thoughtSignature = p.thoughtSignature;
+                if (p.thought !== undefined) part.thought = p.thought;
 
                 // Fallback for simple string parts
                 if (!part.text && !part.functionCall && !part.functionResponse && typeof p === 'string') {

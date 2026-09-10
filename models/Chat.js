@@ -3,7 +3,9 @@ import mongoose from "mongoose";
 const partSchema = new mongoose.Schema({
     text: { type: String },
     functionCall: { type: Object }, // { name: String, args: Object }
-    functionResponse: { type: Object } // { name: String, response: Object }
+    functionResponse: { type: Object }, // { name: String, response: Object }
+    thoughtSignature: { type: String }, // Cryptographic reasoning signature from Gemini 2.5/3.x
+    thought: { type: Boolean } // Flag marking thinking reasoning parts
 }, { _id: false });
 
 const chatTurnSchema = new mongoose.Schema({
