@@ -519,6 +519,19 @@ export default (client) => {
             return;
         }
 
+        // --- 1.5 XỬ LÝ NÚT BẤM SELF-DEV (DEFENSIVE FALLBACK TRÁNH TIMEOUT) ---
+        if (interaction.isButton() && interaction.customId?.startsWith('selfdev_')) {
+            try {
+                if (!interaction.deferred && !interaction.replied) {
+                    await interaction.reply({
+                        content: '✨ Lệnh đã được tự động áp dụng và nạp vào hệ thống rồi nha! Bạn có thể sử dụng lệnh trực tiếp trên Discord luôn nhé~ 💖',
+                        flags: MessageFlags.Ephemeral
+                    });
+                }
+            } catch (_) { }
+            return;
+        }
+
         // --- 2. XỬ LÝ LỆNH SLASH ---
         if (interaction.isChatInputCommand()) {
             const command = client.commands.get(interaction.commandName);

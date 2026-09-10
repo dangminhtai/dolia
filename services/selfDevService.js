@@ -57,7 +57,7 @@ export class SelfDevService {
      */
     static async startSession({ prompt, featureName, user, channel, client, replyTarget = null }) {
         if (!this.isOwner(user.id)) {
-            const rejectMsg = t('self_dev.only_owner') || 'Chỉ có chủ nhân của Dolia mới có quyền yêu cầu tự lập trình tính năng mới nha!';
+            const rejectMsg = t('self_dev.only_owner') || 'Chỉ có chủ nhân mới có thể yêu cầu mình tạo tính năng mới nha!';
             if (replyTarget) await replyTarget.reply(rejectMsg);
             else await channel.send(rejectMsg);
             return;
@@ -66,12 +66,11 @@ export class SelfDevService {
         const safeSlug = this.slugify(featureName || prompt.split(' ')[0]);
         const sessionId = `dev_${safeSlug}_${Date.now()}`;
 
-        // Gửi Embed thông báo tiến trình ban đầu
+        // Gửi Embed thông báo nhẹ nhàng theo đúng phong cách Dolia (xưng mình - bạn)
         const statusEmbed = new EmbedBuilder()
-            .setColor(0x3498DB)
-            .setTitle('🛠️ Dolia Self-Dev Agent: Khởi động')
-            .setDescription(`**Chủ nhân:** <@${user.id}>\n**Yêu cầu:** ${prompt}\n\n⏳ **Trạng thái:** Đang chuẩn bị môi trường cách ly (Sandbox)...`)
-            .setFooter({ text: `Session ID: ${sessionId} • Sandbox Architecture` })
+            .setColor(0x5DADE2)
+            .setTitle('✨ Dolia đang chuẩn bị tạo lệnh nè...')
+            .setDescription(`Bạn đợi mình một chút nha, mình đang viết mã nguồn cho **\`/${safeSlug}\`** đây nè! 🌊🫧`)
             .setTimestamp();
 
         let progressMsg;
@@ -90,19 +89,9 @@ export class SelfDevService {
             // Bước 2: Lấy model Gemini tốt nhất từ Database (Ưu tiên flash-lite trước rồi đến flash)
             const codingModelId = await geminiModelService.getActiveModel('flash-lite');
 
-            // Cập nhật tiến trình
-            statusEmbed.setDescription(`**Chủ nhân:** <@${user.id}>\n**Yêu cầu:** ${prompt}\n\n🧠 **Trạng thái:** Đang kết nối Gemini Coding Agent (\`${codingModelId}\`)...\n*Model đang sinh mã nguồn trong vùng Sandbox an toàn...*`);
-            statusEmbed.setFooter({ text: `Session ID: ${sessionId} • Model: ${codingModelId}` });
-            await progressMsg.edit({ embeds: [statusEmbed] }).catch(() => { });
-
             // Bước 3: Gọi Gemini Coding Model
             const { data: generatedData, usedModel } = await this.callGeminiCodingModel(prompt, safeSlug, codingModelId);
             const commandName = generatedData.command_name || safeSlug;
-
-            // Cập nhật tiến trình
-            statusEmbed.setDescription(`**Chủ nhân:** <@${user.id}>\n**Yêu cầu:** ${prompt}\n\n🧪 **Trạng thái:** Đã sinh mã nguồn bởi \`${usedModel}\`! Đang ghi file vào Sandbox và thực hiện Multi-layer Verification...`);
-            statusEmbed.setFooter({ text: `Session ID: ${sessionId} • Model: ${usedModel}` });
-            await progressMsg.edit({ embeds: [statusEmbed] }).catch(() => { });
 
             // Bước 4: Ghi các file được sinh vào Sandbox
             for (const fileObj of generatedData.files) {
@@ -115,7 +104,7 @@ export class SelfDevService {
                 await sandboxManager.writeFile(i18nRelPath, JSON.stringify(generatedData.i18n.translations, null, 4));
             }
 
-            // Bước 5: Kiểm tra tính toàn vẹn và chất lượng mã nguồn (Multi-layer Verification)
+            // Bước 5: Kiểm tra tính toàn vẹn và chất lượng mã nguồn (Multi-layer Verification trong Sandbox)
             const validationResults = await sandboxValidator.validateBatch(sandboxManager.sandboxDir);
             if (!validationResults.valid) {
                 throw new Error(`Kiểm thử chất lượng mã nguồn trong Sandbox thất bại:\n${validationResults.errors.join('\n')}`);
@@ -123,58 +112,67 @@ export class SelfDevService {
 
             // Bước 6: Tạo Proposed Manifest từ các file trong sandbox
             const proposedManifest = await manifestManager.createProposedManifest({
-                agent: 'gemini-coding-agent',
+                agent: 'dolia-self-dev',
                 model: usedModel,
                 summary: generatedData.summary || prompt
             });
 
-            // Bước 7: Hiển thị giao diện Review & Chờ phê duyệt (PENDING_APPROVAL)
-            const reviewEmbed = new EmbedBuilder()
+            // Bước 7: TỰ ĐỘNG ÁP DỤNG (AUTO-APPLY) TỪ SANDBOX VÀO PRODUCTION
+            Logger.info(`[SelfDev] 🚀 Tự động Apply mã nguồn cho lệnh /${commandName}...`);
+            const applyResult = await applyEngine.apply(proposedManifest, {
+                isApproved: true,
+                approvedBy: user.id
+            });
+
+            // Tùy chọn git commit audit trên repo chính
+            try {
+                await execPromise('git add .');
+                await execPromise(`git commit -m "feat(auto): apply /${commandName} [tx: ${applyResult.transactionId}]"`);
+            } catch (_) { }
+
+            // Dọn dẹp sandbox sau khi apply thành công
+            await sandboxManager.cleanSandbox().catch(() => { });
+
+            // Bước 8: Tự động nạp lệnh vào RAM (Hot-Reload) và làm mới i18n
+            const commandPath = path.join(process.cwd(), 'commands', 'slash', `${commandName}.js`);
+            if (fs.existsSync(commandPath)) {
+                try {
+                    const moduleUrl = pathToFileURL(commandPath).href + `?t=${Date.now()}`;
+                    const importedModule = await import(moduleUrl);
+                    const cmd = importedModule.default ?? importedModule;
+                    if (cmd && cmd.data && client?.commands) {
+                        client.commands.set(cmd.data.name, cmd);
+                        Logger.info(`[SelfDev] Successfully hot-reloaded command: /${cmd.data.name}`);
+                    }
+                } catch (loadErr) {
+                    Logger.warn(`[SelfDev] Warning on hot-reload: ${loadErr.message}`);
+                }
+            }
+            reloadI18n();
+
+            // Bước 9: Tự động deploy slash command lên Discord REST API
+            if (client) {
+                try {
+                    const loadResult = await loadCommands(path.join(process.cwd(), 'commands'), client);
+                    await deployCommands(loadResult);
+                    Logger.info(`[SelfDev] Successfully deployed slash commands to Discord REST API`);
+                } catch (deployErr) {
+                    Logger.warn(`[SelfDev] Warning on deploy commands: ${deployErr.message}`);
+                }
+            }
+
+            // Bước 10: Thông báo hoàn tất đúng phong cách Dolia (xưng mình - bạn, không nút bấm rườm rà)
+            const doneEmbed = new EmbedBuilder()
                 .setColor(0x2ECC71)
-                .setTitle('✨ Tính năng mới đã hoàn thành & Sẵn sàng duyệt (Sandbox)')
+                .setTitle('🎉 Hoàn tất rồi nè!')
                 .setDescription(
-                    `Chủ nhân <@${user.id}> ơi, Dolia đã lập trình xong tính năng **/${commandName}** trong môi trường Sandbox an toàn.\n\n` +
-                    `🤖 **Model xử lý:** \`${usedModel}\` (Gemini Flash Database)\n` +
-                    `📝 **Tóm tắt tính năng:**\n${generatedData.summary || prompt}\n\n` +
-                    `📁 **Kế hoạch cập nhật (Manifest Proposal):**\n` +
-                    proposedManifest.changes.map(c => `• \`${c.source}\` ➔ \`${c.target}\` (${c.action})`).join('\n') +
-                    `\n\n🛡️ **Kiểm thử Sandbox:** ✅ Pass 100% Multi-layer Verification (Syntax, ESM, Import Resolution).`
+                    `Mình đã tạo và cài đặt xong lệnh **\`/${commandName}\`** cho bạn rồi đó!\n` +
+                    `Bây giờ bạn có thể gõ thử **\`/${commandName}\`** ngay nha~ 💖✨\n\n` +
+                    `📝 **Mô tả:** ${generatedData.summary || prompt}`
                 )
-                .setFooter({ text: `Nhấn 'Duyệt & Apply' để áp dụng các thay đổi từ Sandbox vào hệ thống thật.` })
                 .setTimestamp();
 
-            const actionRow = new ActionRowBuilder().addComponents(
-                new ButtonBuilder()
-                    .setCustomId(`selfdev_approve_${sessionId}`)
-                    .setLabel('✅ Duyệt & Apply')
-                    .setStyle(ButtonStyle.Success),
-                new ButtonBuilder()
-                    .setCustomId(`selfdev_view_${sessionId}`)
-                    .setLabel('🔍 Xem Code / Manifest')
-                    .setStyle(ButtonStyle.Secondary),
-                new ButtonBuilder()
-                    .setCustomId(`selfdev_cancel_${sessionId}`)
-                    .setLabel('❌ Hủy bỏ')
-                    .setStyle(ButtonStyle.Danger)
-            );
-
-            await progressMsg.edit({ embeds: [reviewEmbed], components: [actionRow] });
-
-            // Lưu phiên vào RAM
-            const sessionData = {
-                sessionId,
-                userId: user.id,
-                commandName,
-                generatedData,
-                proposedManifest,
-                progressMsg,
-                client,
-                usedModel
-            };
-            pendingSessions.set(sessionId, sessionData);
-
-            // Lắng nghe sự kiện bấm nút từ Owner
-            this.setupCollector(progressMsg, sessionData);
+            await progressMsg.edit({ embeds: [doneEmbed], components: [] });
 
         } catch (error) {
             Logger.error(`[SelfDev] Error in session ${sessionId}:`, error);
@@ -186,8 +184,8 @@ export class SelfDevService {
 
             const errorEmbed = new EmbedBuilder()
                 .setColor(0xE74C3C)
-                .setTitle('❌ Quá trình Self-Dev gặp lỗi')
-                .setDescription(`Rất tiếc chủ nhân, Dolia không thể hoàn thành tác vụ tự lập trình này.\n\n**Chi tiết lỗi:**\n\`\`\`${error.message || error}\`\`\``)
+                .setTitle('Hic, có chút trục trặc nhỏ rồi... 🥺')
+                .setDescription(`Trong lúc viết lệnh **\`/${safeSlug}\`**, mình gặp chút lỗi nên chưa thể nạp được nè:\n\`\`\`${error.message || error}\`\`\`\nMình đã dọn dẹp an toàn rồi, bạn thử lại sau nhé!`)
                 .setTimestamp();
 
             await progressMsg.edit({ embeds: [errorEmbed], components: [] }).catch(() => { });
@@ -598,7 +596,7 @@ export default {
      */
     static async startDeleteSession({ prompt, featureName, user, channel, client, replyTarget = null }) {
         if (!this.isOwner(user.id)) {
-            const rejectMsg = t('self_dev.only_owner') || 'Chỉ có chủ nhân của Dolia mới có quyền yêu cầu xóa tính năng!';
+            const rejectMsg = t('self_dev.only_owner') || 'Chỉ có chủ nhân mới có thể yêu cầu mình xóa tính năng nha!';
             if (replyTarget) return replyTarget.reply({ content: rejectMsg, flags: MessageFlags.Ephemeral });
             return channel.send({ content: rejectMsg });
         }
@@ -612,7 +610,8 @@ export default {
             dice: ['xúc xắc', 'xúc sắc', 'xuc xac', 'xuc sac', 'xí ngầu', 'xi ngau', 'dice', 'roll', 'xuc'],
             tictactoe: ['caro', 'cờ caro', 'tic tac toe', 'tictactoe', 'xo'],
             coinflip: ['đồng xu', 'dong xu', 'tung xu', 'coin', 'flip', 'coinflip'],
-            userinfo: ['thông tin user', 'userinfo', 'user info', 'thông tin người dùng', 'thong tin user']
+            userinfo: ['thông tin user', 'userinfo', 'user info', 'thông tin người dùng', 'thong tin user'],
+            trivia: ['trivia', 'đố vui', 'do vui', 'câu đố', 'cau do']
         };
 
         // Tìm tên lệnh cần xóa
@@ -639,9 +638,9 @@ export default {
         if (!fileExists) {
             const notFoundEmbed = new EmbedBuilder()
                 .setColor(0xE74C3C)
-                .setTitle('🔍 Không tìm thấy lệnh cần xóa')
-                .setDescription(`Dolia không tìm thấy file lệnh tương ứng với **\`${targetName || featureName || prompt}\`** trong thư mục \`commands/slash/\`.\n\n` +
-                    `📋 **Danh sách các lệnh slash hiện có:**\n` +
+                .setTitle('🔍 Không tìm thấy lệnh cần xóa nè')
+                .setDescription(`Mình không tìm thấy file lệnh tương ứng với **\`${targetName || featureName || prompt}\`** trong thư mục lệnh.\n\n` +
+                    `📋 **Danh sách các lệnh hiện có:**\n` +
                     (existingCommands.length > 0 ? existingCommands.map(c => `\`/${c}\``).join(', ') : '*Chưa có lệnh nào*'))
                 .setTimestamp();
 
@@ -650,74 +649,24 @@ export default {
             return channel.send({ embeds: [notFoundEmbed] });
         }
 
-        const sessionId = `del_${targetName}_${Date.now()}`;
-
-        const confirmEmbed = new EmbedBuilder()
+        // Thông báo đang tiến hành xóa
+        const deletingEmbed = new EmbedBuilder()
             .setColor(0xE67E22)
-            .setTitle(`⚠️ Xác nhận gỡ bỏ lệnh /${targetName}`)
-            .setDescription(`Chủ nhân <@${user.id}> ơi, bạn có chắc chắn muốn **gỡ bỏ hoàn toàn** lệnh **\`/${targetName}\`** khỏi Dolia không?\n\n` +
-                `📁 **File sẽ bị xóa:** \`commands/slash/${targetName}.js\`\n` +
-                `⚡ **Bảo vệ:** File sẽ được sao lưu an toàn tự động vào \`.apply/\` trước khi xóa.`)
-            .setFooter({ text: 'Nhấn nút bên dưới để xác nhận hoặc hủy bỏ' })
+            .setTitle(`🗑️ Đang gỡ bỏ lệnh /${targetName}...`)
+            .setDescription(`Mình đang tiến hành sao lưu an toàn và gỡ bỏ lệnh **\`/${targetName}\`** theo yêu cầu của bạn nha! 🌊🫧`)
             .setTimestamp();
 
-        const actionRow = new ActionRowBuilder().addComponents(
-            new ButtonBuilder()
-                .setCustomId(`selfdev_confirm_delete_${sessionId}`)
-                .setLabel(`🗑️ Xác nhận xóa /${targetName}`)
-                .setStyle(ButtonStyle.Danger),
-            new ButtonBuilder()
-                .setCustomId(`selfdev_cancel_delete_${sessionId}`)
-                .setLabel('❌ Giữ lại (Hủy)')
-                .setStyle(ButtonStyle.Secondary)
-        );
-
-        let confirmMsg;
+        let progressMsg;
         if (replyTarget && replyTarget.deferred) {
-            confirmMsg = await replyTarget.editReply({ embeds: [confirmEmbed], components: [actionRow] });
+            progressMsg = await replyTarget.editReply({ embeds: [deletingEmbed] });
         } else if (replyTarget) {
-            confirmMsg = await replyTarget.reply({ embeds: [confirmEmbed], components: [actionRow] });
+            progressMsg = await replyTarget.reply({ embeds: [deletingEmbed] });
         } else {
-            confirmMsg = await channel.send({ embeds: [confirmEmbed], components: [actionRow] });
+            progressMsg = await channel.send({ embeds: [deletingEmbed] });
         }
 
-        // Setup Collector lắng nghe nút bấm xác nhận
-        const collector = confirmMsg.createMessageComponentCollector({
-            componentType: ComponentType.Button,
-            time: 5 * 60 * 1000 // 5 phút
-        });
-
-        collector.on('collect', async (i) => {
-            if (i.user.id !== user.id) {
-                return i.reply({ content: 'Chỉ có chủ nhân mới có quyền xác nhận thao tác này!', flags: MessageFlags.Ephemeral });
-            }
-
-            if (i.customId === `selfdev_confirm_delete_${sessionId}`) {
-                await i.deferUpdate();
-                collector.stop('deleted');
-                await this.executeDeleteCommand({ targetName, user, confirmMsg, client });
-            } else if (i.customId === `selfdev_cancel_delete_${sessionId}`) {
-                await i.deferUpdate();
-                collector.stop('cancelled');
-                const cancelEmbed = new EmbedBuilder()
-                    .setColor(0x95A5A6)
-                    .setTitle('⏹️ Đã hủy yêu cầu xóa')
-                    .setDescription(`Lệnh **\`/${targetName}\`** vẫn được giữ nguyên vẹn trên hệ thống.`)
-                    .setTimestamp();
-                await confirmMsg.edit({ embeds: [cancelEmbed], components: [] });
-            }
-        });
-
-        collector.on('end', async (_, reason) => {
-            if (reason === 'time') {
-                const timeoutEmbed = new EmbedBuilder()
-                    .setColor(0x95A5A6)
-                    .setTitle('⏱️ Hết hạn xác nhận')
-                    .setDescription(`Yêu cầu xóa lệnh **\`/${targetName}\`** đã hết thời gian chờ (5 phút).`)
-                    .setTimestamp();
-                await confirmMsg.edit({ embeds: [timeoutEmbed], components: [] }).catch(() => null);
-            }
-        });
+        // Tự động xóa ngay lập tức qua ApplyEngine (đã có backup an toàn)
+        await this.executeDeleteCommand({ targetName, user, confirmMsg: progressMsg, client });
     }
 
     /**
@@ -793,8 +742,8 @@ export default {
             const successEmbed = new EmbedBuilder()
                 .setColor(0x2ECC71)
                 .setTitle('🗑️ Đã xóa lệnh thành công!')
-                .setDescription(`Chủ nhân <@${user.id}> ơi, Dolia đã gỡ bỏ hoàn toàn lệnh **\`/${targetName}\`** ra khỏi hệ thống!\n\n` +
-                    `💾 **Bản sao lưu an toàn (Audit Backup):** \`.apply/${txId}/backup/\``)
+                .setDescription(`Mình đã gỡ bỏ hoàn toàn lệnh **\`/${targetName}\`** theo yêu cầu của bạn rồi nha!\n\n` +
+                    `💾 File cũ đã được sao lưu an toàn tại \`.apply/${txId}/backup/\` phòng khi cần khôi phục lại nè ✨`)
                 .setTimestamp();
 
             await confirmMsg.edit({ embeds: [successEmbed], components: [] });

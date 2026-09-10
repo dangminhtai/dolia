@@ -10,7 +10,7 @@ export async function agent_code(args) {
     Logger.info(`[DevFunctions] agent_code tool invoked by user ${user?.id} (${user?.username}): action="${action}", prompt="${prompt}", feature_name="${feature_name}"`);
 
     if (!SelfDevService.isOwner(user?.id)) {
-        return "Bạn không phải là chủ nhân của Dolia. Dolia chỉ được phép nhận lệnh tự lập trình và can thiệp mã nguồn từ chủ nhân thôi ạ!";
+        return "Tính năng tự lập trình và can thiệp mã nguồn chỉ dành riêng cho bạn chủ nhân của mình thôi nha!";
     }
 
     const client = channel?.client || guild?.client;
@@ -35,10 +35,10 @@ export async function agent_code(args) {
             Logger.error('[DevFunctions] Error starting Delete session:', err);
         });
 
-        return `Dolia đã nhận lệnh xóa từ chủ nhân! Đang tìm file lệnh và gửi bảng xác nhận gỡ bỏ bên dưới nha!`;
+        return `Mình đã nhận yêu cầu gỡ bỏ lệnh từ bạn rồi nè! Mình đang tiến hành kiểm tra và xóa lệnh an toàn ngay nha~ 🫧`;
     }
 
-    // Kích hoạt tiến trình Self-Dev tạo mới tính năng
+    // Kích hoạt tiến trình Self-Dev tạo mới tính năng (Tự động Apply an toàn)
     SelfDevService.startSession({
         prompt,
         featureName: feature_name,
@@ -49,5 +49,5 @@ export async function agent_code(args) {
         Logger.error('[DevFunctions] Error starting Self-Dev session:', err);
     });
 
-    return `Dolia đã nhận lệnh từ chủ nhân! Đang bắt đầu khởi tạo môi trường thử nghiệm độc lập và kết nối Gemini Coding Agent để lập trình tính năng: "${prompt}". Chủ nhân vui lòng xem bảng tiến trình và nút duyệt bên dưới nha!`;
+    return `Mình đã nhận yêu cầu của bạn rồi nè! Mình đang tự tay viết mã nguồn và kiểm tra lệnh "${prompt}", bạn đợi mình một chút xíu nha~ ✨🫧`;
 }
