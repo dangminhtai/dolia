@@ -590,4 +590,198 @@ export default {
         await progressMsg.edit({ embeds: [cancelEmbed], components: [] }).catch(() => { });
         pendingSessions.delete(sessionId);
     }
+
+    /**
+     * Bắt đầu phiên yêu cầu xóa lệnh/tính năng với nút bấm xác nhận an toàn
+     */
+    static async startDeleteSession({ prompt, featureName, user, channel, client, replyTarget = null }) {
+        if (!this.isOwner(user.id)) {
+            const rejectMsg = t('self_dev.only_owner') || 'Chỉ có chủ nhân của Dolia mới có quyền yêu cầu xóa tính năng!';
+            if (replyTarget) return replyTarget.reply({ content: rejectMsg, flags: MessageFlags.Ephemeral });
+            return channel.send({ content: rejectMsg });
+        }
+
+        const slashDir = path.join(process.cwd(), 'commands', 'slash');
+        const existingFiles = fs.existsSync(slashDir) ? fs.readdirSync(slashDir).filter(f => f.endsWith('.js')) : [];
+        const existingCommands = existingFiles.map(f => f.replace('.js', ''));
+
+        // Từ điển từ khóa thông dụng để nhận diện đúng lệnh cần xóa
+        const COMMAND_KEYWORDS = {
+            dice: ['xúc xắc', 'xúc sắc', 'xuc xac', 'xuc sac', 'xí ngầu', 'xi ngau', 'dice', 'roll', 'xuc'],
+            tictactoe: ['caro', 'cờ caro', 'tic tac toe', 'tictactoe', 'xo'],
+            coinflip: ['đồng xu', 'dong xu', 'tung xu', 'coin', 'flip', 'coinflip'],
+            userinfo: ['thông tin user', 'userinfo', 'user info', 'thông tin người dùng', 'thong tin user']
+        };
+
+        // Tìm tên lệnh cần xóa
+        let targetName = featureName ? this.slugify(featureName) : null;
+        if (!targetName || !existingCommands.includes(targetName)) {
+            const lowerPrompt = (prompt || '').toLowerCase();
+
+            // 1. Kiểm tra bảng từ khóa thông dụng
+            for (const [cmd, keywords] of Object.entries(COMMAND_KEYWORDS)) {
+                if (existingCommands.includes(cmd) && keywords.some(k => lowerPrompt.includes(k))) {
+                    targetName = cmd;
+                    break;
+                }
+            }
+
+            // 2. Nếu chưa tìm thấy, dò tìm trực tiếp tên lệnh trong prompt
+            if (!targetName) {
+                const found = existingCommands.find(cmd => lowerPrompt.includes(cmd.toLowerCase()));
+                if (found) targetName = found;
+            }
+        }
+
+        const targetFile = targetName ? path.join(slashDir, `${targetName}.js`) : null;
+        const fileExists = targetFile && fs.existsSync(targetFile);
+
+        if (!fileExists) {
+            const notFoundEmbed = new EmbedBuilder()
+                .setColor(0xE74C3C)
+                .setTitle('🔍 Không tìm thấy lệnh cần xóa')
+                .setDescription(`Dolia không tìm thấy file lệnh tương ứng với **\`${targetName || featureName || prompt}\`** trong thư mục \`commands/slash/\`.\n\n` +
+                    `📋 **Danh sách các lệnh slash hiện có:**\n` +
+                    (existingCommands.length > 0 ? existingCommands.map(c => `\`/${c}\``).join(', ') : '*Chưa có lệnh nào*'))
+                .setTimestamp();
+
+            if (replyTarget && replyTarget.deferred) return replyTarget.editReply({ embeds: [notFoundEmbed] });
+            if (replyTarget) return replyTarget.reply({ embeds: [notFoundEmbed] });
+            return channel.send({ embeds: [notFoundEmbed] });
+        }
+
+        const sessionId = `del_${targetName}_${Date.now()}`;
+
+        const confirmEmbed = new EmbedBuilder()
+            .setColor(0xE67E22)
+            .setTitle(`⚠️ Xác nhận gỡ bỏ lệnh /${targetName}`)
+            .setDescription(`Chủ nhân <@${user.id}> ơi, bạn có chắc chắn muốn **gỡ bỏ hoàn toàn** lệnh **\`/${targetName}\`** khỏi Dolia không?\n\n` +
+                `📁 **File sẽ bị xóa:** \`commands/slash/${targetName}.js\`\n` +
+                `⚡ **Tác vụ:** Lệnh sẽ bị hủy đăng ký khỏi Discord và gỡ khỏi bộ nhớ bot ngay lập tức.`)
+            .setFooter({ text: 'Nhấn nút bên dưới để xác nhận hoặc hủy bỏ' })
+            .setTimestamp();
+
+        const actionRow = new ActionRowBuilder().addComponents(
+            new ButtonBuilder()
+                .setCustomId(`selfdev_confirm_delete_${sessionId}`)
+                .setLabel(`🗑️ Xác nhận xóa /${targetName}`)
+                .setStyle(ButtonStyle.Danger),
+            new ButtonBuilder()
+                .setCustomId(`selfdev_cancel_delete_${sessionId}`)
+                .setLabel('❌ Giữ lại (Hủy)')
+                .setStyle(ButtonStyle.Secondary)
+        );
+
+        let confirmMsg;
+        if (replyTarget && replyTarget.deferred) {
+            confirmMsg = await replyTarget.editReply({ embeds: [confirmEmbed], components: [actionRow] });
+        } else if (replyTarget) {
+            confirmMsg = await replyTarget.reply({ embeds: [confirmEmbed], components: [actionRow] });
+        } else {
+            confirmMsg = await channel.send({ embeds: [confirmEmbed], components: [actionRow] });
+        }
+
+        // Setup Collector lắng nghe nút bấm xác nhận
+        const collector = confirmMsg.createMessageComponentCollector({
+            componentType: ComponentType.Button,
+            time: 5 * 60 * 1000 // 5 phút
+        });
+
+        collector.on('collect', async (i) => {
+            if (i.user.id !== user.id) {
+                return i.reply({ content: 'Chỉ có chủ nhân mới có quyền xác nhận thao tác này!', flags: MessageFlags.Ephemeral });
+            }
+
+            if (i.customId === `selfdev_confirm_delete_${sessionId}`) {
+                await i.deferUpdate();
+                collector.stop('deleted');
+                await this.executeDeleteCommand({ targetName, user, confirmMsg, client });
+            } else if (i.customId === `selfdev_cancel_delete_${sessionId}`) {
+                await i.deferUpdate();
+                collector.stop('cancelled');
+                const cancelEmbed = new EmbedBuilder()
+                    .setColor(0x95A5A6)
+                    .setTitle('⏹️ Đã hủy yêu cầu xóa')
+                    .setDescription(`Lệnh **\`/${targetName}\`** vẫn được giữ nguyên vẹn trên hệ thống.`)
+                    .setTimestamp();
+                await confirmMsg.edit({ embeds: [cancelEmbed], components: [] });
+            }
+        });
+
+        collector.on('end', async (_, reason) => {
+            if (reason === 'time') {
+                const timeoutEmbed = new EmbedBuilder()
+                    .setColor(0x95A5A6)
+                    .setTitle('⏱️ Hết hạn xác nhận')
+                    .setDescription(`Yêu cầu xóa lệnh **\`/${targetName}\`** đã hết thời gian chờ (5 phút).`)
+                    .setTimestamp();
+                await confirmMsg.edit({ embeds: [timeoutEmbed], components: [] }).catch(() => null);
+            }
+        });
+    }
+
+    /**
+     * Thực thi xóa file lệnh, gỡ khỏi bộ nhớ và đồng bộ lại với Discord API
+     */
+    static async executeDeleteCommand({ targetName, user, confirmMsg, client }) {
+        try {
+            Logger.info(`[SelfDev] 🗑️ Đang tiến hành xóa lệnh /${targetName}...`);
+            const cmdPath = path.join(process.cwd(), 'commands', 'slash', `${targetName}.js`);
+
+            // 1. Xóa file lệnh
+            if (fs.existsSync(cmdPath)) {
+                fs.unlinkSync(cmdPath);
+                Logger.info(`[SelfDev] Đã xóa file: commands/slash/${targetName}.js`);
+            }
+
+            // 2. Dọn dẹp i18n
+            const i18nPath = path.join(process.cwd(), 'resources/vi/common.json');
+            if (fs.existsSync(i18nPath)) {
+                try {
+                    const currentI18n = JSON.parse(fs.readFileSync(i18nPath, 'utf-8'));
+                    if (currentI18n[targetName]) {
+                        delete currentI18n[targetName];
+                        fs.writeFileSync(i18nPath, JSON.stringify(currentI18n, null, 4), 'utf-8');
+                        reloadI18n();
+                        Logger.info(`[SelfDev] Đã xóa chuỗi i18n của lệnh: ${targetName}`);
+                    }
+                } catch (_) { }
+            }
+
+            // 3. Commit thay đổi vào Git
+            try {
+                await execPromise(`git add .`);
+                await execPromise(`git commit -m "feat(auto): delete /${targetName} per owner request"`);
+            } catch (_) { }
+
+            // 4. Xóa khỏi client.commands trong RAM
+            if (client?.commands) {
+                client.commands.delete(targetName);
+                Logger.info(`[SelfDev] Đã gỡ lệnh /${targetName} khỏi RAM của bot`);
+            }
+
+            // 5. Cập nhật Embed thành công lên Discord
+            const successEmbed = new EmbedBuilder()
+                .setColor(0x2ECC71)
+                .setTitle('🗑️ Đã xóa lệnh thành công!')
+                .setDescription(`Chủ nhân <@${user.id}> ơi, Dolia đã gỡ bỏ hoàn toàn lệnh **\`/${targetName}\`** ra khỏi hệ thống rồi nha!`)
+                .setTimestamp();
+
+            await confirmMsg.edit({ embeds: [successEmbed], components: [] });
+
+            // 6. Deploy lại commands lên Discord API để Discord cập nhật danh sách slash
+            const loadResult = await loadCommands(path.join(process.cwd(), 'commands'), client);
+            await deployCommands(loadResult);
+            Logger.info(`[SelfDev] ✅ Đã đồng bộ lại danh sách lệnh lên Discord REST API`);
+
+        } catch (err) {
+            Logger.error(`[SelfDev] Lỗi khi xóa lệnh /${targetName}:`, err);
+            const errEmbed = new EmbedBuilder()
+                .setColor(0xE74C3C)
+                .setTitle('❌ Lỗi khi xóa lệnh')
+                .setDescription(`Không thể xóa lệnh: \`\`\`${err.message}\`\`\``)
+                .setTimestamp();
+            await confirmMsg.edit({ embeds: [errEmbed], components: [] });
+        }
+    }
 }
