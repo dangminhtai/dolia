@@ -1,29 +1,29 @@
 {
   "animal": {
-    "network_error": "Mạng thằng Admin bị lỗi, vui lòng chờ nó nạp 4G",
-    "image_error": "Lỗi 1 chút khi cố gắng lấy ảnh.",
-    "generic_error": "Có lỗi khi lấy ảnh.",
-    "footer": "Được yêu cầu bởi {{username}}"
+    "network_error": "🥺 Mạng của Admin bị hiccup rồi... Chờ Admin bật 4G giúp mình nha!",
+    "image_error": "💦 Ui... mình lấy ảnh không được rồi.",
+    "generic_error": "🥺 Có lỗi mất rồi... thử lại sau nha!",
+    "footer": "💖 Bạn {{username}} yêu cầu nè"
   },
   "morning": {
-    "user_exists": "Người dùng **{{username}}** đã có trong danh sách rồi.",
-    "user_not_found": "Người dùng **{{username}}** không có trong danh sách.",
-    "user_added": "Thành công! Đã thêm **{{username}}** vào danh sách chào buổi sáng.",
-    "user_removed": "Thành công! Đã xóa **{{username}}** khỏi danh sách chào buổi sáng.",
-    "test_success": "✅ Đã gửi tin nhắn test thành công cho **{{username}}**!\nNội dung: *\"{{content}}\"*",
-    "test_failed": "❌ Không thể gửi tin nhắn cho **{{username}}**. Có thể người dùng đã chặn DM hoặc bot gặp lỗi.\nChi tiết: `{{error}}`"
+    "user_exists": "🌸 **{{username}}** có trong danh sách rồi nè!",
+    "user_not_found": "🥺 Mình không thấy **{{username}}** trong danh sách.",
+    "user_added": "✨ Xong rồi nè! Mình thêm **{{username}}** vào danh sách chào buổi sáng rồi!",
+    "user_removed": "🗑️ Okii! Mình xóa **{{username}}** khỏi danh sách rồi nha!",
+    "test_success": "💖 Mình gửi tin nhắn thử cho **{{username}}** thành công rồi!\n\n💌 *\"{{content}}\"*",
+    "test_failed": "🥺 Mình không gửi được tin nhắn cho **{{username}}**...\nCó thể bạn ấy tắt DM hoặc mình gặp lỗi mất rồi.\n\n💦 Chi tiết: `{{error}}`"
   },
   "lyrics": {
-    "modal_title": "Dolia Lyrics Search",
-    "input_label": "Nhập đoạn lời bài hát hoặc tên bài hát",
+    "modal_title": "🎵 Tìm lời bài hát",
+    "input_label": "Nhập tên bài hoặc một đoạn lời nha",
     "input_placeholder": "Ví dụ: \"Em của ngày hôm qua\" hoặc \"đừng làm trái tim anh đau\"...",
-    "not_found": "❌ Xin lỗi, tôi không tìm thấy bài hát nào khớp với nội dung: `{{query}}`",
-    "error": "❌ Đã xảy ra lỗi khi tìm kiếm lời bài hát. Hãy thử lại sau!",
-    "full_lyrics_hint": "*(Xem bản đầy đủ ở file đính kèm bên dưới)*",
-    "full_lyrics_header": "📜 Đây là lời bài hát đầy đủ cho bài **{{title}}**:",
-    "footer": "Dolia Lyrics Search",
-    "year_field": "📅 Năm phát hành",
-    "link_field": "🔗 Nghe nhạc tại",
-    "link_text": "Nhấp để mở Link"
+    "not_found": "🥺 Mình tìm hoài mà chưa thấy bài nào giống: `{{query}}`",
+    "error": "💦 Ui... mình tìm lời bài hát không được rồi. Bạn thử lại sau nha!",
+    "full_lyrics_hint": "📄 *(Lời đầy đủ ở file đính kèm bên dưới nha!)*",
+    "full_lyrics_header": "🎶 Đây là lời đầy đủ của **{{title}}** nè!",
+    "footer": "🎵 Lyrics",
+    "year_field": "📅 Phát hành",
+    "link_field": "🎧 Nghe tại",
+    "link_text": "Mở nghe nè ✨"
   }
 }

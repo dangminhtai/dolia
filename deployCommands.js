@@ -6,6 +6,7 @@ import discord from 'discord.js';
 const { REST, Routes } = discord;
 import { pathToFileURL } from 'url';
 import { commandChanges } from './utils/compareCommands.js';
+import Command from './models/Command.js';
 
 async function loadCommands(dir, client) {
     const commandsToDeploy = []; // This will hold ALL commands
@@ -42,9 +43,22 @@ async function loadCommands(dir, client) {
 }
 
 async function deployCommands(loadResult) {
-    const { commands, hasChanges } = loadResult;
+    let { commands, hasChanges } = loadResult;
 
     if (commands.length === 0) return;
+
+    // Check if any command in DB was deleted from codebase
+    try {
+        const currentNames = commands.map(c => c.name);
+        const deleted = await Command.deleteMany({ name: { $nin: currentNames } });
+        if (deleted && deleted.deletedCount > 0) {
+            console.log(`🗑️ Removed ${deleted.deletedCount} deleted command(s) from database.`);
+            hasChanges = true;
+        }
+    } catch (error) {
+        console.error('Error cleaning deleted commands from database:', error);
+    }
+
     if (!hasChanges) {
         console.log('✅ No command changes detected. Skipping deployment.');
         return;

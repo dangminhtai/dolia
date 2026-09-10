@@ -1,15 +1,15 @@
 {
   "tictactoe": {
-    "waiting": "**Tic-Tac-Toe**: {{player1}} (X) đang chờ đối thủ... \nHãy bấm nút xác nhận bên dưới để chơi!",
-    "turn": "**Tic-Tac-Toe**: {{player1}} (X) vs {{player2}} (O)\n👉 Lượt của: {{current}} ({{symbol}})",
-    "winner": "🎉 **CHÚC MỪNG!** {{winner}} ({{symbol}}) đã chiến thắng! 🏆\n{{selfComment}}",
-    "self_comment": "(Tự kỷ đỉnh cao là đây)",
-    "draw": "🤝 **HÒA!** Bất phân thắng bại",
-    "game_over": "🏁 **Trò chơi kết thúc!**",
-    "room_full": "Phòng đã đầy!",
-    "not_your_turn": "Chưa tới lượt của bạn!",
-    "timeout": "⏳ **Hết giờ!** Trò chơi đã bị hủy.",
-    "error": "Có lỗi khi tạo game.",
-    "join_button": "Tham gia (Join)"
+    "waiting": "🎮 **Tic-Tac-Toe**\n{{player1}} (❌) đang đợi đối thủ nè!\nBấm nút bên dưới để vào chơi cùng nha 💕",
+    "turn": "🎮 **Tic-Tac-Toe**\n{{player1}} (❌) vs {{player2}} (⭕)\n👉 Tới lượt **{{current}}** ({{symbol}}) rồi nè!",
+    "winner": "🎉 Yayyy! **{{winner}}** ({{symbol}}) thắng rồi nè! 🏆\n{{selfComment}}",
+    "self_comment": "🤭 Thắng mình luôn hả... ghê dữ vậy!",
+    "draw": "🤝 Hòa rồi nè!\nHai bạn giỏi ngang nhau luôn ✨",
+    "game_over": "🏁 Ván này xong rồi nè!",
+    "room_full": "🥺 Phòng đủ người rồi á!",
+    "not_your_turn": "🤭 Chưa tới lượt bạn đâu nè!",
+    "timeout": "⏳ Hết thời gian rồi...\nMình hủy ván này nha!",
+    "error": "💦 Ui... mình tạo phòng không được rồi.",
+    "join_button": "🎮 Vào chơi"
   }
 }

@@ -1,6 +1,6 @@
 {
-  "no_permission": "❌ Bạn không có quyền sử dụng lệnh này. Chỉ Bot Admin mới có quyền quản lý.",
-  "database_error": "Lỗi khi truy cập Database hoặc gửi tin nhắn, vui lòng kiểm tra log.",
-  "generic_error": "Có lỗi xảy ra!",
-  "invalid_number": "❌ Vui lòng nhập số hợp lệ!"
+  "no_permission": "🥺 Bạn chưa có quyền dùng lệnh này đâu. Chỉ Bot Admin mới làm được nè!",
+  "database_error": "💦 Ui... mình gặp lỗi khi lưu dữ liệu hoặc gửi tin nhắn rồi. Bạn thử lại sau nha!",
+  "generic_error": "🥺 Ui... có lỗi mất rồi. Thử lại giúp mình nha!",
+  "invalid_number": "🤔 Bạn nhập một con số hợp lệ giúp mình nha!"
 }

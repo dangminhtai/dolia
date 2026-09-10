@@ -1,7 +1,6 @@
 import { Events, MessageFlags } from "discord.js";
 import { decorateTree, createGameUI, checkGameFinished } from '../../utils/christmasGameUtils.js';
 import { TREE_CONFIG } from '../../config/christmasTreeConfig.js';
-import { getConfig } from '../../utils/childConfigUtils.js';
 
 // Music Panel Imports
 import PanelState from '../../models/PanelState.js';
@@ -20,13 +19,6 @@ import { t } from '../../services/i18nService.js';
 
 export default (client) => {
     client.on(Events.InteractionCreate, async interaction => {
-        // --- 0. CHECK ENVIRONMENT LOCK (STOP DEPLOY) ---
-        // Nếu đang ở Linux (Deploy) và có cờ chặn -> return ngay để bot Local (Windows) xử lý
-        if (process.platform === 'linux') {
-            const stopDeploy = await getConfig('stop_deploy');
-            if (stopDeploy) return;
-        }
-
         // --- 0.1 XỬ LÝ MUSIC PANEL (BẤT TỬ) ---
         if (interaction.customId?.startsWith('music_')) {
             try {

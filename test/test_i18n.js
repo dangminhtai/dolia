@@ -9,6 +9,12 @@ console.log('Test music.errors.no_voice_channel:', t('music.errors.no_voice_chan
 console.log('Test music.track_start with params:', t('music.track_start', { title: 'Lạc Trôi', time: '03:45', requester: 'Admin#1234' }));
 console.log('Test music.play.priority_playlist:', t('music.play.priority_playlist', { name: 'Chill EDM', count: 15 }));
 console.log('Test panel.home.title_playing:', t('panel.home.title_playing'));
+console.log('Test panel.settings.nightcore_on:', t('panel.settings.nightcore_on'));
+console.log('Test panel.radio.title:', t('panel.radio.title', { total: 10 }));
+console.log('Test panel.queue.title:', t('panel.queue.title', { count: 3 }));
+console.log('Test panel.buttons.pl_create:', t('panel.buttons.pl_create'));
+console.log('Test panel.modals.title_pl_create:', t('panel.modals.title_pl_create'));
+console.log('Test music.radio.track_not_found:', t('music.radio.track_not_found'));
 console.log('Test games.tictactoe.winner:', t('games.tictactoe.winner', { winner: 'Tai', symbol: 'X', selfComment: '(Tự kỷ đỉnh cao)' }));
 console.log('Test general.morning.user_added:', t('general.morning.user_added', { username: 'Dolia' }));
 

@@ -1,88 +1,81 @@
 {
-  "track_start": "🎶 Đang phát: **{{title}}** `[{{time}}]`\n👤 Yêu cầu bởi: **{{requester}}**",
-  "track_error": "⚠️ Lỗi tải bài hát **{{title}}**. Đang tự động bỏ qua...",
-  "track_stuck": "⚠️ Bài hát **{{title}}** bị kẹt (mạng lag or YouTube chặn). Bot tự động chuyển bài tiếp theo!",
-  "queue_end": "👋 Hết nhạc rồi, bot đi ngủ đây!",
-  "radio_empty": "⚠️ Kho nhạc Radio đang trống! Tắt chế độ 24/7.",
-  "radio_auto_play": "📻 **Radio 24/7:** Tự động phát: **{{title}}**",
-
+  "track_start": "🎶 Đang phát **{{title}}** nè! `[{{time}}]`\n💖 Bạn chọn bài này á!",
+  "track_error": "🥺 Ui... mình không mở được **{{title}}** rồi.\nĐể mình chuyển bài khác nha!",
+  "track_stuck": "😵 Bài **{{title}}** bị đứng mất rồi...\nMình chuyển bài tiếp theo luôn nha!",
+  "queue_end": "😴 Hết nhạc rồi nè... Mình ngủ một xíu đây~",
+  "radio_empty": "📻 Kho Radio trống mất rồi 🥺 Mình tắt chế độ 24/7 nha!",
+  "radio_auto_play": "📻 Radio 24/7 chọn ngẫu nhiên nè!\n🎵 **{{title}}**",
   "errors": {
-    "no_voice_channel": "❌ Bot không tìm thấy kênh Voice nào để vào cả!",
-    "no_voice_user": "❌ Vui lòng vào voice trước khi sử dụng lệnh này!",
-    "no_voice_play": "❌ Không tìm thấy kênh Voice để phát nhạc!",
-    "load_failed": "❌ Lỗi tải nhạc.",
-    "load_failed_alt": "❌ Lỗi khi tải nhạc.",
-    "no_matches": "❌ Không tìm thấy bài nào!",
-    "connection_error": "❌ Lỗi kết nối.",
-    "connection_error_search": "❌ Lỗi kết nối tìm nhạc.",
-    "bad_gateway": "❌ Lỗi kết nối Node nhạc (Bad Gateway).",
-    "lavalink_error": "❌ Lỗi kết nối Lavalink!",
-    "not_playing": "❌ Bot có đang hát đâu?",
-    "no_track_to_skip": "❌ Không có nhạc để skip!",
-    "no_track_playing": "❌ Không có nhạc nào đang phát!",
-    "invalid_index": "❌ Vui lòng nhập số hợp lệ!",
-    "index_out_of_range": "❌ Index không hợp lệ! (1 - {{max}})",
-    "index_out_of_range_simple": "❌ Số thứ tự không hợp lệ! Chỉ có từ 1 đến {{max}}."
+    "no_voice_channel": "🥺 Mình không thấy kênh Voice nào hết...",
+    "no_voice_user": "🎤 Bạn vào Voice trước rồi mình phát nhạc cho nha!",
+    "no_voice_play": "🥺 Không có Voice để mình phát nhạc rồi...",
+    "load_failed": "💦 Mình tải bài này không được rồi...",
+    "load_failed_alt": "💦 Có lỗi khi tải bài hát mất rồi...",
+    "no_matches": "🔍 Mình tìm hoài mà không thấy bài nào hết 🥺",
+    "connection_error": "📡 Kết nối bị lỗi mất rồi...",
+    "connection_error_search": "📡 Mình không tìm nhạc được vì bị lỗi kết nối...",
+    "bad_gateway": "⚠️ Node nhạc đang hơi mệt rồi...",
+    "lavalink_error": "⚠️ Lavalink đang có chút trục trặc á...",
+    "not_playing": "🎵 Mình có phát nhạc đâu nè~",
+    "no_track_to_skip": "🤭 Chưa có bài nào để bỏ qua hết á!",
+    "no_track_playing": "🎵 Chưa có bài nào đang phát nè!",
+    "invalid_index": "🤔 Bạn nhập số giúp mình nha!",
+    "index_out_of_range": "🥺 Chỉ được chọn từ **1** đến **{{max}}** thôi á!",
+    "index_out_of_range_simple": "🥺 Chỉ có từ **1** đến **{{max}}** thôi nha!"
   },
-
   "play": {
-    "priority_playlist": "🚀 **[ƯU TIÊN]** Đã chèn Playlist **{{name}}** ({{count}} bài) lên đầu!",
-    "priority_playlist_simple": "⚡ **[ƯU TIÊN]** Đã chèn Playlist **{{name}}** lên đầu!",
-    "added_playlist": "✅ Đã thêm Playlist **{{name}}** ({{count}} bài).",
-    "added_playlist_queue": "✅ Đã thêm Playlist **{{name}}** vào hàng chờ.",
-    "priority_track": "🚀 **[ƯU TIÊN]** Đã chèn bài **{{title}}**!",
-    "priority_track_simple": "⚡ **[ƯU TIÊN]** Đã chèn **{{title}}** lên đầu!",
-    "added_to_queue": "✅ Đã thêm **{{title}}** vào hàng chờ.",
-    "added_to_queue_alt": "✅ Đã thêm vào hàng chờ: **{{title}}**",
-    "now_playing": "▶️ Đang phát: **{{title}}**",
-    "now_playing_at": "▶️ Đang phát: **{{title}}** tại kênh **{{channel}}**"
+    "priority_playlist": "⚡ Mình đưa Playlist **{{name}}** ({{count}} bài) lên đầu hàng chờ rồi nè!",
+    "priority_playlist_simple": "⚡ Playlist **{{name}}** được phát trước nha!",
+    "added_playlist": "💖 Mình thêm Playlist **{{name}}** ({{count}} bài) rồi nè!",
+    "added_playlist_queue": "💖 Playlist **{{name}}** vào hàng chờ rồi!",
+    "priority_track": "⚡ **{{title}}** sẽ được phát tiếp theo nha!",
+    "priority_track_simple": "⚡ **{{title}}** lên đầu hàng chờ rồi nè!",
+    "added_to_queue": "🎵 Mình thêm **{{title}}** vào hàng chờ rồi!",
+    "added_to_queue_alt": "🎵 **{{title}}** đang đợi tới lượt nè!",
+    "now_playing": "▶️ Giờ tới **{{title}}** nè!",
+    "now_playing_at": "▶️ **{{title}}** đang phát ở **{{channel}}** nha!"
   },
-
-  "stop": "🛑 Đã dừng nhạc và tắt chế độ Radio 24/7.",
-  "skip": "⏭️ Đã bỏ qua bài: **{{title}}**",
-
+  "stop": "🛑 Mình dừng nhạc rồi nha. Radio 24/7 cũng tắt luôn á!",
+  "skip": "⏭️ Bye bye **{{title}}** nha~",
   "radio": {
-    "added": "✅ Đã thêm **{{title}}** vào kho nhạc Radio!",
-    "added_247": "✅ Đã thêm **{{title}}** vào Radio 24/7!",
-    "added_short": "✅ Đã thêm vài Radio!",
-    "removed": "🗑️ Đã xóa bài **{{title}}**!",
-    "removed_indexed": "🗑️ Đã xóa bài số **{{index}}**: **{{title}}** khỏi kho nhạc.",
-    "empty_list": "❌ Kho nhạc đang trống trơn! Dùng `/radio-add` thêm vào đi.",
-    "empty_list_prompt": "❌ Kho nhạc đang trống! Dùng `/radio-add` thêm bài trước đã.",
-    "invalid_page": "❌ Chỉ có tổng cộng **{{totalPages}}** trang thôi ông ơi.",
-    "mode_enabled": "📻 **Đã bật chế độ 24/7!**\nSẽ phát ngẫu nhiên từ kho nhạc (**{{count}}** bài).\n▶️ Mở bát bằng bài: **{{title}}**",
-    "list_title": "📻 KHO NHẠC RADIO 24/7 (Tổng: {{total}} bài)",
-    "list_footer": "Trang {{page}}/{{totalPages}} • Dùng /radio-remove [số thứ tự] để xóa"
+    "added": "📻 **{{title}}** vào kho Radio rồi nè!",
+    "added_247": "📻 Mình thêm **{{title}}** vào Radio 24/7 rồi!",
+    "added_short": "📻 Thêm xong rồi nè!",
+    "removed": "🗑️ Mình xóa **{{title}}** rồi nha!",
+    "removed_indexed": "🗑️ Xóa bài số **{{index}}**: **{{title}}** rồi!",
+    "empty_list": "🥺 Kho Radio trống trơn luôn...",
+    "empty_list_prompt": "🥺 Thêm vài bài vào Radio trước nha!",
+    "invalid_page": "📖 Chỉ có **{{totalPages}}** trang thôi á!",
+    "mode_enabled": "📻 Radio 24/7 bật rồi nè!\n💖 Có **{{count}}** bài để phát ngẫu nhiên.\n🎶 Mở đầu bằng **{{title}}**!",
+    "list_title": "📻 Kho Radio 24/7 ({{total}} bài)",
+    "list_footer": "Trang {{page}}/{{totalPages}} ✨",
+    "track_not_found": "🥺 Mình tìm không thấy bài hát này hoặc không tải được rồi... Bạn thử bài khác giúp mình nha 💕"
   },
-
   "playlist": {
-    "created": "✅ Đã tạo playlist **{{name}}**!",
-    "added_tracks": "✅ Đã thêm **{{count}}** bài vào Playlist **{{name}}**!",
-    "added_to_selected": "✅ Đã thêm vào **{{name}}**!",
-    "playing": "▶️ Đang phát Playlist: **{{name}}**",
-    "empty": "❌ Playlist trống!",
-    "load_failed": "❌ Không tải được bài hát nào trong Playlist này.",
-    "not_found": "❌ Playlist không tồn tại!",
-    "no_selected": "❌ Không xác định được Playlist đang chọn. Hãy chọn lại!"
+    "created": "✨ Playlist **{{name}}** ra đời rồi nè!",
+    "added_tracks": "💖 Mình thêm **{{count}}** bài vào **{{name}}** rồi!",
+    "added_to_selected": "💖 Thêm vào **{{name}}** rồi nha!",
+    "playing": "▶️ Playlist **{{name}}** bắt đầu rồi nè!",
+    "empty": "🥺 Playlist này chưa có bài nào hết...",
+    "load_failed": "💦 Mình không mở được bài nào trong playlist này...",
+    "not_found": "🥺 Mình không thấy playlist đó...",
+    "no_selected": "🤔 Bạn chọn lại playlist giúp mình nha!"
   },
-
   "switch_provider": {
-    "success": "✅ Đã chuyển nguồn phát nhạc sang: **{{provider}}**",
-    "error": "❌ Có lỗi xảy ra khi lưu cài đặt."
+    "success": "✨ Mình đổi sang **{{provider}}** rồi nè!",
+    "error": "🥺 Có lỗi nên mình chưa lưu được..."
   },
-
   "settings": {
-    "title": "🎛️ STUDIO ÂM THANH",
-    "description": "Cài đặt sẽ được **LƯU VĨNH VIỄN** cho server này.",
-    "footer": "Bấm nút để chỉnh. Bot sẽ tự cập nhật ngay lập tức."
+    "title": "🎛️ Chỉnh nhạc nè",
+    "description": "Bạn chỉnh thoải mái nha!\nMình sẽ nhớ luôn cho lần sau á 💕",
+    "footer": "Bấm một cái là mình đổi ngay luôn!"
   },
-
   "nowplaying": {
-    "title": "💿 Đang phát...",
-    "field_artist": "Ca sĩ/Kênh",
-    "field_requester": "Người yêu cầu",
-    "field_time": "Thời gian",
-    "field_progress": "Tiến độ",
-    "footer": "Volume: {{volume}}% | Loop: {{loop}}"
+    "title": "🎶 Đang phát nè",
+    "field_artist": "🎤 Ca sĩ/Kênh",
+    "field_requester": "💖 Người chọn",
+    "field_time": "⏰ Thời gian",
+    "field_progress": "✨ Tiến độ",
+    "footer": "🔊 {{volume}}% • 🔁 {{loop}}"
   }
 }
