@@ -193,6 +193,8 @@ ${topSongsStr || "- Chưa có bài nào nổi bật"}
 
                     let functionCallAttempts = 0;
                     let finalResponseText = null;
+                    let preCallText = null;
+                    let lastToolResultText = null;
 
                     // Loop for Function Calling (Max 5 turns)
                     while (functionCallAttempts < 5) {
@@ -212,9 +214,20 @@ ${topSongsStr || "- Chưa có bài nào nổi bật"}
                         const content = candidate?.content;
                         const responseParts = content?.parts || [];
 
+                        // Lấy text không phải thought từ turn này nếu có
+                        const textParts = responseParts
+                            .filter(p => p.text && !p.thought)
+                            .map(p => p.text)
+                            .join('\n')
+                            .trim();
+
                         const hasFunctionCall = responseParts.some(p => p.functionCall);
 
                         if (hasFunctionCall) {
+                            if (textParts) {
+                                preCallText = textParts;
+                            }
+
                             const callNames = responseParts
                                 .filter(p => p.functionCall)
                                 .map(p => p.functionCall.name)
@@ -244,6 +257,9 @@ ${topSongsStr || "- Chưa có bài nào nổi bật"}
                                             const args = { ...call.args, ...context };
                                             const result = await fn(args);
                                             apiResponse = { result: result };
+                                            if (typeof result === 'string' && result.trim()) {
+                                                lastToolResultText = result.trim();
+                                            }
                                         } catch (error) {
                                             apiResponse = { error: error.message };
                                             console.error(`Error executing ${call.name}:`, error);
@@ -273,16 +289,22 @@ ${topSongsStr || "- Chưa có bài nào nổi bật"}
 
                         } else {
                             // No function call -> Final Text Response
-                            finalResponseText = response.text || responseParts.find(p => p.text)?.text || "";
-
-                            newTurns.push({
-                                role: 'model',
-                                parts: [{ text: finalResponseText }]
-                            });
+                            finalResponseText = textParts || response.text || "";
                             break;
                         }
                         functionCallAttempts++;
                     }
+
+                    // Fallback thông minh: Nếu sau khi gọi tool mà model không sinh thêm text mới
+                    if (!finalResponseText || !finalResponseText.trim()) {
+                        finalResponseText = preCallText || lastToolResultText || "Dolia đã ghi nhận và xử lý yêu cầu của bạn rồi nha! ✨💖";
+                    }
+
+                    // Lưu text phản hồi cuối cùng vào DB
+                    newTurns.push({
+                        role: 'model',
+                        parts: [{ text: finalResponseText }]
+                    });
 
                     // 4. Save new turns to DB
                     if (newTurns.length > 0) {
