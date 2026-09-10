@@ -204,7 +204,7 @@ ${topSongsStr || "- Chưa có bài nào nổi bật"}
                             config: {
                                 tools: this.tools,
                                 systemInstruction: systemInstruction,
-                                temperature: 1.5,
+                                temperature: 0.7,
                                 topK: 40,
                                 topP: 0.95
                             }

@@ -3,7 +3,7 @@ import { Type } from "@google/genai";
 export const devTools = [
     {
         name: "agent_code",
-        description: "Yêu cầu Agent tự động lập trình tạo mới, chỉnh sửa hoặc XOÁ/GỠ BỎ một tính năng, trò chơi, hoặc lệnh cho bot Dolia khi được chủ nhân (Owner) yêu cầu trong chat. BẮT BUỘC gọi tool này khi người dùng muốn: tạo lệnh mới, viết trò chơi mới, sửa tính năng, hoặc XOÁ BỎ một lệnh/trò chơi đã tạo trước đó.",
+        description: "Yêu cầu Agent tự động lập trình tạo mới, chỉnh sửa, TẠO LẠI hoặc XOÁ/GỠ BỎ một tính năng, trò chơi, hoặc lệnh cho bot Dolia khi được chủ nhân (Owner) yêu cầu trong chat. BẮT BUỘC gọi tool này khi người dùng muốn: tạo lệnh mới, viết trò chơi mới, sửa tính năng, XOÁ BỎ lệnh, HOẶC KHI NGƯỜI DÙNG BÁO LỆNH CHƯA ĐƯỢC TẠO / CHƯA CÓ KÌA / YÊU CẦU TẠO LẠI / HỎI SAO CHƯA CÓ LỆNH. TUYỆT ĐỐI KHÔNG ĐƯỢC chỉ trả lời hứa hẹn bằng văn bản mà không gọi tool này.",
         parameters: {
             type: Type.OBJECT,
             properties: {
