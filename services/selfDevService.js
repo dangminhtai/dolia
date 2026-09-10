@@ -107,10 +107,7 @@ export class SelfDevService {
                     await progressMsg.edit({ embeds: [fixEmbed] }).catch(() => { });
                 }
 
-                // Bước 1: Dọn dẹp sạch sẽ môi trường sandbox trước khi bắt đầu
-                sandboxManager.cleanSandbox();
-
-                // Bước 2: Gọi Gemini Coding Model (kèm feedback lỗi nếu retry)
+                // Bước 1: Chuẩn bị file và gọi Gemini Coding Model (kèm feedback lỗi nếu retry)
                 const feedback = lastValidationErrors.length > 0 ? lastValidationErrors.join('\n') : null;
                 const prevCode = generatedData?.files?.[0]?.content || null;
 
@@ -119,7 +116,7 @@ export class SelfDevService {
                 usedModel = result.usedModel;
                 commandName = generatedData.command_name || safeSlug;
 
-                // Bước 3: Ghi các file được sinh vào Sandbox
+                // Bước 2: Ghi các file được sinh vào Sandbox
                 for (const fileObj of generatedData.files) {
                     await sandboxManager.writeFile(fileObj.path, fileObj.content);
                 }
@@ -130,8 +127,12 @@ export class SelfDevService {
                     await sandboxManager.writeFile(i18nRelPath, JSON.stringify(generatedData.i18n.translations, null, 4));
                 }
 
-                // Bước 4: Kiểm tra tính toàn vẹn và chất lượng mã nguồn (Multi-layer Verification trong Sandbox)
-                const validationResults = await sandboxValidator.validateBatch(sandboxManager.sandboxDir);
+                // Bước 3: Kiểm tra tính toàn vẹn của các file vừa tạo trong Sandbox
+                const filesToValidate = [
+                    path.join(sandboxManager.sandboxDir, 'slash', `${commandName}.js`),
+                    ...(generatedData.i18n && generatedData.i18n.translations ? [path.join(sandboxManager.sandboxDir, 'i18n', `${commandName}.json`)] : [])
+                ];
+                const validationResults = await sandboxValidator.validateBatch(filesToValidate);
                 if (validationResults.valid) {
                     lastValidationErrors = [];
                     break; // Vượt qua kiểm thử 100%, sẵn sàng Apply!
@@ -145,14 +146,18 @@ export class SelfDevService {
                 throw new Error(`Kiểm thử chất lượng mã nguồn trong Sandbox chưa đạt chuẩn sau ${MAX_RETRIES} lần tự sửa:\n${lastValidationErrors.join('\n')}`);
             }
 
-            // Bước 5: Tạo Proposed Manifest từ các file trong sandbox
+            // Bước 4: Tạo Proposed Manifest cho các file của lệnh này (giữ nguyên các lệnh khác trong sandbox)
+            const changes = [
+                { action: 'create', source: `slash/${commandName}.js`, target: `commands/slash/${commandName}.js` },
+                ...(generatedData.i18n && generatedData.i18n.translations ? [{ action: 'create', source: `i18n/${commandName}.json`, target: `resources/vi/${commandName}.json` }] : [])
+            ];
             const proposedManifest = await manifestManager.createProposedManifest({
                 agent: 'dolia-self-dev',
                 model: usedModel,
                 summary: generatedData.summary || prompt
-            });
+            }, changes);
 
-            // Bước 6: TỰ ĐỘNG ÁP DỤNG (AUTO-APPLY) TỪ SANDBOX VÀO PRODUCTION
+            // Bước 5: TỰ ĐỘNG ÁP DỤNG (AUTO-APPLY) TỪ SANDBOX VÀO PRODUCTION
             Logger.info(`[SelfDev] 🚀 Tự động Apply mã nguồn cho lệnh /${commandName}...`);
             const applyResult = await applyEngine.apply(proposedManifest, {
                 isApproved: true,
@@ -165,8 +170,19 @@ export class SelfDevService {
                 await execPromise(`git commit -m "feat(auto): apply /${commandName} [tx: ${applyResult.transactionId}]"`);
             } catch (_) { }
 
-            // Dọn dẹp sandbox sau khi apply thành công
-            sandboxManager.cleanSandbox();
+            // BƯỚC 6: THÔNG BÁO HOÀN TẤT LÊN DISCORD NGAY LẬP TỨC (Không để nghẽn trước khi nạp lệnh)
+            const doneEmbed = new EmbedBuilder()
+                .setColor(0x2ECC71)
+                .setTitle('🎉 Hoàn tất rồi nè!')
+                .setDescription(
+                    `Mình đã tạo và cài đặt xong lệnh **\`/${commandName}\`** cho bạn rồi đó!\n` +
+                    `Bây giờ bạn có thể gõ thử **\`/${commandName}\`** ngay nha~ 💖✨\n\n` +
+                    `📝 **Mô tả:** ${generatedData.summary || prompt}\n` +
+                    `📁 **Mã nguồn đã lưu tại:** \`sandbox/slash/${commandName}.js\``
+                )
+                .setTimestamp();
+
+            await progressMsg.edit({ embeds: [doneEmbed], components: [] }).catch(() => { });
 
             // Bước 7: Tự động nạp lệnh vào RAM (Hot-Reload) và làm mới i18n
             const commandPath = path.join(process.cwd(), 'commands', 'slash', `${commandName}.js`);
@@ -195,19 +211,6 @@ export class SelfDevService {
                     Logger.warn(`[SelfDev] Warning on deploy commands: ${deployErr.message}`);
                 }
             }
-
-            // Bước 9: Thông báo hoàn tất đúng phong cách Dolia (xưng mình - bạn, không nút bấm rườm rà)
-            const doneEmbed = new EmbedBuilder()
-                .setColor(0x2ECC71)
-                .setTitle('🎉 Hoàn tất rồi nè!')
-                .setDescription(
-                    `Mình đã tạo và cài đặt xong lệnh **\`/${commandName}\`** cho bạn rồi đó!\n` +
-                    `Bây giờ bạn có thể gõ thử **\`/${commandName}\`** ngay nha~ 💖✨\n\n` +
-                    `📝 **Mô tả:** ${generatedData.summary || prompt}`
-                )
-                .setTimestamp();
-
-            await progressMsg.edit({ embeds: [doneEmbed], components: [] });
 
         } catch (error) {
             Logger.error(`[SelfDev] Error in session ${sessionId}:`, error);
@@ -771,6 +774,30 @@ export default {
                 await execPromise(`git commit -m "feat(auto): delete /${targetName} per owner request [tx: ${txId}]"`);
             } catch (_) { }
 
+            // Sao lưu file bị xóa vào sandbox/backup/<targetName>.js.bak và <targetName>.json.bak
+            try {
+                const sandboxBackupDir = path.join(process.cwd(), 'sandbox', 'backup');
+                if (!fs.existsSync(sandboxBackupDir)) {
+                    fs.mkdirSync(sandboxBackupDir, { recursive: true });
+                }
+                const fullCmdPath = path.join(process.cwd(), cmdRelPath);
+                if (fs.existsSync(fullCmdPath)) {
+                    fs.copyFileSync(fullCmdPath, path.join(sandboxBackupDir, `${targetName}.js.bak`));
+                }
+                const fullI18nPath = path.join(process.cwd(), i18nRelPath);
+                if (fs.existsSync(fullI18nPath)) {
+                    fs.copyFileSync(fullI18nPath, path.join(sandboxBackupDir, `${targetName}.json.bak`));
+                }
+
+                // Dọn file tương ứng trong sandbox/slash/ và sandbox/i18n/
+                const sandboxCmd = path.join(process.cwd(), 'sandbox', 'slash', `${targetName}.js`);
+                if (fs.existsSync(sandboxCmd)) fs.rmSync(sandboxCmd, { force: true });
+                const sandboxI18n = path.join(process.cwd(), 'sandbox', 'i18n', `${targetName}.json`);
+                if (fs.existsSync(sandboxI18n)) fs.rmSync(sandboxI18n, { force: true });
+            } catch (backupErr) {
+                Logger.warn(`[SelfDev] Warning on sandbox backup: ${backupErr.message}`);
+            }
+
             // Xóa khỏi client.commands trong RAM
             if (client?.commands) {
                 client.commands.delete(targetName);
@@ -783,7 +810,7 @@ export default {
                 .setColor(0x2ECC71)
                 .setTitle('🗑️ Đã xóa lệnh thành công!')
                 .setDescription(`Mình đã gỡ bỏ hoàn toàn lệnh **\`/${targetName}\`** theo yêu cầu của bạn rồi nha!\n\n` +
-                    `💾 File cũ đã được sao lưu an toàn tại \`.apply/${txId}/backup/\` phòng khi cần khôi phục lại nè ✨`)
+                    `💾 Bản sao lưu an toàn đã được cất tại \`sandbox/backup/${targetName}.js.bak\` phòng khi cần khôi phục lại nè ✨`)
                 .setTimestamp();
 
             await confirmMsg.edit({ embeds: [successEmbed], components: [] });
