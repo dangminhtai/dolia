@@ -69,8 +69,8 @@ export class SelfDevService {
         // Gửi Embed thông báo nhẹ nhàng theo đúng phong cách Dolia (xưng mình - bạn)
         const statusEmbed = new EmbedBuilder()
             .setColor(0x5DADE2)
-            .setTitle('✨ Dolia đang chuẩn bị tạo lệnh nè...')
-            .setDescription(`Bạn đợi mình một chút nha, mình đang viết mã nguồn cho **\`/${safeSlug}\`** đây nè! 🌊🫧`)
+            .setTitle('✨ Dolia đang chuẩn bị tính năng mới nè...')
+            .setDescription(`Bạn đợi mình một chút nha, mình đang chuẩn bị lệnh **\`/${safeSlug}\`** đây nè! 🌊🫧`)
             .setTimestamp();
 
         let progressMsg;
@@ -96,13 +96,13 @@ export class SelfDevService {
             while (attempt < MAX_RETRIES) {
                 attempt++;
 
-                // Nếu là lần thử lại do phát hiện lỗi -> cập nhật giao diện thông báo đáng yêu
+                // Nếu là lần thử lại do phát hiện lỗi -> cập nhật thông báo nhẹ nhàng đáng yêu
                 if (attempt > 1) {
                     const fixEmbed = new EmbedBuilder()
                         .setColor(0xF39C12)
                         .setTitle('✨ Ấy da, mình xin lỗi nhé! 🥺')
-                        .setDescription(`Có vẻ như mình đang gặp chút trục trặc khi viết lệnh **\`/${commandName}\`**.\n` +
-                            `Bạn đợi một xíu nha, mình đang tự động phân tích và sửa lại ngay đây nè! 🛠️🫧 (Lần sửa ${attempt}/${MAX_RETRIES})`)
+                        .setDescription(`Có vẻ như mình gặp chút trục trặc nhỏ khi chuẩn bị lệnh **\`/${commandName}\`**.\n` +
+                            `Bạn đợi một xíu nha, mình đang tự chỉnh lại cho thật mượt mà ngay đây nè! 🫧✨`)
                         .setTimestamp();
                     await progressMsg.edit({ embeds: [fixEmbed] }).catch(() => { });
                 }
@@ -143,7 +143,7 @@ export class SelfDevService {
             }
 
             if (lastValidationErrors.length > 0) {
-                throw new Error(`Kiểm thử chất lượng mã nguồn trong Sandbox chưa đạt chuẩn sau ${MAX_RETRIES} lần tự sửa:\n${lastValidationErrors.join('\n')}`);
+                throw new Error(`Kiểm thử chất lượng trong Sandbox chưa đạt chuẩn sau ${MAX_RETRIES} lần tự sửa:\n${lastValidationErrors.join('\n')}`);
             }
 
             // Bước 4: Tạo Proposed Manifest cho các file của lệnh này (giữ nguyên các lệnh khác trong sandbox)
@@ -170,15 +170,14 @@ export class SelfDevService {
                 await execPromise(`git commit -m "feat(auto): apply /${commandName} [tx: ${applyResult.transactionId}]"`);
             } catch (_) { }
 
-            // BƯỚC 6: THÔNG BÁO HOÀN TẤT LÊN DISCORD NGAY LẬP TỨC (Không để nghẽn trước khi nạp lệnh)
+            // BƯỚC 6: THÔNG BÁO HOÀN TẤT LÊN DISCORD NGAY LẬP TỨC (Không làm lộ đường dẫn code / từ ngữ kỹ thuật)
             const doneEmbed = new EmbedBuilder()
                 .setColor(0x2ECC71)
                 .setTitle('🎉 Hoàn tất rồi nè!')
                 .setDescription(
-                    `Mình đã tạo và cài đặt xong lệnh **\`/${commandName}\`** cho bạn rồi đó!\n` +
+                    `Mình đã học xong tính năng mới **\`/${commandName}\`** cho bạn rồi đó!\n` +
                     `Bây giờ bạn có thể gõ thử **\`/${commandName}\`** ngay nha~ 💖✨\n\n` +
-                    `📝 **Mô tả:** ${generatedData.summary || prompt}\n` +
-                    `📁 **Mã nguồn đã lưu tại:** \`sandbox/slash/${commandName}.js\``
+                    `📝 **Mô tả:** ${generatedData.summary || prompt}`
                 )
                 .setTimestamp();
 
@@ -201,11 +200,11 @@ export class SelfDevService {
             }
             reloadI18n();
 
-            // Bước 8: Tự động deploy slash command lên Discord REST API
+            // Bước 8: Tự động deploy slash command lên Discord REST API (forceDeploy: true)
             if (client) {
                 try {
                     const loadResult = await loadCommands(path.join(process.cwd(), 'commands'), client);
-                    await deployCommands(loadResult);
+                    await deployCommands(loadResult, true);
                     Logger.info(`[SelfDev] Successfully deployed slash commands to Discord REST API`);
                 } catch (deployErr) {
                     Logger.warn(`[SelfDev] Warning on deploy commands: ${deployErr.message}`);
@@ -223,7 +222,7 @@ export class SelfDevService {
             const errorEmbed = new EmbedBuilder()
                 .setColor(0xE74C3C)
                 .setTitle('Ấy da, có chút trục trặc nhỏ rồi... 🥺')
-                .setDescription(`Trong lúc viết lệnh **\`/${safeSlug}\`**, mình gặp chút lỗi nè:\n\`\`\`${error.message || error}\`\`\`\nMình đã dọn dẹp an toàn rồi, bạn thử lại sau nhé!`)
+                .setDescription(`Trong lúc hoàn thiện lệnh **\`/${safeSlug}\`**, mình gặp chút khó khăn nên chưa xong được nè.\nBạn cho mình thử lại sau nha! 🫧`)
                 .setTimestamp();
 
             await progressMsg.edit({ embeds: [errorEmbed], components: [] }).catch(() => { });
@@ -639,7 +638,7 @@ export default {
      */
     static async startDeleteSession({ prompt, featureName, user, channel, client, replyTarget = null }) {
         if (!this.isOwner(user.id)) {
-            const rejectMsg = t('self_dev.only_owner') || 'Chỉ có chủ nhân mới có thể yêu cầu mình xóa tính năng nha!';
+            const rejectMsg = t('self_dev.only_owner') || 'Chỉ có chủ nhân mới có thể yêu cầu mình gỡ bỏ tính năng nha!';
             if (replyTarget) return replyTarget.reply({ content: rejectMsg, flags: MessageFlags.Ephemeral });
             return channel.send({ content: rejectMsg });
         }
@@ -681,8 +680,8 @@ export default {
         if (!fileExists) {
             const notFoundEmbed = new EmbedBuilder()
                 .setColor(0xE74C3C)
-                .setTitle('🔍 Không tìm thấy lệnh cần xóa nè')
-                .setDescription(`Mình không tìm thấy file lệnh tương ứng với **\`${targetName || featureName || prompt}\`** trong thư mục lệnh.\n\n` +
+                .setTitle('🔍 Không tìm thấy lệnh cần gỡ nè')
+                .setDescription(`Mình không tìm thấy lệnh nào tên là **\`${targetName || featureName || prompt}\`** hết trơn á.\n\n` +
                     `📋 **Danh sách các lệnh hiện có:**\n` +
                     (existingCommands.length > 0 ? existingCommands.map(c => `\`/${c}\``).join(', ') : '*Chưa có lệnh nào*'))
                 .setTimestamp();
@@ -696,7 +695,7 @@ export default {
         const deletingEmbed = new EmbedBuilder()
             .setColor(0xE67E22)
             .setTitle(`🗑️ Đang gỡ bỏ lệnh /${targetName}...`)
-            .setDescription(`Mình đang tiến hành sao lưu an toàn và gỡ bỏ lệnh **\`/${targetName}\`** theo yêu cầu của bạn nha! 🌊🫧`)
+            .setDescription(`Mình đang tiến hành gỡ bỏ lệnh **\`/${targetName}\`** theo yêu cầu của bạn nha! 🌊🫧`)
             .setTimestamp();
 
         let progressMsg;
@@ -805,27 +804,26 @@ export default {
             }
             reloadI18n();
 
-            // Cập nhật Embed thành công lên Discord
+            // Cập nhật Embed thành công lên Discord (không tiết lộ đường dẫn nội bộ / file kỹ thuật)
             const successEmbed = new EmbedBuilder()
                 .setColor(0x2ECC71)
-                .setTitle('🗑️ Đã xóa lệnh thành công!')
-                .setDescription(`Mình đã gỡ bỏ hoàn toàn lệnh **\`/${targetName}\`** theo yêu cầu của bạn rồi nha!\n\n` +
-                    `💾 Bản sao lưu an toàn đã được cất tại \`sandbox/backup/${targetName}.js.bak\` phòng khi cần khôi phục lại nè ✨`)
+                .setTitle('🗑️ Đã gỡ bỏ thành công!')
+                .setDescription(`Mình đã gỡ bỏ hoàn toàn lệnh **\`/${targetName}\`** theo yêu cầu của bạn rồi nha! Bạn yên tâm là mình vẫn lưu trữ lại phòng khi bạn muốn dùng lại sau nè~ 🫧✨`)
                 .setTimestamp();
 
             await confirmMsg.edit({ embeds: [successEmbed], components: [] });
 
-            // Deploy lại commands lên Discord API
+            // Deploy lại commands lên Discord API (forceDeploy: true)
             const loadResult = await loadCommands(path.join(process.cwd(), 'commands'), client);
-            await deployCommands(loadResult);
+            await deployCommands(loadResult, true);
             Logger.info(`[SelfDev] ✅ Đã đồng bộ lại danh sách lệnh lên Discord REST API`);
 
         } catch (err) {
             Logger.error(`[SelfDev] Lỗi khi xóa lệnh /${targetName}:`, err);
             const errEmbed = new EmbedBuilder()
                 .setColor(0xE74C3C)
-                .setTitle('❌ Lỗi khi xóa lệnh')
-                .setDescription(`Không thể xóa lệnh: \`\`\`${err.message}\`\`\``)
+                .setTitle('Ấy da, có chút trục trặc nhỏ rồi... 🥺')
+                .setDescription(`Mình chưa gỡ bỏ được lệnh này nè, bạn thử lại sau giúp mình nha! 🫧`)
                 .setTimestamp();
             await confirmMsg.edit({ embeds: [errEmbed], components: [] });
         }

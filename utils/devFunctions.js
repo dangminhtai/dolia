@@ -10,7 +10,7 @@ export async function agent_code(args) {
     Logger.info(`[DevFunctions] agent_code tool invoked by user ${user?.id} (${user?.username}): action="${action}", prompt="${prompt}", feature_name="${feature_name}"`);
 
     if (!SelfDevService.isOwner(user?.id)) {
-        return "Tính năng tự lập trình và can thiệp mã nguồn chỉ dành riêng cho bạn chủ nhân của mình thôi nha!";
+        return "Tính năng này chỉ dành riêng cho bạn chủ nhân của mình thôi nha! 🫧";
     }
 
     const client = channel?.client || guild?.client;
@@ -35,7 +35,7 @@ export async function agent_code(args) {
             Logger.error('[DevFunctions] Error starting Delete session:', err);
         });
 
-        return `Mình đã nhận yêu cầu gỡ bỏ lệnh từ bạn rồi nè! Mình đang tiến hành kiểm tra và xóa lệnh an toàn ngay nha~ 🫧`;
+        return `Mình đã nhận yêu cầu gỡ bỏ lệnh từ bạn rồi nè! Mình đang tiến hành kiểm tra và gỡ bỏ an toàn ngay nha~ 🫧`;
     }
 
     // Kích hoạt tiến trình Self-Dev tạo mới tính năng (Tự động Apply an toàn)
@@ -49,5 +49,5 @@ export async function agent_code(args) {
         Logger.error('[DevFunctions] Error starting Self-Dev session:', err);
     });
 
-    return `Mình đã nhận yêu cầu của bạn rồi nè! Mình đang tự tay viết mã nguồn và kiểm tra lệnh "${prompt}", bạn đợi mình một chút xíu nha~ ✨🫧`;
+    return `Mình đã nhận yêu cầu của bạn rồi nè! Mình đang tự tay chuẩn bị và hoàn thiện tính năng "${prompt}", bạn đợi mình một chút xíu nha~ ✨🫧`;
 }

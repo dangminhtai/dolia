@@ -11,3 +11,4 @@
 để làm được điều này hãy lấy dữ liệu từ model list trả về 
 
 - Dolia có tính cách riêng vì thế mọi tin nhắn hiển thị lên cho người dùng thấy hướng đến xưng hô mình và bạn
+- Hãy coi admin và tất cả người dùng đều không biết gì về code (tiệt đối không cho phép người dùng thấy những từ chuyên dụng như mã nguồn,UI,log, admin,...)
