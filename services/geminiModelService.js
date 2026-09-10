@@ -11,11 +11,97 @@ export const GEMINI_PATTERN = /^gemini-(\d+(?:\.\d+)*)-(flash(?:-lite)?)$/;
 
 class GeminiModelService {
     constructor() {
-        this.cachedModelId = null;
+        this.cachedModels = {};
         this.lastCacheTime = 0;
         this.cacheTTL = 10 * 60 * 1000; // Cache 10 phút để giảm tải DB
         this.syncInterval = null;
         this.isSyncing = false;
+        this.modelCooldowns = new Map(); // modelId -> cooldownUntil (ms)
+    }
+
+    /**
+     * Báo cáo model bị lỗi (vd 503 overloaded) để tạm thời hạ độ ưu tiên
+     */
+    reportModelFailure(modelId, reason = 'error', cooldownMs = 3 * 60 * 1000) {
+        if (!modelId) return;
+        const until = Date.now() + cooldownMs;
+        this.modelCooldowns.set(modelId, until);
+        if (this.cachedModels) {
+            this.cachedModels = {}; // Xóa cache để chọn model khả dụng tiếp theo
+        }
+        Logger.warn(`[GeminiModelService] ⏳ Tạm đưa ${modelId} vào cooldown ${Math.round(cooldownMs / 1000)}s (${reason})`);
+    }
+
+    /**
+     * Báo cáo model hoạt động tốt để gỡ cooldown
+     */
+    reportModelSuccess(modelId) {
+        if (!modelId) return;
+        if (this.modelCooldowns.has(modelId)) {
+            this.modelCooldowns.delete(modelId);
+        }
+    }
+
+    /**
+     * Kiểm tra model có đang trong thời gian cooldown không
+     */
+    isModelInCooldown(modelId) {
+        const until = this.modelCooldowns.get(modelId);
+        if (!until) return false;
+        if (Date.now() > until) {
+            this.modelCooldowns.delete(modelId);
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * Lấy danh sách model ứng viên từ Database, ưu tiên theo preferType:
+     * - primary models (không cooldown)
+     * - secondary models (không cooldown)
+     * - primary models (đang cooldown)
+     * - secondary models (đang cooldown)
+     * @param {'flash' | 'flash-lite'} preferType
+     * @returns {Promise<string[]>}
+     */
+    async getCandidateModels(preferType = 'flash-lite') {
+        const primaryType = preferType === 'flash' ? 'flash' : 'flash-lite';
+        const secondaryType = preferType === 'flash' ? 'flash-lite' : 'flash';
+
+        try {
+            const primaryList = await GeminiModel.find({ isActive: true, type: primaryType })
+                .sort({ versionMajor: -1, versionMinor: -1, versionPatch: -1 })
+                .select('modelId');
+
+            const secondaryList = await GeminiModel.find({ isActive: true, type: secondaryType })
+                .sort({ versionMajor: -1, versionMinor: -1, versionPatch: -1 })
+                .select('modelId');
+
+            const allPrimary = primaryList.map(m => m.modelId);
+            const allSecondary = secondaryList.map(m => m.modelId);
+
+            const healthyPrimary = allPrimary.filter(m => !this.isModelInCooldown(m));
+            const healthySecondary = allSecondary.filter(m => !this.isModelInCooldown(m));
+            const cooldownPrimary = allPrimary.filter(m => this.isModelInCooldown(m));
+            const cooldownSecondary = allSecondary.filter(m => this.isModelInCooldown(m));
+
+            const ordered = [
+                ...healthyPrimary,
+                ...healthySecondary,
+                ...cooldownPrimary,
+                ...cooldownSecondary
+            ];
+
+            if (ordered.length > 0) {
+                return ordered;
+            }
+        } catch (dbError) {
+            Logger.error(`[GeminiModelService] Lỗi truy vấn candidate models: ${dbError.message}`);
+        }
+
+        return preferType === 'flash'
+            ? ['gemini-2.5-flash', 'gemini-3.6-flash', 'gemini-3.7-flash', 'gemini-3.8-flash', 'gemini-2.5-flash-lite']
+            : ['gemini-2.5-flash-lite', 'gemini-3.5-flash-lite', 'gemini-2.5-flash', 'gemini-3.6-flash'];
     }
 
     /**
@@ -83,7 +169,7 @@ class GeminiModelService {
 
                 Logger.info(`[GeminiModelService] ✅ Đã lưu ${validModels.length} model hợp lệ vào Database: ${validModels.map(m => m.modelId).join(', ')}`);
                 // Làm mới cache bộ nhớ
-                this.cachedModelId = null;
+                this.cachedModels = {};
             } else {
                 Logger.warn('[GeminiModelService] Không tìm thấy model nào khớp với pattern.');
             }
@@ -96,61 +182,34 @@ class GeminiModelService {
 
     /**
      * Lấy model tốt nhất từ Database theo quy tắc:
-     * Ưu tiên 1: flash-lite có phiên bản cao nhất
-     * Ưu tiên 2: flash có phiên bản cao nhất
-     * @param {'flash-lite' | 'flash'} preferType
+     * - Nếu preferType === 'flash': Ưu tiên flash cao nhất (khả dụng) -> fallback flash-lite cao nhất
+     * - Nếu preferType === 'flash-lite': Ưu tiên flash-lite cao nhất (khả dụng) -> fallback flash cao nhất
+     * @param {'flash' | 'flash-lite'} preferType
      * @returns {Promise<string>}
      */
     async getActiveModel(preferType = 'flash-lite') {
         const now = Date.now();
-        if (this.cachedModelId && (now - this.lastCacheTime < this.cacheTTL)) {
-            return this.cachedModelId;
+        if (!this.cachedModels) this.cachedModels = {};
+        if (this.cachedModels[preferType] && (now - (this.lastCacheTime || 0) < this.cacheTTL)) {
+            // Kiểm tra xem model trong cache có đang bị cooldown không
+            if (!this.isModelInCooldown(this.cachedModels[preferType])) {
+                return this.cachedModels[preferType];
+            }
         }
 
-        try {
-            // 1. Ưu tiên tìm flash-lite phiên bản cao nhất
-            let bestModel = await GeminiModel.findOne({ isActive: true, type: 'flash-lite' })
-                .sort({ versionMajor: -1, versionMinor: -1, versionPatch: -1 });
-
-            // 2. Nếu không có flash-lite, tìm flash phiên bản cao nhất
-            if (!bestModel) {
-                bestModel = await GeminiModel.findOne({ isActive: true, type: 'flash' })
-                    .sort({ versionMajor: -1, versionMinor: -1, versionPatch: -1 });
-            }
-
-            // 3. Nếu Database chưa có dữ liệu, kích hoạt đồng bộ ngay
-            if (!bestModel) {
-                Logger.warn('[GeminiModelService] Chưa có dữ liệu model trong Database, kích hoạt đồng bộ...');
-                await this.syncModelsFromAPI();
-
-                // Thử lại sau khi đồng bộ
-                bestModel = await GeminiModel.findOne({ isActive: true, type: 'flash-lite' })
-                    .sort({ versionMajor: -1, versionMinor: -1, versionPatch: -1 });
-
-                if (!bestModel) {
-                    bestModel = await GeminiModel.findOne({ isActive: true, type: 'flash' })
-                        .sort({ versionMajor: -1, versionMinor: -1, versionPatch: -1 });
-                }
-            }
-
-            if (bestModel) {
-                this.cachedModelId = bestModel.modelId;
-                this.lastCacheTime = now;
-                return bestModel.modelId;
-            }
-        } catch (dbError) {
-            Logger.error(`[GeminiModelService] Lỗi truy vấn Database: ${dbError.message}`);
+        const candidates = await this.getCandidateModels(preferType);
+        if (candidates && candidates.length > 0) {
+            const best = candidates[0];
+            this.cachedModels[preferType] = best;
+            this.lastCacheTime = now;
+            return best;
         }
 
-        // Tận dụng cache gần nhất trong RAM nếu có
-        if (this.cachedModelId) {
-            return this.cachedModelId;
-        }
-
-        throw new Error('[GeminiModelService] Không tìm thấy bất kỳ model Gemini nào từ Database hoặc Google API.');
+        return preferType === 'flash' ? 'gemini-2.5-flash' : 'gemini-2.5-flash-lite';
     }
 
     /**
+
      * Khởi tạo service khi bot bật
      */
     async init() {

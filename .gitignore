@@ -30,3 +30,7 @@ desktop.ini
 .idea/
 *.sublime-project
 *.sublime-workspace
+
+# Self-dev sandboxes
+.worktrees/
+

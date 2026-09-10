@@ -5,5 +5,12 @@
   "command_error": "🥺 Có lỗi lúc mình làm lệnh này rồi. Thử lại giúp mình nha!",
   "not_your_menu": "🤭 Menu này không dành cho bạn đâu nè!",
   "server_running": "💖 Mình vẫn đang hoạt động nè!",
-  "guild_only": "🏠 Lệnh này chỉ dùng trong server thôi nha!"
+  "guild_only": "🏠 Lệnh này chỉ dùng trong server thôi nha!",
+  "self_dev": {
+    "only_owner": "🥺 Chỉ có chủ nhân của Dolia mới có quyền yêu cầu tự lập trình tính năng mới nha!",
+    "in_progress": "🛠️ Dolia đang bắt tay vào lập trình tính năng mới theo yêu cầu của chủ nhân...",
+    "review_title": "✨ Tính năng mới đã hoàn thành & Sẵn sàng duyệt!",
+    "applied_success": "🎉 Tính năng mới đã được nạp thành công!",
+    "cancelled": "⏹️ Đã hủy bỏ phiên Self-Dev an toàn."
+  }
 }

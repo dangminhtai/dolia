@@ -2,7 +2,9 @@ import { GoogleGenAI } from '@google/genai';
 import ApiKeyManager from './apiKeyManager.js';
 import Logger from './Logger.js';
 import { musicTools } from '../schema/musicTools.js';
+import { devTools } from '../schema/devTools.js';
 import * as MusicFunctions from '../utils/musicFunctions.js';
+import * as DevFunctions from '../utils/devFunctions.js';
 import * as ChatHelper from '../helpers/chatHelper.js';
 import { loadSystemPrompt } from '../helpers/promptHelper.js';
 import { poru } from '../utils/LavalinkManager.js';
@@ -19,7 +21,7 @@ class GeminiManager {
             log: (msg) => Logger.info(`[Gemini] ${msg}`)
         };
         // Tools definition
-        this.tools = [{ functionDeclarations: musicTools }];
+        this.tools = [{ functionDeclarations: [...musicTools, ...devTools] }];
 
         // Function mapping
         this.functions = {
@@ -27,9 +29,11 @@ class GeminiManager {
             'control_playback': MusicFunctions.control_playback,
             'adjust_audio_settings': MusicFunctions.adjust_audio_settings,
             'manage_radio': MusicFunctions.manage_radio,
-            'show_music_panel': MusicFunctions.show_music_panel
+            'show_music_panel': MusicFunctions.show_music_panel,
+            'agent_code': DevFunctions.agent_code
         };
     }
+
 
     async chat(message) {
         const context = {

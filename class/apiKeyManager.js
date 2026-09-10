@@ -134,13 +134,14 @@ class ApiKeyManager {
         }
     }
 
-    async execute(modelId, task) {
+    async execute(modelId, task, options = {}) {
         if (!this.isInitialized || this.pool.length === 0) {
             await this.loadKeys();
         }
 
-        const MAX_RETRIES = this.pool.length > 0 ? this.pool.length * 2 : 5;
+        const MAX_RETRIES = options.maxRetries ?? Math.min(this.pool.length > 0 ? this.pool.length : 5, 3);
         let attempt = 0;
+        let count503 = 0;
         let lastError = null;
 
         while (attempt < MAX_RETRIES) {
@@ -166,12 +167,14 @@ class ApiKeyManager {
             } catch (e) {
                 lastError = e;
 
-                if (e instanceof TypeError || e instanceof ReferenceError || e instanceof SyntaxError) {
+                if (e instanceof TypeError || e instanceof ReferenceError) {
                     console.error(`❌ CODE BUG (NON-RETRYABLE): ${e.message}`, e.stack);
                     throw e;
                 }
 
-                const statusCode = e.status || 500;
+                const statusCode = typeof e.status === 'number' 
+                    ? e.status 
+                    : (e.statusCode || e.httpMeta?.response?.status || (e.status === 'RESOURCE_EXHAUSTED' ? 429 : 500));
                 const errorMessage = e.message || '';
 
                 let suspendMs = 0;
@@ -179,7 +182,7 @@ class ApiKeyManager {
                 let shouldSuspend = false;
 
                 // --- PRIORITY ERROR LOGIC ---
-                if (statusCode === 429 || errorMessage.includes('429') || errorMessage.includes('quota')) {
+                if (statusCode === 429 || errorMessage.includes('429') || errorMessage.includes('quota') || errorMessage.includes('RESOURCE_EXHAUSTED')) {
                     suspendMs = 15 * 60 * 1000; // 15 mins
                     reason = 'RATE_LIMIT_429';
                     shouldSuspend = true;
@@ -193,6 +196,13 @@ class ApiKeyManager {
                     suspendMs = 3 * 60 * 1000; // 3 mins
                     reason = 'SERVICE_UNAVAILABLE_503';
                     shouldSuspend = true;
+                    count503++;
+                    if (count503 >= 2) {
+                        if (shouldSuspend && suspendMs > 0) {
+                            await this.suspendKey(key, modelId, suspendMs, reason);
+                        }
+                        throw new Error(`Model ${modelId} is currently overloaded (503 Service Unavailable).`);
+                    }
                 }
                 else if (statusCode === 500 || errorMessage.includes('500')) {
                     suspendMs = 60 * 1000; // 1 min

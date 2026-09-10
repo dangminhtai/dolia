@@ -1,0 +1,28 @@
+{
+  "watch": [
+    "class",
+    "commands",
+    "config",
+    "events",
+    "helpers",
+    "models",
+    "resources",
+    "schema",
+    "services",
+    "utils",
+    "index.js",
+    "db.js",
+    "deployCommands.js"
+  ],
+  "ext": "js,mjs,cjs,json",
+  "ignore": [
+    ".worktrees/**",
+    ".worktrees/*",
+    ".git/**",
+    "node_modules/**",
+    "test/**",
+    "docs/**",
+    "*.log"
+  ],
+  "delay": 2000
+}
