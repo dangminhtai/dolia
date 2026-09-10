@@ -205,10 +205,7 @@ export class SelfDevService {
             try {
                 Logger.info(`[SelfDev] 🧠 Đang gọi Gemini Coding Model (${modelId}) cho tính năng: "${suggestedName}"...`);
 
-                const result = await ApiKeyManager.execute(modelId, async (apiKey) => {
-                    const ai = new GoogleGenAI({ apiKey });
-
-                    const systemInstruction = `
+                const systemInstruction = `
 Bạn là Senior Discord Bot Developer cho bot Dolia (Node.js, Discord.js v14, ESM module).
 Nhiệm vụ của bạn là lập trình tính năng/lệnh mới theo yêu cầu của người dùng.
 
