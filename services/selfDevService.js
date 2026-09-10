@@ -87,8 +87,8 @@ export class SelfDevService {
             // Bước 1: Dọn dẹp sạch sẽ môi trường sandbox trước khi bắt đầu
             await sandboxManager.cleanSandbox();
 
-            // Bước 2: Lấy model Gemini tốt nhất từ Database (Ưu tiên flash)
-            const codingModelId = await geminiModelService.getActiveModel('flash');
+            // Bước 2: Lấy model Gemini tốt nhất từ Database (Ưu tiên flash-lite trước rồi đến flash)
+            const codingModelId = await geminiModelService.getActiveModel('flash-lite');
 
             // Cập nhật tiến trình
             statusEmbed.setDescription(`**Chủ nhân:** <@${user.id}>\n**Yêu cầu:** ${prompt}\n\n🧠 **Trạng thái:** Đang kết nối Gemini Coding Agent (\`${codingModelId}\`)...\n*Model đang sinh mã nguồn trong vùng Sandbox an toàn...*`);
@@ -195,10 +195,10 @@ export class SelfDevService {
     }
 
     /**
-     * Gọi Gemini Coding Model từ Database (Ưu tiên Flash)
+     * Gọi Gemini Coding Model từ Database (Ưu tiên Flash-Lite trước rồi đến Flash)
      */
     static async callGeminiCodingModel(userPrompt, suggestedName, preferredModelId = null) {
-        const candidates = await geminiModelService.getCandidateModels('flash');
+        const candidates = await geminiModelService.getCandidateModels('flash-lite');
         if (preferredModelId && !candidates.includes(preferredModelId)) {
             candidates.unshift(preferredModelId);
         }
@@ -279,7 +279,7 @@ export default {
             } catch (modelErr) {
                 lastError = modelErr;
                 geminiModelService.reportModelFailure(modelId, modelErr.message);
-                Logger.warn(`[SelfDev] ⚠️ Model ${modelId} gặp sự cố: ${modelErr.message}. Tự động thử model Flash tiếp theo...`);
+                Logger.warn(`[SelfDev] ⚠️ Model ${modelId} gặp sự cố: ${modelErr.message}. Tự động thử model tiếp theo...`);
             }
         }
 
