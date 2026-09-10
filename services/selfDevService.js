@@ -670,7 +670,7 @@ export default {
     }
 
     /**
-     * Bắt đầu phiên yêu cầu xóa lệnh/tính năng với nút bấm xác nhận an toàn
+     * Bắt đầu phiên yêu cầu xóa lệnh/tính năng trong Sandbox
      */
     static async startDeleteSession({ prompt, featureName, user, channel, client, replyTarget = null }) {
         if (!this.isOwner(user.id)) {
@@ -679,20 +679,22 @@ export default {
             return channel.send({ content: rejectMsg });
         }
 
-        const slashDir = path.join(process.cwd(), 'commands', 'slash');
-        const existingFiles = fs.existsSync(slashDir) ? fs.readdirSync(slashDir).filter(f => f.endsWith('.js')) : [];
+        // CHỈ QUÉT VÀ THAO TÁC TRÊN MÔI TRƯỜNG SANDBOX (Tuyệt đối không can thiệp lệnh gốc trong commands/)
+        const sandboxSlashDir = path.join(process.cwd(), 'sandbox', 'slash');
+        const existingFiles = fs.existsSync(sandboxSlashDir) ? fs.readdirSync(sandboxSlashDir).filter(f => f.endsWith('.js')) : [];
         const existingCommands = existingFiles.map(f => f.replace('.js', ''));
 
-        // Từ điển từ khóa thông dụng để nhận diện đúng lệnh cần xóa
+        // Từ điển từ khóa thông dụng để nhận diện đúng lệnh cần xóa trong Sandbox
         const COMMAND_KEYWORDS = {
+            userinfo: ['thông tin user', 'userinfo', 'user info', 'thông tin người dùng', 'thong tin user', 'profile', 'xem thông tin', 'xem thong tin', 'soi profile'],
+            trivia: ['trivia', 'đố vui', 'do vui', 'câu đố', 'cau do'],
+            dragon_ball_quiz: ['dragon ball', 'dragonball', '7 viên ngọc rồng', 'ngọc rồng', 'dragon_ball_quiz'],
+            word_chain: ['nối từ', 'noi tu', 'word chain', 'word_chain'],
             dice: ['xúc xắc', 'xúc sắc', 'xuc xac', 'xuc sac', 'xí ngầu', 'xi ngau', 'dice', 'roll', 'xuc'],
-            tictactoe: ['caro', 'cờ caro', 'tic tac toe', 'tictactoe', 'xo'],
-            coinflip: ['đồng xu', 'dong xu', 'tung xu', 'coin', 'flip', 'coinflip'],
-            userinfo: ['thông tin user', 'userinfo', 'user info', 'thông tin người dùng', 'thong tin user'],
-            trivia: ['trivia', 'đố vui', 'do vui', 'câu đố', 'cau do']
+            coinflip: ['đồng xu', 'dong xu', 'tung xu', 'coin', 'flip', 'coinflip']
         };
 
-        // Tìm tên lệnh cần xóa
+        // Tìm tên lệnh cần xóa trong Sandbox
         let targetName = featureName ? this.slugify(featureName) : null;
         if (!targetName || !existingCommands.includes(targetName)) {
             const lowerPrompt = (prompt || '').toLowerCase();
@@ -710,16 +712,16 @@ export default {
             }
         }
 
-        const targetFile = targetName ? path.join(slashDir, `${targetName}.js`) : null;
+        const targetFile = targetName ? path.join(sandboxSlashDir, `${targetName}.js`) : null;
         const fileExists = targetFile && fs.existsSync(targetFile);
 
         if (!fileExists) {
             const notFoundEmbed = new EmbedBuilder()
                 .setColor(0xE74C3C)
-                .setTitle('🔍 Không tìm thấy lệnh cần gỡ nè')
-                .setDescription(`Mình không tìm thấy lệnh nào tên là **\`${targetName || featureName || prompt}\`** hết trơn á.\n\n` +
-                    `📋 **Danh sách các lệnh hiện có:**\n` +
-                    (existingCommands.length > 0 ? existingCommands.map(c => `\`/${c}\``).join(', ') : '*Chưa có lệnh nào*'))
+                .setTitle('🔍 Không tìm thấy tính năng cần gỡ nè')
+                .setDescription(`Mình không tìm thấy tính năng nào tên là **\`${targetName || featureName || prompt}\`** trong danh sách tính năng được tạo hết trơn á.\n\n` +
+                    `📋 **Các tính năng hiện có:**\n` +
+                    (existingCommands.length > 0 ? existingCommands.map(c => `\`/${c}\``).join(', ') : '*Chưa có tính năng nào được tạo*'))
                 .setTimestamp();
 
             if (replyTarget && replyTarget.deferred) return replyTarget.editReply({ embeds: [notFoundEmbed] });
