@@ -18,7 +18,7 @@ function formatTime(ms) {
 }
 
 export async function renderMusicPanel(guildId, state, userIdForPlaylist = null) {
-    const player = poru.players.get(guildId);
+    const player = poru?.players ? poru.players.get(guildId) : null;
     const currentTrack = player?.currentTrack;
     const embed = new EmbedBuilder().setTimestamp();
     const components = [];
@@ -202,13 +202,16 @@ export async function renderMusicPanel(guildId, state, userIdForPlaylist = null)
             ? queueSlice.map((t, i) => `**${(page - 1) * itemsPerPage + i + 1}.** [${t.info.title.substring(0, 50)}](${t.info.uri}) \`[${formatTime(t.info.length)}]\` - <@${t.info.requester?.id || 'System'}>`).join('\n')
             : t('panel.queue.empty');
 
+        const nowPlaying = currentTrack
+            ? t('panel.queue.now_playing', {
+                title: currentTrack.info?.title || 'Unknown Title',
+                uri: currentTrack.info?.uri || '#'
+            })
+            : t('panel.queue.not_playing');
+
         embed.setColor('#FFA500')
             .setTitle(t('panel.queue.title', { count: queue.length }))
-            .setDescription(t('panel.queue.now_playing_desc', {
-                title: player?.currentTrack?.info.title || '',
-                uri: player?.currentTrack?.info.uri || '#',
-                list: listString
-            }))
+            .setDescription(`${nowPlaying}\n\n${t('panel.queue.next_header')}\n${listString}`)
             .setFooter({ text: t('panel.queue.footer', { page, totalPages, totalTime: formatTime(queue.reduce((acc, t) => acc + t.info.length, 0)) }) });
 
         const rowQueue = new ActionRowBuilder().addComponents(

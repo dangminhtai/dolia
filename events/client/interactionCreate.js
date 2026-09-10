@@ -16,6 +16,7 @@ import { ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder, Embed
 import GeminiLyrics from '../../class/GeminiLyrics.js';
 import { sendSafeMessage } from '../../utils/messageHelper.js';
 import { t } from '../../services/i18nService.js';
+import { getUserMusicSource, isFailed, isEmpty, isPlaylist, isSuccess } from '../../utils/lavalinkHelper.js';
 
 export default (client) => {
     client.on(Events.InteractionCreate, async interaction => {
@@ -65,12 +66,13 @@ export default (client) => {
                         const isUrl = /^https?:\/\//.test(query);
                         let res;
                         try {
-                            res = await poru.resolve({ query: query, source: isUrl ? null : 'ytsearch', requester: interaction.user });
+                            const source = isUrl ? null : await getUserMusicSource(interaction.user.id);
+                            res = await poru.resolve({ query: query, source: source, requester: interaction.user });
                         } catch (e) {
                             return interaction.editReply(t('music.errors.connection_error_search'));
                         }
 
-                        if (!res || res.loadType === 'LOAD_FAILED' || res.loadType === 'NO_MATCHES') {
+                        if (!res || isFailed(res.loadType) || isEmpty(res.loadType, res.tracks)) {
                             return interaction.editReply(t('music.errors.no_matches'));
                         }
 
@@ -84,7 +86,7 @@ export default (client) => {
                         if (!pl) return interaction.editReply(t('music.playlist.not_found'));
 
                         let count = 0;
-                        if (res.loadType === 'PLAYLIST_LOADED') {
+                        if (isPlaylist(res.loadType)) {
                             for (const t of res.tracks) {
                                 pl.tracks.push({ title: t.info.title, url: t.info.uri, author: t.info.author, duration: t.info.length });
                             }
@@ -112,7 +114,7 @@ export default (client) => {
                             res = await poru.resolve({ query: query, source: isUrl ? null : 'ytsearch', requester: interaction.user });
                         } catch (e) { return interaction.editReply(t('music.errors.connection_error')); }
 
-                        if (!res || res.loadType === 'LOAD_FAILED' || res.loadType === 'NO_MATCHES') {
+                        if (!isSuccess(res)) {
                             return interaction.editReply(t('music.errors.no_matches'));
                         }
 

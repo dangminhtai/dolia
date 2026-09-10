@@ -3,6 +3,7 @@ import { applyAudioSettings } from './AudioController.js';
 import GuildMusicQueue from '../models/GuildMusicQueue.js';
 import { ChannelType } from 'discord.js';
 import { t } from '../services/i18nService.js';
+import { getUserMusicSource, isFailed, isEmpty, isPlaylist, resolveWithProvider } from './lavalinkHelper.js';
 
 /**
  * Common logic to handle Play/Priority requests
@@ -44,19 +45,24 @@ export async function executePlay(interaction, query, isPriority) {
     }
 
     // 2. Resolve Track
-    // Auto-detect source: If URL, source=null. If text, source='ytsearch'
-    const isUrl = /^https?:\/\//.test(query);
     let res;
     try {
-        res = await poru.resolve({ query: query, source: isUrl ? null : 'ytsearch', requester: interaction.user });
+        const resolveResult = await resolveWithProvider({
+            poru,
+            query,
+            userId: interaction.user.id,
+            userTag: interaction.user.tag,
+            requester: interaction.user
+        });
+        res = resolveResult.res;
     } catch (error) {
         console.error('Lavalink Resolve Error:', error);
         return { success: false, message: t('music.errors.lavalink_error') };
     }
 
-    if (!res || res.loadType === 'LOAD_FAILED') {
+    if (!res || isFailed(res.loadType)) {
         return { success: false, message: t('music.errors.load_failed_alt') };
-    } else if (res.loadType === 'NO_MATCHES') {
+    } else if (isEmpty(res.loadType, res.tracks)) {
         return { success: false, message: t('music.errors.no_matches') };
     }
 
@@ -75,7 +81,7 @@ export async function executePlay(interaction, query, isPriority) {
     });
 
     // --- PLAYLIST ---
-    if (res.loadType === 'PLAYLIST_LOADED') {
+    if (isPlaylist(res.loadType)) {
         // Prepare DB Data first (Normal Order)
         for (const track of res.tracks) {
             track.info.requester = interaction.user;

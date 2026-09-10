@@ -1,10 +1,10 @@
 import { GoogleGenAI } from "@google/genai";
 import ApiKeyManager from "./apiKeyManager.js";
 import Logger from "./Logger.js";
+import geminiModelService from "../services/geminiModelService.js";
 
 class GeminiLyrics {
     constructor() {
-        this.modelId = 'gemini-2.5-flash-lite';
         this.logger = {
             info: (msg) => Logger.info(`[GeminiLyrics] ${msg}`),
             error: (msg) => Logger.error(`[GeminiLyrics] ${msg}`)
@@ -15,7 +15,9 @@ class GeminiLyrics {
         // 1. Giới hạn độ dài để tránh Prompt Injection quá dài và làm tốn token
         const sanitizedQuery = query.slice(0, 500).replace(/["\\]/g, '');
 
-        return await ApiKeyManager.execute(this.modelId, async (key) => {
+        const modelId = await geminiModelService.getActiveModel('flash-lite');
+
+        return await ApiKeyManager.execute(modelId, async (key) => {
             const ai = new GoogleGenAI({ apiKey: key });
 
             const config = {
@@ -45,7 +47,7 @@ class GeminiLyrics {
             };
 
             const result = await ai.models.generateContent({
-                model: this.modelId,
+                model: modelId,
                 contents: [{ role: 'user', parts: [{ text: `Tìm thông tin bài hát và link nghe nhạc chính thức cho đoạn lyrics/bài hát này: "${sanitizedQuery}"` }] }],
                 config,
             });

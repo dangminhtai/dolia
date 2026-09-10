@@ -2,20 +2,21 @@
 import { SlashCommandBuilder } from 'discord.js';
 import User from '../../models/User.js';
 import { t } from '../../services/i18nService.js';
+import { PROVIDER_NAMES } from '../../utils/lavalinkHelper.js';
 
 export default {
     data: new SlashCommandBuilder()
         .setName('switch-provider')
-        .setDescription('Chuyển đổi nguồn phát nhạc (YouTube, SoundCloud, v.v.)')
+        .setDescription('Chuyển đổi nguồn phát nhạc (YouTube, SoundCloud, Spotify, v.v.)')
         .addStringOption(option =>
             option.setName('source')
                 .setDescription('Chọn nguồn nhạc muốn dùng')
                 .setRequired(true)
                 .addChoices(
                     { name: 'YouTube (Mặc định)', value: 'ytsearch' },
-                    { name: 'SoundCloud (Nên dùng nếu YT lỗi)', value: 'scsearch' },
-                    { name: 'Spotify', value: 'spsearch' },
-                    { name: 'Apple Music', value: 'amsearch' }
+                    { name: 'YouTube Music (Khuyên dùng)', value: 'ytmsearch' },
+                    { name: 'SoundCloud (Remix / EDM)', value: 'scsearch' },
+                    { name: 'Spotify', value: 'spsearch' }
                 )
         ),
 
@@ -32,14 +33,8 @@ export default {
                 { upsert: true, new: true }
             );
 
-            const providerNames = {
-                'ytsearch': 'YouTube',
-                'scsearch': 'SoundCloud',
-                'spsearch': 'Spotify',
-                'amsearch': 'Apple Music'
-            };
-
-            await interaction.editReply(t('music.switch_provider.success', { provider: providerNames[source] }));
+            const providerName = PROVIDER_NAMES[source] || source;
+            await interaction.editReply(t('music.switch_provider.success', { provider: providerName }));
 
         } catch (error) {
             console.error('Error switching provider:', error);

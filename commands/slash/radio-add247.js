@@ -2,6 +2,7 @@ import { SlashCommandBuilder, PermissionFlagsBits } from 'discord.js';
 import { poru } from '../../utils/LavalinkManager.js';
 import RadioSong from '../../models/RadioSong.js';
 import { t } from '../../services/i18nService.js';
+import { isSuccess } from '../../utils/lavalinkHelper.js';
 
 export default {
     data: new SlashCommandBuilder()
@@ -13,11 +14,12 @@ export default {
     async execute(interaction) {
         await interaction.deferReply();
         const query = interaction.options.getString('query');
+        const isUrl = /^https?:\/\//.test(query);
 
         // Dùng Poru để check xem bài hát có tồn tại không và lấy tên chuẩn
-        const res = await poru.resolve({ query: query, source: 'ytsearch', requester: interaction.user });
+        const res = await poru.resolve({ query: query, source: isUrl ? null : 'ytsearch', requester: interaction.user });
 
-        if (res.loadType === 'LOAD_FAILED' || res.loadType === 'NO_MATCHES') {
+        if (!isSuccess(res)) {
             return interaction.editReply(t('music.radio.track_not_found'));
         }
 

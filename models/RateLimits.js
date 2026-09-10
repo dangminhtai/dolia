@@ -1,15 +1,9 @@
 import mongoose from "mongoose";
 
-const MODELS = [
-    'gemini-3-flash-preview',
-];
-
 const rateLimitSchema = new mongoose.Schema({
     model: {
         type: String,
-        required: true,
-        enum: MODELS
-        // Removed unique: true here to allow multiple keys per model
+        required: true
     },
     apiKey: { type: String, required: true }, // Store last 4 digits
     rpm: { type: Number, default: 0 }, // Requests Per Minute

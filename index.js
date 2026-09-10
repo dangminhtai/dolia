@@ -14,6 +14,7 @@ import onReady from './events/client/onReady.js';
 import interactionCreate from './events/client/interactionCreate.js';
 import messageCreate from './events/client/messageCreate.js';
 import { initI18n, t } from './services/i18nService.js';
+import geminiModelService from './services/geminiModelService.js';
 
 // Khởi tạo hệ thống tài nguyên (Resource / i18n)
 initI18n();
@@ -53,6 +54,7 @@ async function main() {
         // 1. Connect DB (Non-blocking or Soft-fail)
         try {
             await connectDB();
+            geminiModelService.init().catch(err => console.error('⚠️ Gemini Model sync failed:', err.message));
         } catch (dbErr) {
             console.error('⚠️ Database connection failed:', dbErr.message);
             console.log('Bot will continue startup without Database...');

@@ -40,7 +40,10 @@
   },
   "queue": {
     "title": "📜 Hàng chờ bài hát ({{count}} bài nè)",
-    "now_playing_desc": "▶️ **Đang phát:** {{title}}\n👤 Ca sĩ: **{{author}}** | 💖 Yêu cầu: **{{requester}}** `[{{time}}]`\n\n**Hàng chờ tiếp theo nè:**\n{{queueList}}",
+    "now_playing": "▶️ **Đang phát:** [{{title}}]({{uri}})",
+    "not_playing": "😴 **Hiện tại chưa có bài nào đang phát nè~**",
+    "next_header": "**Hàng chờ tiếp theo nè:**",
+    "now_playing_desc": "{{title}}\n\n{{list}}",
     "empty": "Hàng chờ đang trống trơn nè 🥺\nBạn thêm bài hát vào để mình hát cho nghe nha 💕",
     "footer": "Trang {{page}}/{{totalPages}} • Tổng thời gian: {{totalTime}} ✨"
   },

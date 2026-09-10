@@ -62,8 +62,8 @@
     "no_selected": "🤔 Bạn chọn lại playlist giúp mình nha!"
   },
   "switch_provider": {
-    "success": "✨ Mình đổi sang **{{provider}}** rồi nè!",
-    "error": "🥺 Có lỗi nên mình chưa lưu được..."
+    "success": "✨ Mình đổi nguồn tìm nhạc sang **{{provider}}** rồi nè! Từ giờ mình sẽ ưu tiên tìm qua đây cho bạn nha 💕",
+    "error": "🥺 Có lỗi nên mình chưa lưu được nguồn nhạc mới rồi..."
   },
   "settings": {
     "title": "🎛️ Chỉnh nhạc nè",

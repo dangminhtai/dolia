@@ -2,8 +2,8 @@ import { SlashCommandBuilder, ChannelType } from 'discord.js'; // Nhớ import C
 import { poru } from '../../utils/LavalinkManager.js';
 import { applyAudioSettings } from '../../utils/AudioController.js';
 import GuildMusicQueue from '../../models/GuildMusicQueue.js';
-import User from '../../models/User.js';
 import { t } from '../../services/i18nService.js';
+import { getUserMusicSource, isFailed, isEmpty, isPlaylist, resolveWithProvider } from '../../utils/lavalinkHelper.js';
 
 export default {
     data: new SlashCommandBuilder()
@@ -25,33 +25,26 @@ export default {
 
         const query = interaction.options.getString('query');
         const isPriority = interaction.options.getBoolean('priority') || false;
-        const member = interaction.member;
 
         // --- LOGIC CHỌN KÊNH VOICE THÔNG MINH ---
+        const member = interaction.member;
         let voiceChannel = member.voice.channel;
         let player = poru.players.get(interaction.guild.id);
 
-        // Trường hợp 1: Người dùng KHÔNG ở trong voice
         if (!voiceChannel) {
             if (player && player.isConnected) {
-                // Nếu Bot đang hát ở đâu đó -> Dùng luôn kênh đó (Điều khiển từ xa)
                 voiceChannel = interaction.guild.channels.cache.get(player.voiceChannel);
             } else {
-                // Nếu Bot chưa hát -> Tự động tìm kênh Voice đầu tiên của Server để chui vào
-                // (Lọc ra kênh Voice, không lấy kênh Stage, và bot phải vào được)
                 voiceChannel = interaction.guild.channels.cache
                     .filter(c => c.type === ChannelType.GuildVoice && c.joinable && !c.full)
                     .first();
             }
         }
 
-        // Nếu tìm mọi cách mà vẫn không ra kênh voice nào (Server không tạo kênh Voice?)
         if (!voiceChannel) {
             return interaction.editReply(t('music.errors.no_voice_channel'));
         }
-        // ------------------------------------------
 
-        // 1. Tạo hoặc lấy kết nối (Nếu chưa có player)
         if (!player) {
             player = poru.createConnection({
                 guildId: interaction.guild.id,
@@ -63,28 +56,24 @@ export default {
         }
 
         // 2. Tìm nhạc
-        // Auto-detect URL or Search
-        const isUrl = /^https?:\/\//.test(query);
         let res;
         try {
-            // Logic tự nhận diện URL như lúc nãy đã bàn
-            // Logic tự nhận diện URL như lúc nãy đã bàn
-            let source = 'ytsearch';
-            if (!isUrl) {
-                const userConfig = await User.findOne({ userId: interaction.user.id });
-                if (userConfig && userConfig.musicProvider) {
-                    source = userConfig.musicProvider;
-                }
-            }
-            res = await poru.resolve({ query: query, source: isUrl ? null : source, requester: interaction.user });
+            const resolveResult = await resolveWithProvider({
+                poru,
+                query,
+                userId: interaction.user.id,
+                userTag: interaction.user.tag,
+                requester: interaction.user
+            });
+            res = resolveResult.res;
         } catch (error) {
             console.error('Lavalink Resolve Error:', error);
             return interaction.editReply(t('music.errors.bad_gateway'));
         }
 
-        if (!res || res.loadType === 'LOAD_FAILED') {
+        if (!res || isFailed(res.loadType)) {
             return interaction.editReply(t('music.errors.load_failed'));
-        } else if (res.loadType === 'NO_MATCHES') {
+        } else if (isEmpty(res.loadType, res.tracks)) {
             return interaction.editReply(t('music.errors.no_matches'));
         }
 
@@ -102,7 +91,7 @@ export default {
             addedAt: new Date()
         });
 
-        if (res.loadType === 'PLAYLIST_LOADED') {
+        if (isPlaylist(res.loadType)) {
             // Logic mới: Chèn bài vào mảng tracksToAdd trước
             for (const track of res.tracks) {
                 track.info.requester = interaction.user;

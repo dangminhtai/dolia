@@ -7,9 +7,9 @@ const UserSchema = new mongoose.Schema({
     musicProvider: {
         type: String,
         default: 'ytsearch',
-        enum: ['ytsearch', 'scsearch', 'spsearch', 'amsearch']
+        enum: ['ytsearch', 'ytmsearch', 'scsearch', 'spsearch']
     },
-    // ytsearch = YouTube, scsearch = SoundCloud, spsearch = Spotify, amsearch = Apple Music
+    // ytsearch = YouTube, ytmsearch = YouTube Music, scsearch = SoundCloud, spsearch = Spotify
 }, { timestamps: true });
 
 const User = mongoose.model("User", UserSchema);

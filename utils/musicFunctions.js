@@ -6,19 +6,17 @@ import GuildMusicQueue from '../models/GuildMusicQueue.js'; // Added missing imp
 import { applyAudioSettings } from '../utils/AudioController.js';
 import { renderMusicPanel } from '../utils/PanelRenderer.js';
 import { ChannelType } from 'discord.js'; // Added ChannelType
+import { getUserMusicSource, isFailed, isEmpty, isPlaylist, isSuccess, resolveWithProvider } from './lavalinkHelper.js';
 
 /**
  * 1. Play Music
  */
 export async function play_music({ guild, channel, user, query, priority }) {
     // --- LOGIC CHỌN KÊNH VOICE THÔNG MINH (MATCH SLASH COMMAND) ---
-    // channel: Kênh text nơi lệnh được gọi (context.channel) - SAI, ở đây thường là TextChannel
-    // user: User object
-    // Cần tìm Voice Channel của User
     const member = guild.members.cache.get(user.id);
     let voiceChannel = member?.voice?.channel;
 
-    const player = poru.players.get(guild.id);
+    let player = poru.players.get(guild.id);
 
     // Trường hợp 1: Người dùng KHÔNG ở trong voice
     if (!voiceChannel) {
@@ -34,35 +32,40 @@ export async function play_music({ guild, channel, user, query, priority }) {
     }
 
     if (!voiceChannel) {
-        return { success: false, error: "NO_VOICE_CHANNEL", message: "User not in voice and no available channel." };
+        return { success: false, error: "NO_VOICE", message: "Bạn cần vào Voice Channel hoặc Server cần có một Voice Channel trống để mình vào nhé!" };
     }
 
-    // Connect to voice
-    let connection;
-    try {
-        connection = poru.createConnection({
-            guildId: guild.id,
-            voiceChannel: voiceChannel.id,
-            textChannel: channel.id,
-            deaf: true,
-        });
-    } catch (err) {
-        console.error("Poru Create Connection Error:", err);
-        return { success: false, error: "CONNECTION_ERROR", message: "Không thể kết nối đến Voice (No Nodes Available)." };
+    // Connect to voice (Đảm bảo player được gán trực tiếp)
+    if (!player || !player.isConnected) {
+        try {
+            player = poru.createConnection({
+                guildId: guild.id,
+                voiceChannel: voiceChannel.id,
+                textChannel: channel.id,
+                deaf: false,
+            });
+            await applyAudioSettings(player);
+        } catch (err) {
+            console.error("Poru Create Connection Error:", err);
+            return { success: false, error: "CONNECTION_ERROR", message: "Không thể kết nối đến Voice (No Nodes Available)." };
+        }
     }
 
-    // Apply settings only if new connection or just to be safe
-    if (!player) await applyAudioSettings(connection);
-
-    // Resolve Track
-    const isUrl = /^https?:\/\//.test(query);
+    // Resolve Track với Provider của User & Log chi tiết
     let res;
     let resolveAttempts = 0;
     const maxResolveRetries = 3;
 
     while (resolveAttempts < maxResolveRetries) {
         try {
-            res = await poru.resolve({ query, source: isUrl ? null : 'ytsearch', requester: user });
+            const resolveResult = await resolveWithProvider({
+                poru,
+                query,
+                userId: user.id,
+                userTag: user.tag || user.username,
+                requester: user
+            });
+            res = resolveResult.res;
             if (res) break; // Success
         } catch (err) {
             console.warn(`⚠️ Music Resolve Error (Attempt ${resolveAttempts + 1}/${maxResolveRetries}): ${err.message}`);
@@ -75,14 +78,32 @@ export async function play_music({ guild, channel, user, query, priority }) {
         }
     }
 
-    if (res.loadType === 'LOAD_FAILED') {
+    if (!res || isFailed(res.loadType)) {
         return { success: false, error: "LOAD_FAILED", message: "Lỗi tải nhạc từ nguồn." };
-    } else if (res.loadType === 'NO_MATCHES') {
+    } else if (isEmpty(res.loadType, res.tracks)) {
         return { success: false, error: "NO_MATCHES", message: "Không tìm thấy bài hát nào." };
     }
 
+    // Đảm bảo player và queue sẵn sàng (phòng trường hợp player bị destroy giữa chừng)
+    if (!player || !player.queue) {
+        player = poru.players.get(guild.id);
+    }
+    if (!player || !player.queue) {
+        try {
+            player = poru.createConnection({
+                guildId: guild.id,
+                voiceChannel: voiceChannel.id,
+                textChannel: channel.id,
+                deaf: false,
+            });
+            await applyAudioSettings(player);
+        } catch (e) { }
+    }
+    if (!player || !player.queue) {
+        return { success: false, error: "PLAYER_NOT_READY", message: "Trình phát nhạc chưa sẵn sàng, bạn đợi một chút rồi thử lại nhé!" };
+    }
+
     // Handle Tracks & DB
-    const currentPlayer = poru.players.get(guild.id); // Get active player
     let addedMsg = "";
     const tracksToAdd = [];
 
@@ -96,7 +117,7 @@ export async function play_music({ guild, channel, user, query, priority }) {
         addedAt: new Date()
     });
 
-    if (res.loadType === 'PLAYLIST_LOADED') {
+    if (isPlaylist(res.loadType)) {
         for (const track of res.tracks) {
             track.info.requester = user;
             tracksToAdd.push(formatTrackForDB(track));
@@ -104,11 +125,11 @@ export async function play_music({ guild, channel, user, query, priority }) {
 
         if (priority) {
             for (let i = res.tracks.length - 1; i >= 0; i--) {
-                currentPlayer.queue.unshift(res.tracks[i]);
+                player.queue.unshift(res.tracks[i]);
             }
             addedMsg = `⚡ [ƯU TIÊN] Playlist: ${res.playlistInfo.name}`;
         } else {
-            currentPlayer.queue.add(res.tracks);
+            player.queue.add(res.tracks);
             addedMsg = `Playlist: ${res.playlistInfo.name}`;
         }
     } else {
@@ -120,10 +141,10 @@ export async function play_music({ guild, channel, user, query, priority }) {
         tracksToAdd.push(formatTrackForDB(track));
 
         if (priority) {
-            currentPlayer.queue.unshift(track);
+            player.queue.unshift(track);
             addedMsg = `⚡ [ƯU TIÊN] Bài: ${track.info.title}`;
         } else {
-            currentPlayer.queue.add(track);
+            player.queue.add(track);
             addedMsg = `Bài: ${track.info.title}`;
         }
     }
@@ -142,11 +163,11 @@ export async function play_music({ guild, channel, user, query, priority }) {
 
     // Play Trigger
     if (priority) {
-        if (currentPlayer.isPlaying || currentPlayer.isPaused) currentPlayer.skip();
-        else currentPlayer.play();
+        if (player.isPlaying || player.isPaused) player.skip();
+        else player.play();
     } else {
-        if (!currentPlayer.isPlaying && !currentPlayer.isPaused) {
-            currentPlayer.play();
+        if (!player.isPlaying && !player.isPaused) {
+            player.play();
         }
     }
 
@@ -170,7 +191,7 @@ export async function control_playback({ guild, action }) {
             player.skip();
             return { success: true, message: "⏭️ Đã bỏ qua bài hát." };
         case 'stop':
-            player.destroy();
+            await player.destroy();
             return { success: true, message: "🛑 Đã dừng nhạc và rời kênh." };
         case 'pause':
             player.pause(true);
@@ -249,8 +270,9 @@ export async function manage_radio({ guild, user, action, query, index }) {
         if (!query) return { success: false, message: "❌ Vui lòng nhập link bài hát." };
 
         // Check URL validity using Poru
-        const res = await poru.resolve({ query, source: 'ytsearch', requester: user });
-        if (res.loadType !== 'TRACK_LOADED' && res.loadType !== 'SEARCH_RESULT' && res.loadType !== 'PLAYLIST_LOADED') {
+        const isUrl = /^https?:\/\//.test(query);
+        const res = await poru.resolve({ query, source: isUrl ? null : 'ytsearch', requester: user });
+        if (!isSuccess(res)) {
             return { success: false, message: "❌ Link không hợp lệ hoặc không tìm thấy nhạc." };
         }
 

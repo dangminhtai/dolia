@@ -3,6 +3,8 @@ import RadioSong from '../models/RadioSong.js';
 import MusicLog from '../models/MusicLog.js';
 import GuildMusicQueue from '../models/GuildMusicQueue.js';
 import { t } from '../services/i18nService.js';
+import { isSuccess } from './lavalinkHelper.js';
+import Logger from '../class/Logger.js';
 
 // Chỉ giữ lại Node "vàng" đã kết nối thành công
 const nodes = [
@@ -66,11 +68,14 @@ export function initLavalink(discordClient) {
         // FIX: Dùng hàm getSafeChannel để đảm bảo lấy được kênh
         const channel = await getSafeChannel(player.textChannel);
 
-        if (channel) {
-            const duration = track.info.length;
-            const timeString = track.info.isStream ? "🔴 LIVE" : new Date(duration).toISOString().slice(14, 19);
-            const requester = track.info.requester?.tag || client.user.tag;
+        const duration = track.info.length;
+        const timeString = track.info.isStream ? "🔴 LIVE" : new Date(duration).toISOString().slice(14, 19);
+        const requester = track.info.requester?.tag || client.user?.tag || 'Unknown';
+        const sourceName = track.info.sourceName || 'unknown';
 
+        Logger.info(`[Music] ▶️ Bắt đầu phát: "${track.info.title}" [${timeString}] | Kênh: ${track.info.author} | Provider gốc: [${sourceName}]`);
+
+        if (channel) {
             // Gửi tin nhắn (Catch lỗi nếu bot thiếu quyền gửi tin)
             channel.send(t('music.track_start', { title: track.info.title, time: timeString, requester: requester })).catch(e => console.error("Không gửi được tin nhắn trackStart:", e.message));
         }
@@ -158,7 +163,7 @@ export function initLavalink(discordClient) {
             // Resolve nhạc
             const res = await poru.resolve({ query: songData.url, source: 'ytsearch', requester: client.user });
 
-            if (res.loadType !== 'LOAD_FAILED' && res.loadType !== 'NO_MATCHES') {
+            if (isSuccess(res)) {
                 const track = res.tracks[0];
                 track.info.requester = client.user;
 

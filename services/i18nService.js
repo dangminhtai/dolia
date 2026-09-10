@@ -85,6 +85,9 @@ export function t(key, params = {}, context = null) {
         result = formatString(result, context);
     }
 
+    // Dọn dẹp an toàn các placeholder {{...}} còn sót lại nếu không được truyền params (tránh lộ raw template trên Discord)
+    result = result.replace(/{{\s*[\w.-]+\s*}}/g, '');
+
     return result;
 }
 

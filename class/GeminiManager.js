@@ -8,6 +8,7 @@ import { loadSystemPrompt } from '../helpers/promptHelper.js';
 import { poru } from '../utils/LavalinkManager.js';
 import MusicSetting from '../models/MusicSetting.js';
 import MusicLog from '../models/MusicLog.js';
+import geminiModelService from '../services/geminiModelService.js';
 
 class GeminiManager {
     constructor() {
@@ -17,7 +18,6 @@ class GeminiManager {
             error: (msg) => Logger.error(`[Gemini] ${msg}`),
             log: (msg) => Logger.info(`[Gemini] ${msg}`)
         };
-        this.modelId = 'gemini-3-flash-preview';
         // Tools definition
         this.tools = [{ functionDeclarations: musicTools }];
 
@@ -177,7 +177,9 @@ ${topSongsStr || "- Chưa có bài nào nổi bật"}
 
         const systemInstruction = loadSystemPrompt(replacements);
 
-        return await ApiKeyManager.execute(this.modelId, async (key) => {
+        const modelId = await geminiModelService.getActiveModel('flash-lite');
+
+        return await ApiKeyManager.execute(modelId, async (key) => {
             const ai = new GoogleGenAI({ apiKey: key });
             // ... (Rest of logic remains same)
 
@@ -187,7 +189,7 @@ ${topSongsStr || "- Chưa có bài nào nổi bật"}
             // Loop for Function Calling (Max 5 turns)
             while (functionCallAttempts < 5) {
                 const response = await ai.models.generateContent({
-                    model: this.modelId,
+                    model: modelId,
                     contents: contents,
                     config: {
                         tools: this.tools,
