@@ -1,0 +1,30 @@
+{
+    "name": "dolia-bot",
+    "version": "1.0.0",
+    "description": "Discord bot Dolia - AI & Music Assistant",
+    "main": "index.js",
+    "type": "module",
+    "scripts": {
+        "start": "node index.js",
+        "dev": "node --watch index.js",
+        "deploy": "node deployCommands.js"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "dependencies": {
+        "@discordjs/voice": "^0.18.0",
+        "@distube/ytdl-core": "^4.16.10",
+        "@google/genai": "^1.29.1",
+        "@sefinek/random-animals": "^2.0.5",
+        "axios": "^1.13.2",
+        "chalk": "^5.3.0",
+        "discord.js": "^14.16.3",
+        "dotenv": "^16.4.5",
+        "express": "^4.18.2",
+        "libsodium-wrappers": "^0.8.2",
+        "mongoose": "^8.8.3",
+        "poru": "^5.2.0",
+        "sharp": "^0.34.5"
+    }
+}
