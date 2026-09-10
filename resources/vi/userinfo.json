@@ -1,0 +1,11 @@
+{
+    "description": "Xem thông tin chi tiết về người dùng Discord",
+    "target_desc": "Người dùng bạn muốn xem thông tin",
+    "id": "ID",
+    "bot": "Bot?",
+    "created_at": "Tạo tài khoản",
+    "joined_at": "Tham gia Server",
+    "roles": "Vai trò",
+    "no_roles": "Không có",
+    "error": "Đã xảy ra lỗi khi lấy thông tin người dùng này."
+}
