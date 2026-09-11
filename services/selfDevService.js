@@ -828,6 +828,14 @@ export class SelfDevService {
             scriptCode = scriptCode.replace(/(\bspawn\s*\(\s*['"`])python3(['"`])/g, '$1python$2');
         }
 
+        // Tự động sửa lỗi Agent lưu vào scriptPath nhưng execSync lại gọi tên file cộc lốc
+        if (scriptCode.includes('scriptPath')) {
+            scriptCode = scriptCode.replace(
+                /execSync\s*\(\s*(['"`])(?:python3?|py)\s+([a-zA-Z0-9_-]+\.py)\1/g,
+                'execSync(`python "${scriptPath}"`'
+            );
+        }
+
         const channelWorkspaceDir = path.join(process.cwd(), 'sandbox', 'workspaces', channel?.id || 'default');
         if (!fs.existsSync(channelWorkspaceDir)) {
             fs.mkdirSync(channelWorkspaceDir, { recursive: true });
