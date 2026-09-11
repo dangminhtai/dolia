@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { pathToFileURL } from 'url';
-import { EmbedBuilder, MessageFlags, ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
+import { EmbedBuilder, MessageFlags } from 'discord.js';
 import ApiKeyManager from '../class/apiKeyManager.js';
 import Logger from '../class/Logger.js';
 import { reloadI18n, t } from './i18nService.js';
@@ -73,32 +73,13 @@ export class SelfDevService {
             )
             .setTimestamp();
 
-        const dismissBtnId = `dismiss_session_${Date.now()}`;
-        const dismissRow = new ActionRowBuilder().addComponents(
-            new ButtonBuilder()
-                .setCustomId(dismissBtnId)
-                .setLabel('Ẩn thông báo')
-                .setEmoji('🗑️')
-                .setStyle(ButtonStyle.Secondary)
-        );
-
         let progressMsg;
         if (replyTarget && replyTarget.deferred) {
-            progressMsg = await replyTarget.editReply({ embeds: [statusEmbed], components: [dismissRow] }).catch(() => null);
-        } else if (replyTarget) {
-            progressMsg = await replyTarget.reply({ embeds: [statusEmbed], components: [dismissRow] }).catch(() => null);
+            progressMsg = await replyTarget.editReply({ embeds: [statusEmbed] }).catch(() => null);
+        } else if (replyTarget && typeof replyTarget.reply === 'function') {
+            progressMsg = await replyTarget.reply({ embeds: [statusEmbed], flags: MessageFlags.Ephemeral }).catch(() => null);
         } else {
-            progressMsg = await channel.send({ embeds: [statusEmbed], components: [dismissRow] }).catch(() => null);
-        }
-
-        let collector = null;
-        if (progressMsg && typeof progressMsg.createMessageComponentCollector === 'function') {
-            const filter = (btnInt) => btnInt.customId === dismissBtnId && (btnInt.user.id === user?.id || SelfDevService.isOwner(btnInt.user.id));
-            collector = progressMsg.createMessageComponentCollector({ filter, time: 300000 });
-            collector.on('collect', async (btnInt) => {
-                await btnInt.deferUpdate().catch(() => {});
-                await progressMsg.delete().catch(() => {});
-            });
+            progressMsg = await channel.send({ embeds: [statusEmbed] }).catch(() => null);
         }
 
         let currentStageDescription = '💭 Dolia đang lên ý tưởng trò chơi thật vui cho bạn nè...';
@@ -132,7 +113,7 @@ export class SelfDevService {
                 )
                 .setTimestamp();
 
-            await progressMsg.edit({ embeds: [liveEmbed], components: [dismissRow] }).catch(() => { });
+            await progressMsg.edit({ embeds: [liveEmbed] }).catch(() => { });
         }, 3000);
 
         try {
@@ -377,7 +358,7 @@ export class SelfDevService {
                 )
                 .setTimestamp();
 
-            await progressMsg.edit({ embeds: [fallbackEmbed], components: [dismissRow] }).catch(() => { });
+            await progressMsg.edit({ embeds: [fallbackEmbed], components: [] }).catch(() => { });
             // Tin nhắn ngắn hạn: Tự động xóa thông báo sau 10 giây
             setTimeout(() => {
                 progressMsg?.delete().catch(() => {});
@@ -387,9 +368,6 @@ export class SelfDevService {
             if (progressInterval) {
                 clearInterval(progressInterval);
                 progressInterval = null;
-            }
-            if (collector) {
-                collector.stop();
             }
             Logger.error(`[SelfDev] Error in session ${sessionId}:`, error);
 
@@ -407,7 +385,7 @@ export class SelfDevService {
                 .setDescription(`Trong lúc hoàn thiện lệnh **\`/${safeSlug}\`**, mình gặp chút khó khăn nên chưa xong được nè.\nBạn cho mình thử lại sau nha! 🫧`)
                 .setTimestamp();
 
-            await progressMsg.edit({ embeds: [errorEmbed], components: [dismissRow] }).catch(() => { });
+            await progressMsg.edit({ embeds: [errorEmbed], components: [] }).catch(() => { });
             // Tin nhắn ngắn hạn: Tự động xóa thông báo lỗi sau 10 giây
             setTimeout(() => {
                 progressMsg?.delete().catch(() => {});

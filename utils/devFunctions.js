@@ -1,4 +1,4 @@
-import { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
+import { EmbedBuilder } from 'discord.js';
 import { SelfDevService } from '../services/selfDevService.js';
 import Logger from '../class/Logger.js';
 import ApiKeyManager from '../class/apiKeyManager.js';
@@ -169,26 +169,16 @@ export async function agent_code(args) {
                 .setTimestamp();
         };
 
-        const dismissBtnId = `dismiss_wait_${Date.now()}`;
-        const dismissRow = new ActionRowBuilder().addComponents(
-            new ButtonBuilder()
-                .setCustomId(dismissBtnId)
-                .setLabel('Ẩn thông báo')
-                .setEmoji('🗑️')
-                .setStyle(ButtonStyle.Secondary)
-        );
 
         try {
             if (message && typeof message.reply === 'function') {
                 statusMsg = await message.reply({
-                    embeds: [createWaitEmbed(0, currentStage, currentStageDescription)],
-                    components: [dismissRow]
+                    embeds: [createWaitEmbed(0, currentStage, currentStageDescription)]
                 }).catch(() => null);
             }
             if (!statusMsg && channel && typeof channel.send === 'function') {
                 statusMsg = await channel.send({
-                    embeds: [createWaitEmbed(0, currentStage, currentStageDescription)],
-                    components: [dismissRow]
+                    embeds: [createWaitEmbed(0, currentStage, currentStageDescription)]
                 }).catch(() => null);
             }
         } catch (e) {
@@ -196,17 +186,10 @@ export async function agent_code(args) {
         }
 
         if (statusMsg) {
-            const filter = (btnInt) => btnInt.customId === dismissBtnId && (btnInt.user.id === user?.id || SelfDevService.isOwner(btnInt.user.id));
-            collector = statusMsg.createMessageComponentCollector({ filter, time: 180000 });
-            collector.on('collect', async (btnInt) => {
-                await btnInt.deferUpdate().catch(() => {});
-                await statusMsg.delete().catch(() => {});
-            });
-
             progressInterval = setInterval(async () => {
                 const elapsed = Math.floor((Date.now() - startTime) / 1000);
                 const updatedEmbed = createWaitEmbed(elapsed, currentStage, currentStageDescription);
-                await statusMsg.edit({ embeds: [updatedEmbed], components: [dismissRow] }).catch(() => {});
+                await statusMsg.edit({ embeds: [updatedEmbed] }).catch(() => {});
             }, 2500);
         }
 
@@ -220,7 +203,7 @@ export async function agent_code(args) {
             if (statusMsg) {
                 const elapsed = Math.floor((Date.now() - startTime) / 1000);
                 const updatedEmbed = createWaitEmbed(elapsed, currentStage, currentStageDescription);
-                statusMsg.edit({ embeds: [updatedEmbed], components: [dismissRow] }).catch(() => {});
+                statusMsg.edit({ embeds: [updatedEmbed] }).catch(() => {});
             }
         };
 
@@ -245,14 +228,11 @@ export async function agent_code(args) {
                 clearInterval(progressInterval);
                 progressInterval = null;
             }
-            if (collector) {
-                collector.stop();
-            }
-            // Tin nhắn ngắn hạn: Tự động ẩn/xóa sau 2.5 giây khi kết quả hoàn tất hiển thị
+            // Tin nhắn ngắn hạn: Tự động xóa sau 2 giây khi kết quả hoàn tất hiển thị
             if (statusMsg) {
                 setTimeout(() => {
                     statusMsg.delete().catch(() => {});
-                }, 2500);
+                }, 2000);
             }
         }
     }

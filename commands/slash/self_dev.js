@@ -27,7 +27,7 @@ export default {
             });
         }
 
-        await interaction.deferReply();
+        await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
         const prompt = interaction.options.getString('prompt');
         const featureName = interaction.options.getString('feature_name');
