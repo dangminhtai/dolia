@@ -908,6 +908,15 @@ export class SelfDevService {
                 };
             }
 
+            // Timeout guard 120s để các tác vụ render video / canvas / Discord API có đủ thời gian chạy
+            let scriptTimer;
+            const timeoutPromise = new Promise((_, reject) => {
+                scriptTimer = setTimeout(() => {
+                    reject(new Error("Script thực thi quá 120s (timeout do tác vụ kéo dài)"));
+                }, 120000);
+                scriptTimer.unref?.();
+            });
+
             const dataResult = await Promise.race([
                 runFn({ client, guild, channel: wrappedChannel, user, message }),
                 timeoutPromise
