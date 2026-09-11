@@ -896,20 +896,35 @@ export class SelfDevService {
             Logger.info(`[SelfDev] 🚀 Bắt đầu thực thi script kiểm tra ngầm (${path.basename(scriptPath)})...`);
             onProgress?.({ stage: 'executing', text: '🚀 Dolia đang hoàn thiện và kết xuất hình ảnh/video cho bạn nè... 🎬✨' });
 
-            // Timeout guard 180s (3 phút) để tránh script bị treo vô hạn mà vẫn đáp ứng tác vụ nặng (render đồ họa / video)
-            let scriptTimer;
-            const timeoutPromise = new Promise((_, reject) => {
-                scriptTimer = setTimeout(() => {
-                    reject(new Error("Script thực thi quá 3 phút (timeout do tác vụ kéo dài)"));
-                }, 180000);
-                scriptTimer.unref?.();
-            });
+            // Bọc channel để phát hiện nếu script tự gọi channel.send() tránh gửi đúp 2 tin nhắn trùng lặp
+            let channelSendCalled = false;
+            let wrappedChannel = channel;
+            if (channel && typeof channel.send === 'function') {
+                const origSend = channel.send.bind(channel);
+                wrappedChannel = Object.create(channel);
+                wrappedChannel.send = async (...args) => {
+                    channelSendCalled = true;
+                    return await origSend(...args);
+                };
+            }
 
             const dataResult = await Promise.race([
-                runFn({ client, guild, channel, user, message }),
+                runFn({ client, guild, channel: wrappedChannel, user, message }),
                 timeoutPromise
             ]);
             if (scriptTimer) clearTimeout(scriptTimer);
+
+            if (dataResult && typeof dataResult === 'object') {
+                if (channelSendCalled) {
+                    dataResult.alreadySent = true;
+                }
+                if (!dataResult.files) {
+                    const candidateFile = dataResult.data?.video || dataResult.data?.file || dataResult.data?.filePath;
+                    if (candidateFile && typeof candidateFile === 'string' && fs.existsSync(candidateFile)) {
+                        dataResult.files = [candidateFile];
+                    }
+                }
+            }
 
             Logger.info(`[SelfDev] ✅ Script kiểm tra ngầm trong sandbox trả về:`, dataResult);
             onProgress?.({ stage: 'completed', text: '✨ Đã hoàn thành xuất sắc! Đang đóng gói gửi đến bạn ngay đây... 🎉' });

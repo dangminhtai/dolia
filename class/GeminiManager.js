@@ -309,20 +309,33 @@ ${topSongsStr || "- Chưa có bài nào nổi bật"}
                         const hasAgentCall = responseParts.some(p => p.functionCall?.name === 'agent_code');
                         if (hasAgentCall && lastToolResult) {
                             let agentReplyText = null;
+                            let agentFiles = [];
+                            let alreadySent = false;
+
                             if (typeof lastToolResult === 'string') {
                                 try {
                                     const parsed = JSON.parse(lastToolResult);
                                     agentReplyText = parsed.reply || parsed.message || parsed.description || parsed.summary || parsed.status || null;
+                                    if (Array.isArray(parsed.files)) agentFiles = parsed.files;
+                                    else if (parsed.data?.video) agentFiles = [parsed.data.video];
+                                    alreadySent = !!parsed.alreadySent;
                                 } catch (_) {
                                     agentReplyText = lastToolResult;
                                 }
                             } else if (typeof lastToolResult === 'object') {
                                 agentReplyText = lastToolResult.reply || lastToolResult.message || lastToolResult.description || lastToolResult.summary || lastToolResult.status || null;
+                                if (Array.isArray(lastToolResult.files)) agentFiles = lastToolResult.files;
+                                else if (lastToolResult.data?.video) agentFiles = [lastToolResult.data.video];
+                                alreadySent = !!lastToolResult.alreadySent;
                             }
 
-                            if (agentReplyText && typeof agentReplyText === 'string' && agentReplyText.trim()) {
+                            if ((agentReplyText && typeof agentReplyText === 'string' && agentReplyText.trim()) || agentFiles.length > 0 || alreadySent) {
                                 this.logger.info(`[GeminiManager] ⚡ Tối ưu 2-Request: Trả về trực tiếp phản hồi từ Agent (bỏ qua Request 3).`);
-                                finalResponseText = agentReplyText;
+                                finalResponseText = {
+                                    reply: agentReplyText,
+                                    files: agentFiles,
+                                    alreadySent
+                                };
                                 break;
                             }
                         }

@@ -1,3 +1,4 @@
+import fs from 'fs';
 import { Events } from 'discord.js';
 import GeminiManager from '../../class/GeminiManager.js';
 import { t } from '../../services/i18nService.js';
@@ -25,26 +26,46 @@ export default (client) => {
             const response = await GeminiManager.chat(message);
 
             // 3. Reply - Luôn đảm bảo phản hồi người dùng, không bao giờ im lặng
-            const textToReply = (response && response.trim())
-                ? response.trim()
-                : (t('common.chat_empty_fallback') || 'Dolia đã ghi nhận yêu cầu của chủ nhân rồi nha! ✨💖');
+            let textToReply = '';
+            let filesToAttach = [];
 
-            const sendResponse = async (content) => {
+            if (typeof response === 'object' && response !== null) {
+                if (response.alreadySent) {
+                    // Script đã tự gửi file hoặc thông báo vào kênh chat rồi -> không gửi thêm tin nhắn trùng lặp
+                    return;
+                }
+                textToReply = (response.reply || response.text || '').trim();
+                if (Array.isArray(response.files)) {
+                    filesToAttach = response.files.filter(f => typeof f === 'string' && fs.existsSync(f));
+                }
+            } else if (typeof response === 'string') {
+                textToReply = response.trim();
+            }
+
+            if (!textToReply && filesToAttach.length === 0) {
+                textToReply = t('common.chat_empty_fallback') || 'Dolia đã ghi nhận yêu cầu của chủ nhân rồi nha! ✨💖';
+            }
+
+            const sendResponse = async (content, files = []) => {
+                const payload = { content };
+                if (files && files.length > 0) {
+                    payload.files = files;
+                }
                 try {
-                    return await message.reply(content);
+                    return await message.reply(payload);
                 } catch (replyErr) {
                     // Nếu tin nhắn gốc đã bị xóa (ví dụ do lệnh xóa bulk delete), gửi trực tiếp vào kênh
-                    return await message.channel.send(content).catch(() => {});
+                    return await message.channel.send(payload).catch(() => {});
                 }
             };
 
             if (textToReply.length > 2000) {
                 const chunks = textToReply.match(/[\s\S]{1,2000}/g) || [];
-                for (const chunk of chunks) {
-                    await sendResponse(chunk);
+                for (let i = 0; i < chunks.length; i++) {
+                    await sendResponse(chunks[i], i === 0 ? filesToAttach : []);
                 }
             } else {
-                await sendResponse(textToReply);
+                await sendResponse(textToReply, filesToAttach);
             }
         } catch (error) {
             console.error('Gemini Chat Error:', error);

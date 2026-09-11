@@ -57,7 +57,16 @@ Script phải:
 * `export default async function`;
 * nhận `{ client, guild, channel, user, message }`;
 * **Chuẩn hóa phản hồi 2-Request:** Đối tượng trả về của hàm `run()` BẮT BUỘC có trường `reply` (hoặc `message`) chứa câu trả lời hoàn chỉnh, tự nhiên theo đúng phong cách nhân vật bé cá Dolia (`~ ✨🫧🐬`, xưng mình, gọi bạn/chủ nhân). Hệ thống sẽ gửi trực tiếp câu trả lời này đến người dùng mà không cần tốn thêm request AI thứ 3!
-  - Nếu đã gửi file/ảnh/video trực tiếp vào kênh chat bằng `await channel.send({ files: [...] })`, trường `reply` chỉ cần lời nhắn dễ thương xác nhận đã hoàn tất và tóm tắt thông số chính (thời gian render, dung lượng, độ phân giải...).
+  - **Quy tắc gửi File / Video / Ảnh đính kèm (TRÁNH BỊ GỬI ĐÚP 2 TIN NHẮN):**
+    - **TUYỆT ĐỐI KHÔNG TỰ GỌI `await channel.send({ files: [...] })` trong script!**
+    - Thay vào đó, hãy trả về đường dẫn file trong trường `files`:
+      ```javascript
+      return {
+          reply: "✨🫧🐬 Tada! Video 20 giây đã hoàn thành và gửi tặng bạn đây nè ~",
+          files: [videoFilePath]
+      };
+      ```
+      Hệ thống bot sẽ tự động đính kèm file và reply **DUY NHẤT 1 tin nhắn** trực tiếp cho người dùng, không bao giờ bị nhân đôi tin nhắn.
   - Nếu là truy vấn dữ liệu Discord, trường `reply` cần tóm tắt số liệu rõ ràng, ngắn gọn và thân thiện.
 * **Quy tắc Chained Modification (Kế thừa mã nguồn cũ):**
   - Khi prompt có chứa phần `[MÃ NGUỒN CŨ ĐÃ HOẠT ĐỘNG THÀNH CÔNG TRƯỚC ĐÓ]`, bạn TUYỆT ĐỐI KHÔNG được viết lại từ đầu.
