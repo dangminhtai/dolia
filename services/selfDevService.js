@@ -710,10 +710,10 @@ export class SelfDevService {
 
         onProgress?.({ stage: 'thinking', text: '💭 Dolia đang phân tích yêu cầu và lên ý tưởng cho bạn nè...' });
 
-        // Lấy thông tin Agent Session đã lưu trong MongoDB cho user và channel này
         let agentSession = null;
         if (user?.id && channel?.id) {
             agentSession = await getAgentSession(user.id, channel.id);
+            Logger.info(`[SelfDev] 🔍 Kiểm tra Agent Session kênh #${channel?.name || channel?.id}: environmentId=${agentSession?.environmentId || 'null (Local Sandbox Workspace)'}, lastInteractionId=${agentSession?.lastInteractionId || 'null'}, lastScript=${agentSession?.lastScript?.name || 'none'}`);
         }
 
         const lastScript = agentSession?.lastScript;

@@ -1,5 +1,6 @@
 import Chat from '../models/Chat.js';
 import User from '../models/User.js';
+import Logger from '../class/Logger.js';
 
 export async function getChatSession(channelId, userId = null) {
     try {
@@ -179,9 +180,10 @@ export async function updateAgentSession(userId, channelId, updates = {}) {
         chatSession.agentSession.updatedAt = new Date();
 
         await chatSession.save();
+        Logger.info(`[AgentSession] 💾 Đã lưu session kênh [${channelId}]: environmentId=${chatSession.agentSession.environmentId || 'null'}, lastInteractionId=${chatSession.agentSession.lastInteractionId || 'null'}, lastScript=${chatSession.agentSession.lastScript?.name || 'none'}`);
         return chatSession.agentSession;
     } catch (error) {
-        console.error('Failed to update agent session:', error);
+        Logger.error('[AgentSession] ❌ Lỗi cập nhật agent session:', error);
         return null;
     }
 }

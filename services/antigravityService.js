@@ -47,6 +47,8 @@ export class AntigravityService {
             let envParam = sessionEnv?.environmentId || "remote";
             let previousInteractionId = sessionEnv?.lastInteractionId || null;
 
+            Logger.info(`[Antigravity] 🔍 Nạp Session kênh [${context?.channel?.id || 'unknown'}]: environmentId=${sessionEnv?.environmentId || 'null (sẽ tạo mới remote container)'}, previousInteractionId=${previousInteractionId || 'null'}`);
+
             if (!sessionEnv?.environmentId && skillSources.length > 0) {
                 // Nhúng các file SKILL.md inline vào remote sandbox theo chuẩn Google Custom Agents
                 envParam = {
@@ -129,6 +131,7 @@ export class AntigravityService {
                         if (eventType === 'interaction.created' && eventObj.interaction) {
                             const newEnvId = eventObj.interaction.environment_id;
                             const newInteractionId = eventObj.interaction.id;
+                            Logger.info(`[Antigravity] ☁️ Google Cloud Interaction Created: environmentId="${newEnvId || 'null'}", interactionId="${newInteractionId || 'null'}"`);
                             if (newEnvId) {
                                 antigravityKeyManager.setEnvironmentId(newEnvId, sessionKey, newInteractionId);
                                 if (context?.user?.id && context?.channel?.id) {
@@ -177,6 +180,7 @@ export class AntigravityService {
                             }
                         } else if (eventType === 'interaction.completed') {
                             finalInteraction = eventObj.interaction;
+                            Logger.info(`[Antigravity] ✅ Google Cloud Interaction Completed: environmentId="${finalInteraction?.environment_id || 'null'}", interactionId="${finalInteraction?.id || 'null'}"`);
                             if (finalInteraction?.environment_id) {
                                 antigravityKeyManager.setEnvironmentId(finalInteraction.environment_id, sessionKey, finalInteraction.id);
                                 if (context?.user?.id && context?.channel?.id) {
