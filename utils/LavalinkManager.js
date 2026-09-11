@@ -57,6 +57,22 @@ export function initLavalink(discordClient) {
         reconnectTries: Infinity,
     });
 
+    // Patch lỗi nội bộ thư viện Poru khi Discord gửi gói tin VOICE_SERVER_UPDATE rỗng (endpoint null khi ngắt kết nối voice)
+    const origPacketUpdate = poru.packetUpdate.bind(poru);
+    poru.packetUpdate = async function (packet) {
+        if (packet?.t === 'VOICE_SERVER_UPDATE' && !packet?.d?.endpoint) {
+            return;
+        }
+        try {
+            await origPacketUpdate(packet);
+        } catch (err) {
+            if (err.message && err.message.includes('No Session id found')) {
+                return;
+            }
+            Logger.warn(`[Lavalink] Poru packetUpdate handled error: ${err.message}`);
+        }
+    };
+
     poru.init(client);
 
     poru.on('nodeConnect', node => console.log(`✅ [Lavalink] Node ${node.name} đã kết nối!`));
