@@ -178,7 +178,13 @@ export class AntigravityService {
                         } else if (eventType === 'interaction.completed') {
                             finalInteraction = eventObj.interaction;
                             if (finalInteraction?.environment_id) {
-                                antigravityKeyManager.setEnvironmentId(finalInteraction.environment_id);
+                                antigravityKeyManager.setEnvironmentId(finalInteraction.environment_id, sessionKey, finalInteraction.id);
+                                if (context?.user?.id && context?.channel?.id) {
+                                    updateAgentSession(context.user.id, context.channel.id, {
+                                        environmentId: finalInteraction.environment_id,
+                                        lastInteractionId: finalInteraction.id
+                                    }).catch(() => {});
+                                }
                             }
                             if (typeof onProgress === 'function') {
                                 onProgress({ stage: 'completed', text: '🎉 Antigravity Cloud đã hoàn tất!', event: eventType });
@@ -237,7 +243,7 @@ export class AntigravityService {
                 data: parsedData,
                 usedModel: activeModel,
                 usedAgent: 'antigravity-preview-05-2026',
-                environmentId: antigravityKeyManager.getEnvironmentId()
+                environmentId: antigravityKeyManager.getEnvironmentId(sessionKey)?.environmentId || null
             };
         }, { timeoutMs: 180000, maxRetries: 2 });
     }

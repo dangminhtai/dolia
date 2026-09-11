@@ -90,24 +90,6 @@ class AntigravityKeyManager {
         console.log(`⏳ [AntigravityKeyManager] Suspended key ...${shortKey} for ${durationMs / 1000}s (${reason})`);
     }
 
-    getEnvironmentId() {
-        return this.cachedEnvironmentId;
-    }
-
-    setEnvironmentId(envId) {
-        if (envId && typeof envId === 'string') {
-            this.cachedEnvironmentId = envId;
-            console.log(`💾 [AntigravityKeyManager] Saved warm environment ID: ${envId}`);
-        }
-    }
-
-    clearEnvironmentId() {
-        if (this.cachedEnvironmentId) {
-            console.log(`🧹 [AntigravityKeyManager] Cleared stale environment ID: ${this.cachedEnvironmentId}`);
-            this.cachedEnvironmentId = null;
-        }
-    }
-
     async getNextKey() {
         if (!this.isInitialized || this.pool.length === 0) {
             await this.loadKeys();
