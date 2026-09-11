@@ -1,6 +1,7 @@
 import { Events, MessageFlags } from "discord.js";
 import { decorateTree, createGameUI, checkGameFinished } from '../../utils/christmasGameUtils.js';
 import { TREE_CONFIG } from '../../config/christmasTreeConfig.js';
+import { handleBlockAgentMenu } from '../../commands/slash/block-agent.js';
 
 // Music Panel Imports
 import PanelState from '../../models/PanelState.js';
@@ -514,6 +515,19 @@ export default (client) => {
                 console.error("Tree Game Error:", err);
                 if (!interaction.replied) {
                     await interaction.followUp({ content: TREE_CONFIG.messages.error, flags: MessageFlags.Ephemeral });
+                }
+            }
+            return;
+        }
+
+        // --- 1.4 XỬ LÝ BLOCK-AGENT MENU (MULTI-SELECT) ---
+        if (interaction.isStringSelectMenu() && interaction.customId?.startsWith('blockagent_')) {
+            try {
+                await handleBlockAgentMenu(interaction);
+            } catch (err) {
+                console.error('Block-Agent Menu Error:', err);
+                if (!interaction.replied && !interaction.deferred) {
+                    await interaction.reply({ content: '❌ Lỗi khi xử lý block/unblock model!', flags: MessageFlags.Ephemeral }).catch(() => {});
                 }
             }
             return;
