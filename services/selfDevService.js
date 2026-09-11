@@ -795,14 +795,37 @@ export class SelfDevService {
 
                     try {
                         const parsed = JSON.parse(rawOutput);
-                        scriptCode = parsed.code || parsed.content || rawOutput;
+                        scriptCode = parsed.code || parsed.content || null;
                     } catch (_) {
-                        const match = rawOutput.match(/```(?:javascript|js)?([\s\S]*?)```/) || [null, rawOutput];
-                        scriptCode = match[1].trim();
+                        const match = rawOutput.match(/```(?:javascript|js)?([\s\S]*?)```/);
+                        if (match) {
+                            scriptCode = match[1].trim();
+                        } else {
+                            const matchCode = rawOutput.match(/"code"\s*:\s*"([\s\S]*)"\s*\}?\s*$/);
+                            if (matchCode) {
+                                scriptCode = matchCode[1]
+                                    .replace(/\\n/g, '\n')
+                                    .replace(/\\"/g, '"')
+                                    .replace(/\\\\/g, '\\');
+                            }
+                        }
                     }
 
                     // Loại bỏ markdown ticks nếu có lọt vào
-                    scriptCode = scriptCode.replace(/^```(?:javascript|js)?\n?/i, '').replace(/\n?```$/i, '').trim();
+                    if (scriptCode) {
+                        scriptCode = scriptCode.replace(/^```(?:javascript|js)?\n?/i, '').replace(/\n?```$/i, '').trim();
+                    }
+
+                    // Kiểm tra an toàn: Tuyệt đối không để nguyên khối JSON ghi vào file .js
+                    if (scriptCode && scriptCode.startsWith('{') && scriptCode.includes('"code"')) {
+                        const matchCode = scriptCode.match(/"code"\s*:\s*"([\s\S]*)"\s*\}?\s*$/);
+                        if (matchCode) {
+                            scriptCode = matchCode[1]
+                                .replace(/\\n/g, '\n')
+                                .replace(/\\"/g, '"')
+                                .replace(/\\\\/g, '\\');
+                        }
+                    }
 
                     geminiModelService.reportModelSuccess(modelId);
                     break; // Sinh script thành công, thoát vòng lặp model
@@ -817,7 +840,10 @@ export class SelfDevService {
 
         if (!scriptCode) {
             Logger.error(`[SelfDev] ❌ Tất cả các model đều không thể sinh script kiểm tra ngầm. Lỗi cuối: ${lastError?.message}`);
-            return this.getDirectDataFallback(guild, channel, lastError?.message);
+            return {
+                error: lastError?.message || 'Không thể tạo script',
+                reply: `⚠️ Dolia không thể tạo script phù hợp cho yêu cầu này: \`${lastError?.message || 'Lỗi không xác định'}\`. Bạn hãy thử lại với mô tả rõ ràng hơn nhé! ~ ✨🫧`
+            };
         }
 
         // Tự động chuẩn hóa mã nguồn cho môi trường Host (fix lỗi python3 trên Windows)
@@ -906,7 +932,10 @@ export class SelfDevService {
 
         } catch (scriptErr) {
             Logger.warn(`[SelfDev] ⚠️ Lỗi trong quá trình chạy script ngầm:`, scriptErr.message);
-            return this.getDirectDataFallback(guild, channel, scriptErr.message);
+            return {
+                error: scriptErr.message,
+                reply: `⚠️ Dolia đã gặp sự cố khi thực thi tác vụ: \`${scriptErr.message}\`. Bạn hãy báo lại hoặc yêu cầu mình điều chỉnh nhé! ~ ✨🫧🐬`
+            };
         } finally {
             // Tự động sao lưu file script sang sandbox/backup/*.bak trước khi dọn dẹp sandbox/scripts/
             if (scriptPath && fs.existsSync(scriptPath)) {

@@ -257,10 +257,34 @@ export class AntigravityService {
             if (isScript) {
                 let scriptCode = parsedData?.code || parsedData?.files?.[0]?.content || parsedData?.content || null;
                 if (!scriptCode) {
-                    const codeMatch = rawText.match(/```(?:javascript|js)?([\s\S]*?)```/) || [null, rawText];
-                    scriptCode = codeMatch[1].trim();
+                    const codeMatch = rawText.match(/```(?:javascript|js)?([\s\S]*?)```/);
+                    if (codeMatch) {
+                        scriptCode = codeMatch[1].trim();
+                    } else {
+                        const matchCode = rawText.match(/"code"\s*:\s*"([\s\S]*)"\s*\}?\s*$/);
+                        if (matchCode) {
+                            scriptCode = matchCode[1]
+                                .replace(/\\n/g, '\n')
+                                .replace(/\\"/g, '"')
+                                .replace(/\\\\/g, '\\');
+                        }
+                    }
                 }
-                scriptCode = scriptCode.replace(/^```(?:javascript|js)?\n?/i, '').replace(/\n?```$/i, '').trim();
+                if (scriptCode) {
+                    scriptCode = scriptCode.replace(/^```(?:javascript|js)?\n?/i, '').replace(/\n?```$/i, '').trim();
+                }
+
+                // Kiểm tra an toàn: Tuyệt đối không để nguyên khối JSON ghi vào file .js
+                if (scriptCode && scriptCode.startsWith('{') && scriptCode.includes('"code"')) {
+                    const matchCode = scriptCode.match(/"code"\s*:\s*"([\s\S]*)"\s*\}?\s*$/);
+                    if (matchCode) {
+                        scriptCode = matchCode[1]
+                            .replace(/\\n/g, '\n')
+                            .replace(/\\"/g, '"')
+                            .replace(/\\\\/g, '\\')
+                            .trim();
+                    }
+                }
 
                 if (!scriptCode || !scriptCode.includes('run(')) {
                     throw new Error("Mã nguồn script trả về từ Antigravity Agent không hợp lệ (thiếu hàm run).");
