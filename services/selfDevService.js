@@ -820,6 +820,14 @@ export class SelfDevService {
             return this.getDirectDataFallback(guild, channel, lastError?.message);
         }
 
+        // Tự động chuẩn hóa mã nguồn cho môi trường Host (fix lỗi python3 trên Windows)
+        if (process.platform === 'win32') {
+            scriptCode = scriptCode.replace(/(['"`])python3\s+/g, '$1python ');
+            scriptCode = scriptCode.replace(/(\bexecSync\s*\(\s*['"`])python3\b/g, '$1python');
+            scriptCode = scriptCode.replace(/(\bexec\s*\(\s*['"`])python3\b/g, '$1python');
+            scriptCode = scriptCode.replace(/(\bspawn\s*\(\s*['"`])python3(['"`])/g, '$1python$2');
+        }
+
         const channelWorkspaceDir = path.join(process.cwd(), 'sandbox', 'workspaces', channel?.id || 'default');
         if (!fs.existsSync(channelWorkspaceDir)) {
             fs.mkdirSync(channelWorkspaceDir, { recursive: true });

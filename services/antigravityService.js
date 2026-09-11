@@ -266,6 +266,13 @@ export class AntigravityService {
                     throw new Error("Mã nguồn script trả về từ Antigravity Agent không hợp lệ (thiếu hàm run).");
                 }
 
+                if (process.platform === 'win32') {
+                    scriptCode = scriptCode.replace(/(['"`])python3\s+/g, '$1python ');
+                    scriptCode = scriptCode.replace(/(\bexecSync\s*\(\s*['"`])python3\b/g, '$1python');
+                    scriptCode = scriptCode.replace(/(\bexec\s*\(\s*['"`])python3\b/g, '$1python');
+                    scriptCode = scriptCode.replace(/(\bspawn\s*\(\s*['"`])python3(['"`])/g, '$1python$2');
+                }
+
                 return {
                     success: true,
                     mode: 'script',
