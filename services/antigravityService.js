@@ -7,14 +7,17 @@ import { getAgentSession, updateAgentSession } from '../helpers/chatHelper.js';
 
 export class AntigravityService {
     /**
-     * Ủy quyền cho Antigravity Agent trên Google Cloud Sandbox phát triển và kiểm thử tính năng/game
+     * Ủy quyền cho Antigravity Agent trên Google Cloud Sandbox phát triển (Command hoặc Script)
      * @param {Object} options
-     * @param {string} options.prompt - Yêu cầu tính năng từ người dùng
-     * @param {string} options.featureName - Tên định danh (slug) của lệnh
-     * @param {Function} [options.onProgress] - Callback cập nhật trạng thái tiến trình thực tế từ luồng SSE
+     * @param {string} options.prompt - Yêu cầu từ người dùng
+     * @param {string} [options.mode='command'] - 'command' (Slash command) hoặc 'script' (Dynamic Inspect/Modify Script)
+     * @param {string} [options.featureName] - Tên định danh (slug)
+     * @param {Function} [options.onProgress] - Callback cập nhật trạng thái tiến trình
      * @param {Object} [options.context] - Ngữ cảnh Discord { client, guild, channel, user, message }
+     * @param {Object} [options.lastScript] - Script cũ nếu là Chained Script Modification
      */
-    static async developFeature({ prompt, featureName, onProgress = null, context = null }) {
+    static async develop({ prompt, mode = 'command', featureName = null, onProgress = null, context = null, lastScript = null }) {
+        const isScript = mode === 'script';
         const safeSlug = (featureName || prompt.split(' ')[0])
             .toLowerCase()
             .trim()
@@ -25,14 +28,24 @@ export class AntigravityService {
 
         // Ưu tiên flash-lite cho Antigravity Cloud: nhanh hơn, quota rộng hơn, giữ render Discord mượt
         const activeModel = await geminiModelService.getActiveModel('flash-lite', 'agent');
-        Logger.info(`[Antigravity] 🚀 Khởi chạy Antigravity Agent (Cloud Sandbox) với model: ${activeModel}...`);
+        Logger.info(`[Antigravity] 🚀 Khởi chạy Antigravity Agent (Cloud Sandbox - Mode: ${mode}) với model: ${activeModel}...`);
 
         // Đọc prompt tùy biến từ config/prompt/agent/AgentInstruction.md và nhúng Skills chuẩn Google Custom Agents
         const baseInstruction = loadAgentPrompt('AgentInstruction.md', {
             '{{safeSlug}}': safeSlug
         });
         const systemInstruction = SkillHelper.enhanceInstructionWithSkills(baseInstruction, prompt);
-        const promptInstruction = `${systemInstruction}\n\n[NHIỆM VỤ HIỆN TẠI]: Hãy thiết kế và lập trình tính năng mới sau: "${prompt}". Tên lệnh được chỉ định: "${safeSlug}". Trả về DUY NHẤT một JSON hợp lệ theo [CHẾ ĐỘ 2: SLASH COMMAND]!`;
+
+        let promptInstruction = '';
+        if (isScript) {
+            if (lastScript && lastScript.code) {
+                promptInstruction = `${systemInstruction}\n\n[CHẾ ĐỘ 1: MODIFY SCRIPT - KẾ THỪA MÃ NGUỒN CŨ TRONG WORKSPACE]:\nBạn đang tiếp tục phiên làm việc trong môi trường (workspace) của kênh này.\n\n[MÃ NGUỒN CŨ ĐÃ HOẠT ĐỘNG THÀNH CÔNG TRƯỚC ĐÓ]:\n\`\`\`javascript\n${lastScript.code}\n\`\`\`\n\n[YÊU CẦU SỬA ĐỔI TỪ NGƯỜI DÙNG]:\n"${prompt}"\n\n[NGUYÊN TẮC BẮT BUỘC]:\n1. Sửa trực tiếp trên mã nguồn cũ, kế thừa 100% bố cục, màu sắc, font chữ, animation timeline và các hiệu ứng đã có.\n2. CHỈ thay đổi hoặc loại bỏ đúng các chi tiết mà người dùng yêu cầu (ví dụ: chỉ giữ lại avatar của người dùng, bỏ avatar khác).\n3. Trả về DUY NHẤT một JSON hợp lệ theo [CHẾ ĐỘ 1: INSPECT DATA & DYNAMIC TASKS] với trường "code" chứa hàm run({ client, guild, channel, user, message }), hàm run() luôn trả về trường 'reply' theo đúng phong cách Dolia.`;
+            } else {
+                promptInstruction = `${systemInstruction}\n\n[NHIỆM VỤ HIỆN TẠI]: Hãy thiết kế và lập trình script thực thi tác vụ dynamic / kiểm tra dữ liệu sau: "${prompt}".\nTrả về DUY NHẤT một JSON hợp lệ theo [CHẾ ĐỘ 1: INSPECT DATA & DYNAMIC TASKS] với trường "code" chứa hàm run({ client, guild, channel, user, message })!`;
+            }
+        } else {
+            promptInstruction = `${systemInstruction}\n\n[NHIỆM VỤ HIỆN TẠI]: Hãy thiết kế và lập trình tính năng mới sau: "${prompt}". Tên lệnh được chỉ định: "${safeSlug}". Trả về DUY NHẤT một JSON hợp lệ theo [CHẾ ĐỘ 2: SLASH COMMAND]!`;
+        }
 
         const sessionKey = context?.channel?.id ? `${context.guild?.id || 'dm'}_${context.channel.id}` : null;
         let dbSession = null;
@@ -229,27 +242,68 @@ export class AntigravityService {
             } catch (_) {
                 const match = rawText.match(/```(?:json)?([\s\S]*?)```/);
                 if (match) {
-                    parsedData = JSON.parse(match[1].trim());
-                } else {
-                    const jsonMatch = rawText.match(/\{[\s\S]*"command_name"[\s\S]*\}/);
+                    try { parsedData = JSON.parse(match[1].trim()); } catch (_) {}
+                }
+                if (!parsedData) {
+                    const jsonMatch = rawText.match(/\{[\s\S]*\}/);
                     if (jsonMatch) {
-                        parsedData = JSON.parse(jsonMatch[0].trim());
+                        try { parsedData = JSON.parse(jsonMatch[0].trim()); } catch (_) {}
                     }
                 }
             }
 
-            if (!parsedData || !parsedData.files || !Array.isArray(parsedData.files) || parsedData.files.length === 0) {
-                throw new Error("Dữ liệu trả về từ Antigravity Agent không chứa cấu trúc files hợp lệ.");
-            }
+            const currentEnvId = antigravityKeyManager.getEnvironmentId(sessionKey)?.environmentId || null;
 
-            return {
-                success: true,
-                data: parsedData,
-                usedModel: activeModel,
-                usedAgent: 'antigravity-preview-05-2026',
-                environmentId: antigravityKeyManager.getEnvironmentId(sessionKey)?.environmentId || null
-            };
+            if (isScript) {
+                let scriptCode = parsedData?.code || parsedData?.files?.[0]?.content || parsedData?.content || null;
+                if (!scriptCode) {
+                    const codeMatch = rawText.match(/```(?:javascript|js)?([\s\S]*?)```/) || [null, rawText];
+                    scriptCode = codeMatch[1].trim();
+                }
+                scriptCode = scriptCode.replace(/^```(?:javascript|js)?\n?/i, '').replace(/\n?```$/i, '').trim();
+
+                if (!scriptCode || !scriptCode.includes('run(')) {
+                    throw new Error("Mã nguồn script trả về từ Antigravity Agent không hợp lệ (thiếu hàm run).");
+                }
+
+                return {
+                    success: true,
+                    mode: 'script',
+                    scriptCode,
+                    data: parsedData || { code: scriptCode },
+                    usedModel: activeModel,
+                    usedAgent: 'antigravity-preview-05-2026',
+                    environmentId: currentEnvId
+                };
+            } else {
+                if (!parsedData || !parsedData.files || !Array.isArray(parsedData.files) || parsedData.files.length === 0) {
+                    throw new Error("Dữ liệu trả về từ Antigravity Agent không chứa cấu trúc files hợp lệ.");
+                }
+
+                return {
+                    success: true,
+                    mode: 'command',
+                    data: parsedData,
+                    usedModel: activeModel,
+                    usedAgent: 'antigravity-preview-05-2026',
+                    environmentId: currentEnvId
+                };
+            }
         }, { timeoutMs: 180000, maxRetries: 2 });
+    }
+
+    /**
+     * Tạo tính năng Slash Command mới (Backward Compatible Alias)
+     */
+    static async developFeature(options) {
+        return await this.develop({ ...options, mode: 'command' });
+    }
+
+    /**
+     * Tạo hoặc chỉnh sửa Script tác vụ dynamic (Cloud Managed Sandbox)
+     */
+    static async developScript(options) {
+        return await this.develop({ ...options, mode: 'script' });
     }
 }
 

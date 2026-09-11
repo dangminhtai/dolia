@@ -744,43 +744,74 @@ export class SelfDevService {
         let scriptCode = '';
         let lastError = null;
 
-        for (const modelId of candidates) {
-            if (geminiModelService.isAgentBlocked(modelId)) continue;
-            try {
-                Logger.info(`[SelfDev] 🧠 Đang gọi model (${modelId}) sinh script kiểm tra ngầm cho: "${prompt}"...`);
-                onProgress?.({ stage: 'coding', text: '✍️ Dolia đang tỉ mỉ chuẩn bị và phác thảo theo ý bạn nè... 🫧' });
-                const rawOutput = await ApiKeyManager.execute(modelId, async (apiKey) => {
-                    const ai = ApiKeyManager.getClient(apiKey);
-                    const response = await ai.models.generateContent({
-                        model: modelId,
-                        contents: [{ role: 'user', parts: [{ text: promptContent }] }],
-                        config: {
-                            systemInstruction,
-                            responseMimeType: 'application/json',
-                            temperature: 0.1
-                        }
-                    });
-                    return response.text;
-                }, { timeoutMs: 40000 });
-
-                try {
-                    const parsed = JSON.parse(rawOutput);
-                    scriptCode = parsed.code || parsed.content || rawOutput;
-                } catch (_) {
-                    const match = rawOutput.match(/```(?:javascript|js)?([\s\S]*?)```/) || [null, rawOutput];
-                    scriptCode = match[1].trim();
+        // Ưu tiên 1: Gọi Antigravity Agent trên Google Cloud Sandbox (Interactions API)
+        try {
+            Logger.info(`[SelfDev] 🧠 Đang gọi Antigravity Agent (Cloud Sandbox) sinh script cho kênh #${channel?.name || channel?.id}...`);
+            const antiResult = await AntigravityService.developScript({
+                prompt,
+                context: { client, guild, channel, user, message },
+                lastScript: isModify ? lastScript : null,
+                onProgress: (progress) => {
+                    if (progress && typeof progress === 'object') {
+                        onProgress?.({
+                            stage: progress.stage || 'coding',
+                            text: progress.text || '✍️ Dolia đang chuẩn bị mã nguồn trong Google Sandbox...'
+                        });
+                    } else if (typeof progress === 'string') {
+                        onProgress?.({ stage: 'coding', text: progress });
+                    }
                 }
+            });
 
-                // Loại bỏ markdown ticks nếu có lọt vào
-                scriptCode = scriptCode.replace(/^```(?:javascript|js)?\n?/i, '').replace(/\n?```$/i, '').trim();
+            if (antiResult?.scriptCode) {
+                scriptCode = antiResult.scriptCode;
+                Logger.info(`[SelfDev] ✅ Antigravity Cloud sinh script thành công (environmentId: ${antiResult.environmentId || 'none'})`);
+            }
+        } catch (antiErr) {
+            Logger.warn(`[SelfDev] ⚠️ Antigravity Cloud gặp sự cố: ${antiErr.message}. Tự động chuyển sang chế độ sinh script dự phòng nội bộ...`);
+            onProgress?.({ stage: 'fallback', text: '🔄 Chuyển sang chế độ dự phòng nội bộ...' });
+        }
 
-                geminiModelService.reportModelSuccess(modelId);
-                break; // Sinh script thành công, thoát vòng lặp model
-            } catch (modelErr) {
-                lastError = modelErr;
-                geminiModelService.reportModelFailure(modelId, modelErr.message, 5 * 60 * 1000);
-                Logger.warn(`[SelfDev] ⚠️ Model ${modelId} gặp sự cố khi sinh script: ${modelErr.message}. Tự động chuyển model tiếp theo...`);
-                onProgress?.({ stage: 'coding', text: '🔄 Dolia đang điều chỉnh lại một xíu cho thật hoàn hảo nha... ✨' });
+        // Ưu tiên 2: Fallback chế độ sinh mã nội bộ (generateContent) nếu Antigravity Cloud chưa sinh được code
+        if (!scriptCode) {
+            for (const modelId of candidates) {
+                if (geminiModelService.isAgentBlocked(modelId)) continue;
+                try {
+                    Logger.info(`[SelfDev] 🧠 Đang gọi model (${modelId}) sinh script kiểm tra ngầm cho: "${prompt}"...`);
+                    onProgress?.({ stage: 'coding', text: '✍️ Dolia đang tỉ mỉ chuẩn bị và phác thảo theo ý bạn nè... 🫧' });
+                    const rawOutput = await ApiKeyManager.execute(modelId, async (apiKey) => {
+                        const ai = ApiKeyManager.getClient(apiKey);
+                        const response = await ai.models.generateContent({
+                            model: modelId,
+                            contents: [{ role: 'user', parts: [{ text: promptContent }] }],
+                            config: {
+                                systemInstruction,
+                                responseMimeType: 'application/json',
+                                temperature: 0.1
+                            }
+                        });
+                        return response.text;
+                    }, { timeoutMs: 40000 });
+
+                    try {
+                        const parsed = JSON.parse(rawOutput);
+                        scriptCode = parsed.code || parsed.content || rawOutput;
+                    } catch (_) {
+                        const match = rawOutput.match(/```(?:javascript|js)?([\s\S]*?)```/) || [null, rawOutput];
+                        scriptCode = match[1].trim();
+                    }
+
+                    // Loại bỏ markdown ticks nếu có lọt vào
+                    scriptCode = scriptCode.replace(/^```(?:javascript|js)?\n?/i, '').replace(/\n?```$/i, '').trim();
+
+                    geminiModelService.reportModelSuccess(modelId);
+                    break; // Sinh script thành công, thoát vòng lặp model
+                } catch (modelErr) {
+                    lastError = modelErr;
+                    geminiModelService.reportModelFailure(modelId, modelErr.message, 5 * 60 * 1000);
+                    Logger.warn(`[SelfDev] ⚠️ Model ${modelId} gặp sự cố khi sinh script: ${modelErr.message}. Tự động chuyển model tiếp theo...`);
+                    onProgress?.({ stage: 'coding', text: '🔄 Dolia đang điều chỉnh lại một xíu cho thật hoàn hảo nha... ✨' });
+                }
             }
         }
 
