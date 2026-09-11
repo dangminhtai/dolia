@@ -734,7 +734,8 @@ export class SelfDevService {
 
         // Chuẩn bị User Prompt: Kế thừa mã nguồn cũ nếu là tác vụ sửa đổi (Chained Modification)
         let promptContent = `Kiểm tra dữ liệu Discord theo [CHẾ ĐỘ 1: INSPECT SCRIPT]: ${prompt}`;
-        if (isModify && lastScript && lastScript.code) {
+        const hasAttachedScript = prompt.includes('[Tệp đính kèm:');
+        if (!hasAttachedScript && isModify && lastScript && lastScript.code) {
             Logger.info(`[SelfDev] 🔄 Kích hoạt Chained Script Modification cho kênh #${channel?.name || channel?.id}: Kế thừa script trước đó (${lastScript.name || 'last_script.js'})...`);
             onProgress?.({ stage: 'thinking', text: '🔄 Dolia đang xem lại tác phẩm trước đó để chỉnh sửa theo đúng ý bạn nè... 🫧' });
             promptContent = `[CHẾ ĐỘ 1: MODIFY SCRIPT - KẾ THỪA MÃ NGUỒN CŨ TRONG WORKSPACE]:\nBạn đang tiếp tục phiên làm việc trong môi trường (workspace) của kênh này.\n\n[MÃ NGUỒN CŨ ĐÃ HOẠT ĐỘNG THÀNH CÔNG TRƯỚC ĐÓ]:\n\`\`\`javascript\n${lastScript.code}\n\`\`\`\n\n[YÊU CẦU SỬA ĐỔI TỪ NGƯỜI DÙNG]:\n"${prompt}"\n\n[NGUYÊN TẮC BẮT BUỘC]:\n1. Sửa trực tiếp trên mã nguồn cũ, kế thừa 100% bố cục, màu sắc, font chữ, animation timeline và các hiệu ứng đã có.\n2. CHỈ thay đổi hoặc loại bỏ đúng các chi tiết mà người dùng yêu cầu (ví dụ: chỉ giữ lại avatar của người dùng, bỏ avatar khác).\n3. Trả về mã nguồn hoàn chỉnh đã sửa, hàm run() luôn trả về trường 'reply' theo đúng phong cách Dolia.`;

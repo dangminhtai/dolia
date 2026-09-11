@@ -53,9 +53,32 @@ class GeminiManager {
         const baseHistory = await ChatHelper.getHistory(userId, chatSession);
 
         // 2. Add Current User Message with Speaker Prefix ([DisplayName]: content)
+        let fullUserText = message.cleanContent || '';
+
+        // Tự động đọc nội dung file đính kèm nếu người dùng tải lên code/text file (.js, .bak, .txt, .json, .py, v.v.)
+        if (message.attachments && message.attachments.size > 0) {
+            const attachedFileTexts = [];
+            for (const [, att] of message.attachments) {
+                if (/\.(js|bak|txt|json|py|md|ts|html|css)$/i.test(att.name)) {
+                    try {
+                        const res = await fetch(att.url);
+                        if (res.ok) {
+                            const fileContent = await res.text();
+                            attachedFileTexts.push(`[Tệp đính kèm: ${att.name}]\n\`\`\`javascript\n${fileContent}\n\`\`\``);
+                        }
+                    } catch (attErr) {
+                        console.error('Không thể đọc file đính kèm:', attErr.message);
+                    }
+                }
+            }
+            if (attachedFileTexts.length > 0) {
+                fullUserText = `${fullUserText}\n\n${attachedFileTexts.join('\n\n')}`.trim();
+            }
+        }
+
         const userTurn = {
             role: 'user',
-            parts: [{ text: `[${displayName}]: ${message.cleanContent}` }],
+            parts: [{ text: `[${displayName}]: ${fullUserText}` }],
             authorId: userId,
             authorName: displayName
         };
