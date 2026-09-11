@@ -12,6 +12,7 @@ class AntigravityKeyManager {
         this.index = 0;
         this.suspensionCache = new Map(); // `${key}_antigravity` -> timestamp (ms)
         this.cachedEnvironmentId = null;
+        this.sessionEnvironments = new Map(); // sessionKey -> { environmentId, lastInteractionId, updatedAt }
     }
 
     /**
@@ -209,6 +210,33 @@ class AntigravityKeyManager {
         }
 
         throw new Error(`Antigravity Agent failed after ${attempt} attempts. Last error: ${lastError?.message}`);
+    }
+
+    getEnvironmentId(sessionKey = null) {
+        if (sessionKey && this.sessionEnvironments?.has(sessionKey)) {
+            return this.sessionEnvironments.get(sessionKey);
+        }
+        return this.cachedEnvironmentId ? { environmentId: this.cachedEnvironmentId } : null;
+    }
+
+    setEnvironmentId(envId, sessionKey = null, interactionId = null) {
+        this.cachedEnvironmentId = envId;
+        if (sessionKey) {
+            if (!this.sessionEnvironments) this.sessionEnvironments = new Map();
+            const existing = this.sessionEnvironments.get(sessionKey) || {};
+            this.sessionEnvironments.set(sessionKey, {
+                environmentId: envId,
+                lastInteractionId: interactionId || existing.lastInteractionId || null,
+                updatedAt: Date.now()
+            });
+        }
+    }
+
+    clearEnvironmentId(sessionKey = null) {
+        if (sessionKey && this.sessionEnvironments) {
+            this.sessionEnvironments.delete(sessionKey);
+        }
+        this.cachedEnvironmentId = null;
     }
 }
 

@@ -132,3 +132,47 @@ export async function saveInteraction(chatSession, newContents) {
         console.error('Failed to save interaction:', error);
     }
 }
+
+/**
+ * Lấy thông tin Agent Session (environmentId, lastInteractionId, lastScript) theo channel và user
+ */
+export async function getAgentSession(userId, channelId) {
+    try {
+        const session = await Chat.findOne({ userId, channelId }).select('agentSession');
+        return session?.agentSession || null;
+    } catch (error) {
+        console.error('Error getting agent session:', error);
+        return null;
+    }
+}
+
+/**
+ * Cập nhật Agent Session (environmentId, lastInteractionId, lastScript, workspacePath)
+ */
+export async function updateAgentSession(userId, channelId, updates = {}) {
+    try {
+        const chatSession = await getChatSession(userId, channelId);
+        if (!chatSession.agentSession) {
+            chatSession.agentSession = {};
+        }
+
+        if (updates.environmentId !== undefined) chatSession.agentSession.environmentId = updates.environmentId;
+        if (updates.lastInteractionId !== undefined) chatSession.agentSession.lastInteractionId = updates.lastInteractionId;
+        if (updates.workspacePath !== undefined) chatSession.agentSession.workspacePath = updates.workspacePath;
+        if (updates.lastScript) {
+            chatSession.agentSession.lastScript = {
+                name: updates.lastScript.name || 'script.js',
+                code: updates.lastScript.code,
+                prompt: updates.lastScript.prompt,
+                createdAt: new Date()
+            };
+        }
+        chatSession.agentSession.updatedAt = new Date();
+
+        await chatSession.save();
+        return chatSession.agentSession;
+    } catch (error) {
+        console.error('Failed to update agent session:', error);
+        return null;
+    }
+}

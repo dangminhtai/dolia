@@ -3,6 +3,7 @@ import Logger from '../class/Logger.js';
 import geminiModelService from './geminiModelService.js';
 import { loadAgentPrompt } from '../helpers/promptHelper.js';
 import SkillHelper from '../helpers/skillHelper.js';
+import { getAgentSession, updateAgentSession } from '../helpers/chatHelper.js';
 
 export class AntigravityService {
     /**
@@ -11,8 +12,9 @@ export class AntigravityService {
      * @param {string} options.prompt - Yêu cầu tính năng từ người dùng
      * @param {string} options.featureName - Tên định danh (slug) của lệnh
      * @param {Function} [options.onProgress] - Callback cập nhật trạng thái tiến trình thực tế từ luồng SSE
+     * @param {Object} [options.context] - Ngữ cảnh Discord { client, guild, channel, user, message }
      */
-    static async developFeature({ prompt, featureName, onProgress = null }) {
+    static async developFeature({ prompt, featureName, onProgress = null, context = null }) {
         const safeSlug = (featureName || prompt.split(' ')[0])
             .toLowerCase()
             .trim()
@@ -32,37 +34,51 @@ export class AntigravityService {
         const systemInstruction = SkillHelper.enhanceInstructionWithSkills(baseInstruction, prompt);
         const promptInstruction = `${systemInstruction}\n\n[NHIỆM VỤ HIỆN TẠI]: Hãy thiết kế và lập trình tính năng mới sau: "${prompt}". Tên lệnh được chỉ định: "${safeSlug}". Trả về DUY NHẤT một JSON hợp lệ theo [CHẾ ĐỘ 2: SLASH COMMAND]!`;
 
+        const sessionKey = context?.channel?.id ? `${context.guild?.id || 'dm'}_${context.channel.id}` : null;
+        let dbSession = null;
+        if (context?.user?.id && context?.channel?.id) {
+            dbSession = await getAgentSession(context.user.id, context.channel.id);
+        }
+
         return await antigravityKeyManager.execute(async (apiKey) => {
-            const cachedEnv = antigravityKeyManager.getEnvironmentId();
+            const sessionEnv = antigravityKeyManager.getEnvironmentId(sessionKey) || dbSession;
             const skillSources = SkillHelper.getEnvironmentSources();
 
-            let envParam = cachedEnv || "remote";
-            if (!cachedEnv && skillSources.length > 0) {
+            let envParam = sessionEnv?.environmentId || "remote";
+            let previousInteractionId = sessionEnv?.lastInteractionId || null;
+
+            if (!sessionEnv?.environmentId && skillSources.length > 0) {
                 // Nhúng các file SKILL.md inline vào remote sandbox theo chuẩn Google Custom Agents
                 envParam = {
                     type: "remote",
                     sources: skillSources
                 };
                 Logger.info(`[Antigravity] 📦 Đã nhúng ${skillSources.length} skills vào environment.sources (.agents/skills/): ${skillSources.map(s => s.target).join(', ')}`);
-            } else if (cachedEnv) {
-                Logger.info(`[Antigravity] ⚡ Tái sử dụng Warm Sandbox Container ID: ${cachedEnv}`);
+            } else if (sessionEnv?.environmentId) {
+                Logger.info(`[Antigravity] ⚡ Tái sử dụng Warm Sandbox Container ID: ${sessionEnv.environmentId}${previousInteractionId ? ` (Chained Interaction: ${previousInteractionId})` : ''}`);
             }
 
             const url = `https://generativelanguage.googleapis.com/v1beta/interactions?alt=sse&key=${apiKey}`;
+            const requestPayload = {
+                agent: "antigravity-preview-05-2026",
+                input: promptInstruction,
+                environment: envParam,
+                stream: true,
+                agent_config: {
+                    type: "antigravity",
+                    model: activeModel
+                },
+                system_instruction: systemInstruction
+            };
+
+            if (previousInteractionId) {
+                requestPayload.previous_interaction_id = previousInteractionId;
+            }
+
             const response = await fetch(url, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    agent: "antigravity-preview-05-2026",
-                    input: promptInstruction,
-                    environment: envParam,
-                    stream: true,
-                    agent_config: {
-                        type: "antigravity",
-                        model: activeModel
-                    },
-                    system_instruction: systemInstruction
-                })
+                body: JSON.stringify(requestPayload)
             });
 
             if (!response.ok) {
@@ -73,8 +89,14 @@ export class AntigravityService {
                 apiErr.error = err;
 
                 // Nếu môi trường cũ đã hết hạn hoặc không tìm thấy, xóa cache để lần sau tạo mới
-                if (cachedEnv && (response.status === 400 || response.status === 404)) {
-                    antigravityKeyManager.clearEnvironmentId();
+                if (sessionEnv?.environmentId && (response.status === 400 || response.status === 404)) {
+                    antigravityKeyManager.clearEnvironmentId(sessionKey);
+                    if (context?.user?.id && context?.channel?.id) {
+                        updateAgentSession(context.user.id, context.channel.id, {
+                            environmentId: null,
+                            lastInteractionId: null
+                        }).catch(() => {});
+                    }
                 }
 
                 throw apiErr;
@@ -104,8 +126,18 @@ export class AntigravityService {
                         const eventObj = JSON.parse(jsonStr);
                         const eventType = eventObj.event_type;
 
-                        if (eventType === 'interaction.created' && eventObj.interaction?.environment_id) {
-                            antigravityKeyManager.setEnvironmentId(eventObj.interaction.environment_id);
+                        if (eventType === 'interaction.created' && eventObj.interaction) {
+                            const newEnvId = eventObj.interaction.environment_id;
+                            const newInteractionId = eventObj.interaction.id;
+                            if (newEnvId) {
+                                antigravityKeyManager.setEnvironmentId(newEnvId, sessionKey, newInteractionId);
+                                if (context?.user?.id && context?.channel?.id) {
+                                    updateAgentSession(context.user.id, context.channel.id, {
+                                        environmentId: newEnvId,
+                                        lastInteractionId: newInteractionId
+                                    }).catch(() => {});
+                                }
+                            }
                             if (typeof onProgress === 'function') {
                                 onProgress({ stage: 'connected', text: '☁️ Dolia đã kết nối không gian đám mây thành công!', event: eventType });
                             }

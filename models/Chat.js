@@ -18,6 +18,18 @@ const chatSchema = new mongoose.Schema({
     userId: { type: String, required: true },
     channelId: { type: String, required: true },
     turns: [chatTurnSchema],
+    agentSession: {
+        environmentId: { type: String, default: null },
+        lastInteractionId: { type: String, default: null },
+        workspacePath: { type: String, default: null },
+        lastScript: {
+            name: { type: String, default: null },
+            code: { type: String, default: null },
+            prompt: { type: String, default: null },
+            createdAt: { type: Date, default: null }
+        },
+        updatedAt: { type: Date, default: Date.now }
+    }
 });
 
 chatSchema.index({ userId: 1, channelId: 1 });

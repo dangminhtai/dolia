@@ -128,15 +128,18 @@ export async function agent_code(args) {
         return JSON.stringify(runResult);
     }
 
-    // 1. Xử lý kịch bản kiểm tra/truy vấn ngầm bằng script trong Sandbox (Dynamic Inspection Script)
+    // 1. Xử lý kịch bản kiểm tra/truy vấn ngầm bằng script trong Sandbox (Dynamic Inspection & Modification Script)
     const isScript = lowerAction === 'create_script' || 
+                     lowerAction === 'modify_script' ||
+                     lowerAction === 'edit_script' ||
                      lowerAction === 'inspect_data';
 
     if (isScript) {
-        Logger.info(`[DevFunctions] 🔍 Chạy script ngầm trong sandbox để kiểm tra dữ liệu: "${prompt}"...`);
+        Logger.info(`[DevFunctions] 🔍 Chạy script ngầm trong sandbox (action: "${lowerAction}"): "${prompt}"...`);
         try {
             const inspectionResult = await SelfDevService.runDynamicScript({
                 prompt,
+                action: lowerAction,
                 context: { client, guild, channel, user, message }
             });
             return typeof inspectionResult === 'string' ? inspectionResult : JSON.stringify(inspectionResult);

@@ -17,8 +17,8 @@ export const devTools = [
                 },
                 action: {
                     type: Type.STRING,
-                    description: "Loại tác vụ: 'run_feature' (khởi chạy ngay game/lệnh đã có sẵn trong danh sách ra kênh chat), 'inspect_data' (kiểm tra ngầm dữ liệu Discord, đếm người, xem thành viên, role, kênh), 'create_script' (chạy script kiểm tra), 'create_game' (tạo game mới chưa có), 'create_feature' (tạo lệnh mới chưa có), 'modify_feature' (sửa lệnh), 'delete_feature' (xoá lệnh).",
-                    enum: ["run_feature", "inspect_data", "create_script", "create_feature", "create_game", "modify_feature", "delete_feature"]
+                    description: "Loại tác vụ: 'run_feature' (khởi chạy ngay game/lệnh đã có sẵn trong danh sách ra kênh chat), 'inspect_data' (kiểm tra ngầm dữ liệu Discord, đếm người, xem thành viên, role, kênh), 'create_script' (chạy script kiểm tra, vẽ canvas, render video), 'modify_script' (chỉnh sửa, cập nhật lại script đã tạo trước đó trong kênh), 'create_game' (tạo game mới chưa có), 'create_feature' (tạo lệnh mới chưa có), 'modify_feature' (sửa lệnh), 'delete_feature' (xoá lệnh).",
+                    enum: ["run_feature", "inspect_data", "create_script", "modify_script", "create_feature", "create_game", "modify_feature", "delete_feature"]
                 }
             },
             required: ["prompt", "action"]

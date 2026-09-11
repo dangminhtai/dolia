@@ -15,6 +15,7 @@ import {
     sandboxValidator,
     PackageInstaller
 } from '../core/sandbox/index.js';
+import { getAgentSession, updateAgentSession } from '../helpers/chatHelper.js';
 
 const OWNER_ID = process.env.OWNER_ID;
 
@@ -129,6 +130,7 @@ export class SelfDevService {
                 const antiResult = await AntigravityService.developFeature({
                     prompt,
                     featureName: safeSlug,
+                    context: { client, guild: channel?.guild, channel, user },
                     onProgress: (progress) => {
                         // Hỗ trợ cả 2 format: object { stage, text } hoặc string thuần
                         if (progress && typeof progress === 'object') {
@@ -682,15 +684,42 @@ export class SelfDevService {
      * Tạo và thực thi script ngầm trong sandbox/scripts/ để kiểm tra dữ liệu Discord/hệ thống thực tế
      * Trả về kết quả cho Gemini để trả lời câu hỏi của người dùng
      */
-    static async runDynamicScript({ prompt, context }) {
+    /**
+     * Tạo và thực thi script ngầm trong sandbox/workspaces/<channelId>/ để kiểm tra dữ liệu Discord/hệ thống thực tế
+     * Hỗ trợ Chained Modification kế thừa mã nguồn script cũ theo chuẩn Google Custom Agents & Managed Environment
+     */
+    static async runDynamicScript({ prompt, context, action = 'create_script' }) {
         const { client, guild, channel, user, message } = context;
         const candidates = await geminiModelService.getCandidateModels('flash', 'agent');
+
+        // Lấy thông tin Agent Session đã lưu trong MongoDB cho user và channel này
+        let agentSession = null;
+        if (user?.id && channel?.id) {
+            agentSession = await getAgentSession(user.id, channel.id);
+        }
+
+        const lastScript = agentSession?.lastScript;
+        const lowerPrompt = (prompt || '').toLowerCase();
+        const isModify = action === 'modify_script' || 
+                         action === 'edit_script' || 
+                         lowerPrompt.includes('sửa') || 
+                         lowerPrompt.includes('chỉnh') || 
+                         lowerPrompt.includes('thay đổi') || 
+                         lowerPrompt.includes('chỉ giữ') || 
+                         lowerPrompt.includes('bỏ avatar');
 
         // Nạp prompt chỉ thị từ config/prompt/agent/AgentInstruction.md và nhúng skills
         const baseInstruction = loadAgentPrompt('AgentInstruction.md', {
             '{{safeSlug}}': 'query_script'
         });
         const systemInstruction = SkillHelper.enhanceInstructionWithSkills(baseInstruction, prompt);
+
+        // Chuẩn bị User Prompt: Kế thừa mã nguồn cũ nếu là tác vụ sửa đổi (Chained Modification)
+        let promptContent = `Kiểm tra dữ liệu Discord theo [CHẾ ĐỘ 1: INSPECT SCRIPT]: ${prompt}`;
+        if (isModify && lastScript && lastScript.code) {
+            Logger.info(`[SelfDev] 🔄 Kích hoạt Chained Script Modification cho kênh #${channel?.name || channel?.id}: Kế thừa script trước đó (${lastScript.name || 'last_script.js'})...`);
+            promptContent = `[CHẾ ĐỘ 1: MODIFY SCRIPT - KẾ THỪA MÃ NGUỒN CŨ TRONG WORKSPACE]:\nBạn đang tiếp tục phiên làm việc trong môi trường (workspace) của kênh này.\n\n[MÃ NGUỒN CŨ ĐÃ HOẠT ĐỘNG THÀNH CÔNG TRƯỚC ĐÓ]:\n\`\`\`javascript\n${lastScript.code}\n\`\`\`\n\n[YÊU CẦU SỬA ĐỔI TỪ NGƯỜI DÙNG]:\n"${prompt}"\n\n[NGUYÊN TẮC BẮT BUỘC]:\n1. Sửa trực tiếp trên mã nguồn cũ, kế thừa 100% bố cục, màu sắc, font chữ, animation timeline và các hiệu ứng đã có.\n2. CHỈ thay đổi hoặc loại bỏ đúng các chi tiết mà người dùng yêu cầu (ví dụ: chỉ giữ lại avatar của người dùng, bỏ avatar khác).\n3. Trả về mã nguồn hoàn chỉnh đã sửa, hàm run() luôn trả về trường 'reply' theo đúng phong cách Dolia.`;
+        }
 
         let scriptPath = null;
         let scriptCode = '';
@@ -704,7 +733,7 @@ export class SelfDevService {
                     const ai = ApiKeyManager.getClient(apiKey);
                     const response = await ai.models.generateContent({
                         model: modelId,
-                        contents: [{ role: 'user', parts: [{ text: `Kiểm tra dữ liệu Discord theo [CHẾ ĐỘ 1: INSPECT SCRIPT]: ${prompt}` }] }],
+                        contents: [{ role: 'user', parts: [{ text: promptContent }] }],
                         config: {
                             systemInstruction,
                             responseMimeType: 'application/json',
@@ -739,6 +768,11 @@ export class SelfDevService {
             return this.getDirectDataFallback(guild, channel, lastError?.message);
         }
 
+        const channelWorkspaceDir = path.join(process.cwd(), 'sandbox', 'workspaces', channel?.id || 'default');
+        if (!fs.existsSync(channelWorkspaceDir)) {
+            fs.mkdirSync(channelWorkspaceDir, { recursive: true });
+        }
+
         try {
             // Tự động phát hiện và cài đặt an toàn các thư viện npm mới nếu script yêu cầu
             await PackageInstaller.ensureDependencies(scriptCode);
@@ -750,6 +784,10 @@ export class SelfDevService {
             }
             scriptPath = path.join(scriptsDir, `query_${Date.now()}.js`);
             fs.writeFileSync(scriptPath, scriptCode, 'utf-8');
+
+            // Ghi bản sao lưu giữ state vào channel workspace
+            const wsScriptPath = path.join(channelWorkspaceDir, 'current_script.js');
+            fs.writeFileSync(wsScriptPath, scriptCode, 'utf-8');
 
             // Nạp và thực thi script
             const moduleUrl = pathToFileURL(scriptPath).href + `?t=${Date.now()}`;
@@ -778,6 +816,21 @@ export class SelfDevService {
             if (scriptTimer) clearTimeout(scriptTimer);
 
             Logger.info(`[SelfDev] ✅ Script kiểm tra ngầm trong sandbox trả về:`, dataResult);
+
+            // Cập nhật lastScript vào Agent Session của Channel trong MongoDB để phục vụ Modify ở lượt sau
+            if (user?.id && channel?.id && scriptCode) {
+                updateAgentSession(user.id, channel.id, {
+                    workspacePath: channelWorkspaceDir,
+                    lastScript: {
+                        name: path.basename(scriptPath),
+                        code: scriptCode,
+                        prompt: prompt
+                    }
+                }).catch(err => {
+                    Logger.warn('[SelfDev] ⚠️ Không thể lưu lastScript vào agentSession:', err.message);
+                });
+            }
+
             return dataResult;
 
         } catch (scriptErr) {
