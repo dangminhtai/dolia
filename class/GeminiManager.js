@@ -212,6 +212,8 @@ ${topSongsStr || "- Chưa có bài nào nổi bật"}
                 let finalResponseText = null;
                 let preCallText = null;
                 let lastToolResult = null;
+                let attachedFiles = [];
+                let alreadySentToChannel = false;
 
                 // Loop for Function Calling (Max 5 turns)
                 while (functionCallAttempts < 5) {
@@ -329,13 +331,12 @@ ${topSongsStr || "- Chưa có bài nào nổi bật"}
                                 alreadySent = !!lastToolResult.alreadySent;
                             }
 
+                            if (agentFiles.length > 0) attachedFiles = agentFiles;
+                            if (alreadySent) alreadySentToChannel = true;
+
                             if ((agentReplyText && typeof agentReplyText === 'string' && agentReplyText.trim()) || agentFiles.length > 0 || alreadySent) {
                                 this.logger.info(`[GeminiManager] ⚡ Tối ưu 2-Request: Trả về trực tiếp phản hồi từ Agent (bỏ qua Request 3).`);
-                                finalResponseText = {
-                                    reply: agentReplyText,
-                                    files: agentFiles,
-                                    alreadySent
-                                };
+                                finalResponseText = (typeof agentReplyText === 'string') ? agentReplyText : "";
                                 break;
                             }
                         }
@@ -349,23 +350,39 @@ ${topSongsStr || "- Chưa có bài nào nổi bật"}
                 }
 
                 // Fallback thông minh: Nếu sau khi gọi tool mà model không sinh thêm text mới
-                if (!finalResponseText || !finalResponseText.trim()) {
+                if (!finalResponseText || typeof finalResponseText !== 'string' || !finalResponseText.trim()) {
                     if (preCallText) {
                         finalResponseText = preCallText;
                     } else if (lastToolResult) {
                         if (typeof lastToolResult === 'string') {
                             try {
                                 const parsed = JSON.parse(lastToolResult);
-                                finalResponseText = parsed.summary || parsed.message || parsed.description || lastToolResult;
+                                finalResponseText = parsed.reply || parsed.summary || parsed.message || parsed.description || lastToolResult;
                             } catch (_) {
                                 finalResponseText = lastToolResult;
                             }
                         } else if (typeof lastToolResult === 'object') {
-                            finalResponseText = lastToolResult.summary || lastToolResult.message || JSON.stringify(lastToolResult);
+                            finalResponseText = lastToolResult.reply || lastToolResult.summary || lastToolResult.message || JSON.stringify(lastToolResult);
                         }
                     } else {
                         finalResponseText = "Dolia đã ghi nhận và xử lý yêu cầu của bạn rồi nha! ✨💖";
                     }
+                }
+
+                if (typeof finalResponseText !== 'string') {
+                    finalResponseText = String(finalResponseText);
+                }
+
+                // Lọc bỏ các thông số nội bộ và tên file không mong muốn khỏi lời nhắn của Dolia
+                finalResponseText = finalResponseText
+                    .replace(/[-*•]?\s*(?:Đầu ra|Output|File output|Tên file):\s*[^\n\r]+/gi, '')
+                    .replace(/\b[a-zA-Z0-9_\-\\\/]+(?:\/|\\)[a-zA-Z0-9_\-]+\.(mp4|avi|mov|mkv|webm|png|jpg|jpeg|gif|json|py|js)\b/gi, '')
+                    .replace(/\b[a-zA-Z0-9_\-]*\.(mp4|avi|mov|mkv|webm)\b/gi, '')
+                    .replace(/\n{3,}/g, '\n\n')
+                    .trim();
+
+                if (!finalResponseText) {
+                    finalResponseText = "Tada! Dolia đã hoàn thành xong tác vụ cho bạn rồi nè! ✨🐬💖";
                 }
 
                 // Lưu text phản hồi cuối cùng vào DB
@@ -381,6 +398,13 @@ ${topSongsStr || "- Chưa có bài nào nổi bật"}
 
                 // Model phản hồi thành công -> gỡ cooldown nếu có và return
                 geminiModelService.reportModelSuccess(modelId);
+                if (attachedFiles.length > 0 || alreadySentToChannel) {
+                    return {
+                        reply: finalResponseText,
+                        files: attachedFiles,
+                        alreadySent: alreadySentToChannel
+                    };
+                }
                 return finalResponseText;
 
             } catch (err) {
