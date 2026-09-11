@@ -76,9 +76,16 @@ Script phải:
   - Phải kế thừa 100% bố cục, bảng màu, font chữ, độ phân giải, animation timeline và cấu trúc code cũ/tệp đính kèm.
   - Chỉ thực hiện chỉnh sửa chính xác các chi tiết mà người dùng yêu cầu (ví dụ: đổi ID người dùng / bot, đổi avatar, sửa chữ, đổi màu...).
   - Đảm bảo giữ nguyên các câu lệnh `import` và luôn trả về `files: [videoPath]` ở cuối hàm `run()` để bot đính kèm video gửi lên Discord.
+* **Quy tắc lấy User & Avatar theo Discord User ID:**
+  - Khi cần lấy User/Avatar của một ID cụ thể (ví dụ: `1149477475001323540`, `1449070502348984442`...): BẮT BUỘC dùng:
+    ```javascript
+    const targetUser = await client.users.fetch('ID_HERE').catch(() => null);
+    const avatarUrl = targetUser ? targetUser.displayAvatarURL({ extension: 'png', size: 512 }) : 'https://cdn.discordapp.com/embed/avatars/0.png';
+    ```
+  - TUYỆT ĐỐI KHÔNG chỉ tìm trong `guild.members.cache.get(id)` hay `guild.members.fetch(id)` vì nếu người đó/bot đó không có mặt trong server hiện tại thì `guild.members` sẽ trả về `undefined`, khiến avatar bị biến thành avatar mặc định của Discord!
 * **Tốc độ đọc dữ liệu cực nhanh:**
   - Luôn ưu tiên dùng Cache có sẵn: `guild.members.cache`, `guild.channels.cache`, `client.guilds.cache`.
-  - TUYỆT ĐỐI KHÔNG gọi `guild.members.fetch()` không có timeout (sẽ bị Gateway treo 120s và lỗi "Members didn't arrive in time"). Nếu cần fetch, BẮT BUỘC dùng: `await guild.members.fetch({ time: 5000 }).catch(() => guild.members.cache)`.
+  - TUYỆT ĐỐI KHÔNG gọi `guild.members.fetch()` không có timeout (sẽ bị Gateway treo 120s và lỗi "Members didn't arrive in time"). Nếu cần fetch thành viên server, BẮT BUỘC dùng: `await guild.members.fetch({ time: 5000 }).catch(() => guild.members.cache)`.
 * không được đoán.
 
 ---
