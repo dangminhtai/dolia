@@ -85,8 +85,32 @@ async function deployCommands(loadResult, forceDeploy = false) {
 
     // 1. Kiểm tra xem có lệnh nào trong DB bị xóa khỏi mã nguồn không
     try {
-        const currentNames = commands.map(c => c.name);
-        const deleted = await Command.deleteMany({ name: { $nin: currentNames } });
+        const currentNames = new Set(commands.map(c => c.name));
+
+        // Quét các file .js trên ổ đĩa để bảo vệ lệnh đang bị lỗi nạp tạm thời, không xóa nhầm khỏi DB
+        const diskFileNames = new Set();
+        const dirsToScan = [
+            path.join(process.cwd(), 'commands'),
+            path.join(process.cwd(), 'sandbox', 'slash')
+        ];
+        for (const dir of dirsToScan) {
+            if (fs.existsSync(dir)) {
+                const scan = (d) => {
+                    for (const item of fs.readdirSync(d, { withFileTypes: true })) {
+                        const itemPath = path.join(d, item.name);
+                        if (item.isDirectory()) scan(itemPath);
+                        else if (item.isFile() && item.name.endsWith('.js')) {
+                            diskFileNames.add(item.name.replace(/\.js$/, ''));
+                        }
+                    }
+                };
+                scan(dir);
+            }
+        }
+
+        // Chỉ xóa lệnh trong DB nếu lệnh đó KHÔNG nạp được VÀ file mã nguồn cũng KHÔNG còn trên đĩa
+        const preservedNames = Array.from(new Set([...currentNames, ...diskFileNames]));
+        const deleted = await Command.deleteMany({ name: { $nin: preservedNames } });
         if (deleted && deleted.deletedCount > 0) {
             console.log(`🗑️ Removed ${deleted.deletedCount} deleted command(s) from database.`);
             hasChanges = true;

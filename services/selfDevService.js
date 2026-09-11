@@ -242,7 +242,14 @@ export class SelfDevService {
                     }
                 } catch (loadErr) {
                     Logger.warn(`[SelfDev] Warning on hot-reload: ${loadErr.message}`);
+                    throw new Error(`Không thể nạp lệnh /${commandName} vào bộ nhớ bot: ${loadErr.message}`);
                 }
+            } else {
+                throw new Error(`File lệnh /${commandName} không tồn tại trên ổ đĩa sau khi sinh mã.`);
+            }
+
+            if (!loadedCmd) {
+                throw new Error(`Không thể khởi tạo lệnh /${commandName} (thiếu export data hoặc execute).`);
             }
             reloadI18n();
 

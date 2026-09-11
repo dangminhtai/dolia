@@ -2,6 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { exec } from 'child_process';
 import { promisify } from 'util';
+import { pathToFileURL } from 'url';
 
 const execPromise = promisify(exec);
 
@@ -122,7 +123,7 @@ export class SandboxValidator {
     /**
      * 5. Type-Specific Validators
      */
-    validateSlashCommand(filePath) {
+    async validateSlashCommand(filePath) {
         const errors = [];
         try {
             const content = fs.readFileSync(filePath, 'utf-8');
@@ -132,8 +133,16 @@ export class SandboxValidator {
             if (!content.includes('async execute(') && !content.includes('execute(')) {
                 errors.push(`Slash Command thiếu phương thức thực thi "execute(interaction)".`);
             }
+
+            // Thử import runtime thực tế để bắt các lỗi module (sai named export, CommonJS vs ESM, missing package...)
+            const fileUrl = pathToFileURL(filePath).href + `?t=${Date.now()}`;
+            const importedModule = await import(fileUrl);
+            const cmd = importedModule.default ?? importedModule;
+            if (!cmd || !cmd.data) {
+                errors.push(`File lệnh không export default một SlashCommand hợp lệ (thiếu thuộc tính 'data').`);
+            }
         } catch (e) {
-            errors.push(`Lỗi kiểm tra Slash Command: ${e.message}`);
+            errors.push(`Lỗi nạp module / runtime import: ${e.message}`);
         }
         return errors;
     }
@@ -198,7 +207,7 @@ export class SandboxValidator {
         const isI18n = fileCategory === 'i18n' || normalized.includes('/i18n/') || normalized.includes('resources/');
 
         if (isSlash && (ext === '.js' || ext === '.mjs')) {
-            const slashErrors = this.validateSlashCommand(filePath);
+            const slashErrors = await this.validateSlashCommand(filePath);
             result.errors.push(...slashErrors);
         }
 
