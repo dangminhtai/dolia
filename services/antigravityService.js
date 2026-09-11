@@ -333,6 +333,9 @@ export class AntigravityService {
                     scriptCode = scriptCode.replace(/(\bspawn\s*\(\s*['"`])python3(['"`])/g, '$1python$2');
                 }
 
+                // Tự động sửa lỗi regex escape bị mất slash: replace(/\/g, '/') -> replaceAll('\\', '/')
+                scriptCode = scriptCode.replace(/\.replace\(\/\\?\/g\s*,\s*(['"`])\/\1\)/g, ".replaceAll('\\\\', '/')");
+
                 // Tự động sửa lỗi Agent lưu vào scriptPath nhưng execSync lại gọi tên file cộc lốc
                 if (scriptCode.includes('scriptPath')) {
                     scriptCode = scriptCode.replace(
