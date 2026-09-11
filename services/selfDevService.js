@@ -1,29 +1,22 @@
 import fs from 'fs';
 import path from 'path';
-import { promisify } from 'util';
-import { exec } from 'child_process';
 import { pathToFileURL } from 'url';
-import { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ComponentType, MessageFlags } from 'discord.js';
-import { GoogleGenAI } from '@google/genai';
+import { EmbedBuilder, MessageFlags } from 'discord.js';
 import ApiKeyManager from '../class/apiKeyManager.js';
 import Logger from '../class/Logger.js';
 import { reloadI18n, t } from './i18nService.js';
 import { loadCommands, deployCommands } from '../deployCommands.js';
 import geminiModelService from './geminiModelService.js';
+import AntigravityService from './antigravityService.js';
+import { loadAgentPrompt } from '../helpers/promptHelper.js';
 import {
     sandboxManager,
     sandboxValidator,
-    manifestManager,
-    applyEngine,
-    mappingRegistry
+    PackageInstaller
 } from '../core/sandbox/index.js';
 
-const execPromise = promisify(exec);
+const OWNER_ID = process.env.OWNER_ID;
 
-const OWNER_ID = process.env.OWNER_ID || '1149477475001323540';
-
-// Lưu trữ các session đang chờ chủ nhân duyệt
-const pendingSessions = new Map();
 
 export class SelfDevService {
     /**
@@ -65,12 +58,17 @@ export class SelfDevService {
 
         const safeSlug = this.slugify(featureName || prompt.split(' ')[0]);
         const sessionId = `dev_${safeSlug}_${Date.now()}`;
+        const startTime = Date.now();
 
-        // Gửi Embed thông báo nhẹ nhàng theo đúng phong cách Dolia (xưng mình - bạn)
+        // Gửi Embed thông báo nhẹ nhàng ban đầu theo đúng phong cách Dolia (xưng mình - bạn)
         const statusEmbed = new EmbedBuilder()
             .setColor(0x5DADE2)
-            .setTitle('✨ Dolia đang chuẩn bị tính năng mới nè...')
-            .setDescription(`Bạn đợi mình một chút nha, mình đang chuẩn bị lệnh **\`/${safeSlug}\`** đây nè! 🌊🫧`)
+            .setTitle('✨ Dolia đang chuẩn bị trò chơi cho bạn nè...')
+            .setDescription(
+                `⏳ **Thời gian:** 0 giây...\n` +
+                `💭 **Trạng thái:** 💭 Dolia đang lên ý tưởng trò chơi thật vui cho bạn nè...\n\n` +
+                `*(Bạn đợi mình một chút xíu nha, sắp xong rồi nè~ 💖)*`
+            )
             .setTimestamp();
 
         let progressMsg;
@@ -82,6 +80,40 @@ export class SelfDevService {
             progressMsg = await channel.send({ embeds: [statusEmbed] });
         }
 
+        let currentStageDescription = '💭 Dolia đang lên ý tưởng trò chơi thật vui cho bạn nè...';
+        let currentStage = 'init'; // Theo dõi stage hiện tại từ Antigravity SSE
+
+        // Màu embed động theo stage của Antigravity Agent
+        const stageColors = {
+            init: 0x5DADE2,       // xanh dương nhạt
+            connected: 0x3498DB,  // xanh dương
+            thinking: 0x9B59B6,   // tím (suy nghĩ)
+            coding: 0xE67E22,     // cam (viết code)
+            tool_call: 0xF39C12,  // vàng (gọi tool)
+            code_done: 0x27AE60,  // xanh lá (code xong)
+            output: 0x2ECC71,     // xanh lá sáng (xuất kết quả)
+            completed: 0x2ECC71,  // xanh lá
+            failed: 0xE74C3C,     // đỏ
+            fallback: 0xF39C12,   // vàng (fallback nội bộ)
+        };
+
+        // Live Progress Timer UX: Cập nhật mỗi 3 giây với thời gian thực và sự kiện thực tế từ Agent
+        let progressInterval = setInterval(async () => {
+            const elapsed = Math.floor((Date.now() - startTime) / 1000);
+
+            const liveEmbed = new EmbedBuilder()
+                .setColor(stageColors[currentStage] || 0x5DADE2)
+                .setTitle('✨ Dolia đang chuẩn bị trò chơi cho bạn nè...')
+                .setDescription(
+                    `⏳ **Thời gian:** ${elapsed} giây...\n` +
+                    `💭 **Trạng thái:** ${currentStageDescription}\n\n` +
+                    `*(Bạn đợi mình một chút xíu nha, sắp xong rồi nè~ 💖)*`
+                )
+                .setTimestamp();
+
+            await progressMsg.edit({ embeds: [liveEmbed] }).catch(() => { });
+        }, 3000);
+
         try {
             const MAX_RETRIES = 3;
             let attempt = 0;
@@ -90,60 +122,108 @@ export class SelfDevService {
             let commandName = safeSlug;
             let lastValidationErrors = [];
 
-            // Lấy model Gemini tốt nhất từ Database (Ưu tiên flash-lite trước rồi đến flash)
-            const codingModelId = await geminiModelService.getActiveModel('flash-lite');
+            // Ưu tiên 1: Gọi Antigravity Agent trên Google Cloud Sandbox với SSE Stream Real-time
+            try {
+                Logger.info(`[SelfDev] 🧠 Đang gọi Antigravity Agent (Cloud Sandbox)...`);
+                const antiResult = await AntigravityService.developFeature({
+                    prompt,
+                    featureName: safeSlug,
+                    onProgress: (progress) => {
+                        // Hỗ trợ cả 2 format: object { stage, text } hoặc string thuần
+                        if (progress && typeof progress === 'object') {
+                            currentStageDescription = progress.text || currentStageDescription;
+                            currentStage = progress.stage || currentStage;
+                        } else if (typeof progress === 'string') {
+                            currentStageDescription = progress;
+                        }
+                    }
+                });
+                if (antiResult?.data?.files?.length > 0) {
+                    generatedData = antiResult.data;
+                    usedModel = antiResult.usedModel;
+                    commandName = generatedData.command_name || safeSlug;
+                    Logger.info(`[SelfDev] ✅ Antigravity Cloud sinh mã thành công cho /${commandName}`);
+                }
+            } catch (antiErr) {
+                Logger.warn(`[SelfDev] ⚠️ Antigravity Cloud gặp sự cố: ${antiErr.message}. Tự động chuyển sang chế độ dự phòng nội bộ...`);
+                currentStage = 'fallback';
+                currentStageDescription = '🔄 Chuyển sang chế độ tự phát triển nội bộ...';
+            }
 
-            while (attempt < MAX_RETRIES) {
-                attempt++;
+            // Ưu tiên 2: Fallback chế độ sinh mã nội bộ nếu Antigravity Cloud chưa trả về dữ liệu
+            if (!generatedData) {
+                const codingModelId = await geminiModelService.getActiveModel('flash-lite');
 
-                // Nếu là lần thử lại do phát hiện lỗi -> cập nhật thông báo nhẹ nhàng đáng yêu
-                if (attempt > 1) {
-                    const fixEmbed = new EmbedBuilder()
-                        .setColor(0xF39C12)
-                        .setTitle('✨ Ấy da, mình xin lỗi nhé! 🥺')
-                        .setDescription(`Có vẻ như mình gặp chút trục trặc nhỏ khi chuẩn bị lệnh **\`/${commandName}\`**.\n` +
-                            `Bạn đợi một xíu nha, mình đang tự chỉnh lại cho thật mượt mà ngay đây nè! 🫧✨`)
-                        .setTimestamp();
-                    await progressMsg.edit({ embeds: [fixEmbed] }).catch(() => { });
+                while (attempt < MAX_RETRIES) {
+                    attempt++;
+
+                    if (attempt > 1) {
+                        const fixEmbed = new EmbedBuilder()
+                            .setColor(0xF39C12)
+                            .setTitle('✨ Ấy da, mình xin lỗi nhé! 🥺')
+                            .setDescription(`Có vẻ như mình gặp chút trục trặc nhỏ khi chuẩn bị lệnh **\`/${commandName}\`**.\n` +
+                                `Bạn đợi một xíu nha, mình đang tự chỉnh lại cho thật mượt mà ngay đây nè! 🫧✨`)
+                            .setTimestamp();
+                        await progressMsg.edit({ embeds: [fixEmbed] }).catch(() => { });
+                    }
+
+                    const feedback = lastValidationErrors.length > 0 ? lastValidationErrors.join('\n') : null;
+                    const prevCode = generatedData?.files?.[0]?.content || null;
+
+                    const result = await this.callGeminiCodingModel(prompt, safeSlug, codingModelId, feedback, prevCode);
+                    generatedData = result.data;
+                    usedModel = result.usedModel;
+                    commandName = generatedData.command_name || safeSlug;
+
+                    // Ghi vào Sandbox
+                    for (const fileObj of generatedData.files) {
+                        await sandboxManager.writeFile(fileObj.path, fileObj.content);
+                    }
+
+                    if (generatedData.i18n && generatedData.i18n.translations) {
+                        const i18nRelPath = `i18n/${commandName}.json`;
+                        await sandboxManager.writeFile(i18nRelPath, JSON.stringify(generatedData.i18n.translations, null, 4));
+                    }
+
+                    const filesToValidate = [
+                        path.join(sandboxManager.sandboxDir, 'slash', `${commandName}.js`),
+                        ...(generatedData.i18n && generatedData.i18n.translations ? [path.join(sandboxManager.sandboxDir, 'i18n', `${commandName}.json`)] : [])
+                    ];
+                    const validationResults = await sandboxValidator.validateBatch(filesToValidate);
+                    if (validationResults.valid) {
+                        lastValidationErrors = [];
+                        break;
+                    } else {
+                        lastValidationErrors = validationResults.errors;
+                        Logger.warn(`[SelfDev] ⚠️ Kiểm thử Sandbox lượt ${attempt} thất bại: ${lastValidationErrors.join('; ')}`);
+                    }
                 }
 
-                // Bước 1: Chuẩn bị file và gọi Gemini Coding Model (kèm feedback lỗi nếu retry)
-                const feedback = lastValidationErrors.length > 0 ? lastValidationErrors.join('\n') : null;
-                const prevCode = generatedData?.files?.[0]?.content || null;
-
-                const result = await this.callGeminiCodingModel(prompt, safeSlug, codingModelId, feedback, prevCode);
-                generatedData = result.data;
-                usedModel = result.usedModel;
-                commandName = generatedData.command_name || safeSlug;
-
-                // Bước 2: Ghi các file được sinh vào Sandbox (CHỈ LƯU TRONG SANDBOX, KHÔNG LƯU VÀO CODE CHÍNH)
+                if (lastValidationErrors.length > 0) {
+                    throw new Error(`Kiểm thử chất lượng trong Sandbox chưa đạt chuẩn sau ${MAX_RETRIES} lần tự sửa:\n${lastValidationErrors.join('\n')}`);
+                }
+            } else {
+                // Nếu đến từ Antigravity Cloud: Ghi file vào Sandbox cục bộ
                 for (const fileObj of generatedData.files) {
                     await sandboxManager.writeFile(fileObj.path, fileObj.content);
                 }
-
-                // Ghi file i18n vào sandbox nếu có
                 if (generatedData.i18n && generatedData.i18n.translations) {
                     const i18nRelPath = `i18n/${commandName}.json`;
                     await sandboxManager.writeFile(i18nRelPath, JSON.stringify(generatedData.i18n.translations, null, 4));
                 }
-
-                // Bước 3: Kiểm tra tính toàn vẹn của các file vừa tạo trong Sandbox
-                const filesToValidate = [
-                    path.join(sandboxManager.sandboxDir, 'slash', `${commandName}.js`),
-                    ...(generatedData.i18n && generatedData.i18n.translations ? [path.join(sandboxManager.sandboxDir, 'i18n', `${commandName}.json`)] : [])
-                ];
-                const validationResults = await sandboxValidator.validateBatch(filesToValidate);
-                if (validationResults.valid) {
-                    lastValidationErrors = [];
-                    break; // Vượt qua kiểm thử 100%, sẵn sàng chạy trực tiếp từ Sandbox!
-                } else {
-                    lastValidationErrors = validationResults.errors;
-                    Logger.warn(`[SelfDev] ⚠️ Kiểm thử Sandbox lượt ${attempt} thất bại: ${lastValidationErrors.join('; ')}`);
-                }
             }
 
-            if (lastValidationErrors.length > 0) {
-                throw new Error(`Kiểm thử chất lượng trong Sandbox chưa đạt chuẩn sau ${MAX_RETRIES} lần tự sửa:\n${lastValidationErrors.join('\n')}`);
+            // Dừng Live Progress Timer trước khi sang bước hoàn tất
+            if (progressInterval) {
+                clearInterval(progressInterval);
+                progressInterval = null;
+            }
+
+            // Tự động phát hiện và cài đặt an toàn các thư viện npm mới nếu lệnh yêu cầu
+            for (const fileObj of generatedData.files) {
+                if (fileObj.path?.endsWith('.js') && fileObj.content) {
+                    await PackageInstaller.ensureDependencies(fileObj.content);
+                }
             }
 
             // Bước 4: Tự động nạp lệnh vào RAM trực tiếp từ SANDBOX (Hot-Reload) và làm mới i18n
@@ -222,7 +302,7 @@ export class SelfDevService {
                             return await channel.send(data);
                         },
                         deleteReply: async () => {
-                            return await progressMsg.delete().catch(() => {});
+                            return await progressMsg.delete().catch(() => { });
                         }
                     };
 
@@ -248,6 +328,10 @@ export class SelfDevService {
             await progressMsg.edit({ embeds: [fallbackEmbed], components: [] }).catch(() => { });
 
         } catch (error) {
+            if (progressInterval) {
+                clearInterval(progressInterval);
+                progressInterval = null;
+            }
             Logger.error(`[SelfDev] Error in session ${sessionId}:`, error);
 
             // Dọn dẹp sandbox nếu có lỗi
@@ -280,61 +364,17 @@ export class SelfDevService {
             try {
                 Logger.info(`[SelfDev] 🧠 Đang gọi Gemini Coding Model (${modelId}) cho tính năng: "${suggestedName}"...`);
 
-                const systemInstruction = `
-Bạn là Senior Discord Bot Developer cho bot Dolia (Node.js, Discord.js v14, ESM module).
-Nhiệm vụ của bạn là lập trình tính năng/lệnh mới theo yêu cầu của người dùng, hoạt động trong kiến trúc Sandbox an toàn.
+                const systemInstruction = loadAgentPrompt('AgentInstruction.md', {
+                    '{{safeSlug}}': suggestedName
+                });
 
-YÊU CẦU MÃ NGUỒN (SANDBOX ARCHITECTURE):
-1. Mã nguồn của lệnh slash command chuẩn Discord.js v14 tại đường dẫn: slash/${suggestedName}.js
-2. Cấu trúc lệnh bắt buộc (ESM):
-\`\`\`javascript
-import { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ApplicationIntegrationType, InteractionContextType } from 'discord.js';
-import { t } from '../../services/i18nService.js';
-
-export default {
-    data: new SlashCommandBuilder()
-        .setName('${suggestedName}')
-        .setDescription('Mô tả ngắn gọn bằng tiếng Việt')
-        .setIntegrationTypes(ApplicationIntegrationType.GuildInstall, ApplicationIntegrationType.UserInstall)
-        .setContexts(InteractionContextType.Guild, InteractionContextType.BotDM, InteractionContextType.PrivateChannel),
-    async execute(interaction) {
-        // Luôn hỗ trợ chạy tự động: ưu tiên interaction.deferReply() và interaction.editReply()
-        // Luôn có giá trị fallback cho options nếu không được cung cấp (ví dụ: interaction.options?.getUser('target') || interaction.user)
-        // Thiết kế giao diện Embed + ActionRowBuilder (Buttons/Menu) đẹp mắt, có ComponentCollector lắng nghe sự kiện tương tác
-    }
-};
-\`\`\`
-3. Nếu cần chuỗi văn bản i18n, cung cấp định nghĩa i18n trong trường "i18n" của JSON.
-4. Tuyệt đối KHÔNG import các module không có sẵn trong package.json hoặc các file ngoài phạm vi.
-5. Code phải hoàn toàn sạch sẽ, KHÔNG có placeholder dạng "TODO", code phải chạy được ngay lập tức.
-
-ĐỊNH DẠNG TRẢ VỀ (BẮT BUỘC TRẢ VỀ DUY NHẤT ĐỊNH DẠNG JSON):
-{
-  "command_name": "${suggestedName}",
-  "summary": "Mô tả tóm tắt tính năng và cách dùng",
-  "files": [
-    {
-      "path": "slash/${suggestedName}.js",
-      "content": "/* Toàn bộ mã nguồn code đầy đủ của file command */"
-    }
-  ],
-  "i18n": {
-    "key_group": "${suggestedName}",
-    "translations": {
-      "title": "...",
-      "desc": "..."
-    }
-  }
-}
-`;
-
-                let promptContent = `Lập trình tính năng sau cho Dolia: ${userPrompt}. Tên lệnh gợi ý: ${suggestedName}. Hãy viết code thật chất lượng và trả về định dạng JSON đúng chuẩn.`;
+                let promptContent = `Lập trình tính năng sau cho Dolia theo [CHẾ ĐỘ 2: SLASH COMMAND]: ${userPrompt}. Tên lệnh gợi ý: ${suggestedName}. Hãy viết code thật chất lượng và trả về DUY NHẤT định dạng JSON đúng chuẩn.`;
                 if (errorFeedback && previousCode) {
                     promptContent += `\n\n[LƯU Ý SỬA LỖI TỰ ĐỘNG]: Lần sinh mã trước gặp lỗi kiểm thử sau:\n${errorFeedback}\n\nMã nguồn bị lỗi trước đó:\n\`\`\`javascript\n${previousCode}\n\`\`\`\nHãy phân tích nguyên nhân lỗi và sinh lại mã nguồn hoàn chỉnh, sửa triệt để tất cả các lỗi trên!`;
                 }
 
                 const outputText = await ApiKeyManager.execute(modelId, async (apiKey) => {
-                    const ai = new GoogleGenAI({ apiKey });
+                    const ai = ApiKeyManager.getClient(apiKey);
                     const response = await ai.models.generateContent({
                         model: modelId,
                         contents: promptContent,
@@ -394,7 +434,7 @@ export default {
                     } catch (_) {
                         try {
                             const codeMatch = clean.match(/"content"\s*:\s*"([\s\S]*?)"\s*\}\s*\]/m) ||
-                                              clean.match(/"content"\s*:\s*`([\s\S]*?)`/m);
+                                clean.match(/"content"\s*:\s*`([\s\S]*?)`/m);
                             if (codeMatch) {
                                 const extractedCode = codeMatch[1]
                                     .replace(/\\n/g, '\n')
@@ -461,212 +501,6 @@ export default {
         }
 
         return result;
-    }
-
-    /**
-     * Thiết lập collector lắng nghe nút bấm từ Owner trên Discord
-     */
-    static setupCollector(message, sessionData) {
-        const collector = message.createMessageComponentCollector({
-            componentType: ComponentType.Button,
-            time: 10 * 60 * 1000 // 10 phút
-        });
-
-        collector.on('collect', async (i) => {
-            // Chỉ Owner mới được bấm
-            if (i.user.id !== sessionData.userId) {
-                return i.reply({ content: 'Chỉ có chủ nhân yêu cầu mới có quyền duyệt tính năng này!', flags: MessageFlags.Ephemeral });
-            }
-
-            const { customId } = i;
-
-            // 1. DUYỆT & APPLY TỪ SANDBOX VÀO PRODUCTION
-            if (customId === `selfdev_approve_${sessionData.sessionId}`) {
-                await i.deferUpdate();
-
-                try {
-                    Logger.info(`[SelfDev] 🚀 Bắt đầu Apply từ Sandbox cho session: ${sessionData.sessionId}`);
-
-                    // Thực thi ApplyEngine với kiểm tra quyền duyệt
-                    const applyResult = await applyEngine.apply(sessionData.proposedManifest, {
-                        isApproved: true,
-                        approvedBy: i.user.id
-                    });
-
-                    // Tùy chọn git commit audit trên repo chính
-                    try {
-                        await execPromise('git add .');
-                        await execPromise(`git commit -m "feat(auto): apply /${sessionData.commandName} via Sandbox Apply Engine [tx: ${applyResult.transactionId}]"`);
-                    } catch (_) { }
-
-                    // Dọn dẹp sandbox sau khi apply thành công
-                    await sandboxManager.cleanSandbox();
-
-                    // Chuyển giao diện sang READY_FOR_RELOAD với hai nút riêng biệt (Hot-Reload & Deploy)
-                    const readyEmbed = new EmbedBuilder()
-                        .setColor(0x3498DB)
-                        .setTitle(`📦 Apply hoàn tất! Sẵn sàng nạp lệnh`)
-                        .setDescription(
-                            `Chủ nhân <@${sessionData.userId}> ơi, mã nguồn đã được chuyển giao an toàn từ **Sandbox** sang **Production**!\n\n` +
-                            `🆔 **Transaction ID:** \`${applyResult.transactionId}\`\n` +
-                            `💾 **Audit & Backup:** \`.apply/${applyResult.transactionId}/\`\n` +
-                            `📁 **Các file đã áp dụng:**\n` +
-                            applyResult.appliedFiles.map(f => `• \`${f.target}\` (${f.action})`).join('\n') +
-                            `\n\n👉 **Bước tiếp theo:** Chủ nhân hãy chọn nạp vào RAM hoặc deploy slash command:`
-                        )
-                        .setFooter({ text: 'Bước Apply đã hoàn tất! Chủ nhân có thể thử ngay bằng Hot-Reload.' })
-                        .setTimestamp();
-
-                    const reloadRow = new ActionRowBuilder().addComponents(
-                        new ButtonBuilder()
-                            .setCustomId(`selfdev_reload_${sessionData.sessionId}`)
-                            .setLabel('⚡ Nạp lệnh (Hot-Reload)')
-                            .setStyle(ButtonStyle.Primary),
-                        new ButtonBuilder()
-                            .setCustomId(`selfdev_deploy_${sessionData.sessionId}`)
-                            .setLabel('🚀 Deploy Slash Command')
-                            .setStyle(ButtonStyle.Success),
-                        new ButtonBuilder()
-                            .setCustomId(`selfdev_done_${sessionData.sessionId}`)
-                            .setLabel('✅ Hoàn tất')
-                            .setStyle(ButtonStyle.Secondary)
-                    );
-
-                    await message.edit({ embeds: [readyEmbed], components: [reloadRow] });
-
-                } catch (applyErr) {
-                    Logger.error(`[SelfDev] ❌ Apply thất bại cho session ${sessionData.sessionId}:`, applyErr);
-
-                    const errEmbed = new EmbedBuilder()
-                        .setColor(0xE74C3C)
-                        .setTitle('❌ Apply thất bại (Đã Rollback an toàn)')
-                        .setDescription(`Quá trình Apply đã bị hủy và hệ thống đã tự động Rollback về trạng thái ban đầu:\n\`\`\`${applyErr.message}\`\`\``)
-                        .setTimestamp();
-
-                    await message.edit({ embeds: [errEmbed], components: [] });
-                    sandboxManager.cleanSandbox();
-                    pendingSessions.delete(sessionData.sessionId);
-                    collector.stop('apply_failed');
-                }
-
-            // 2. XEM CODE & MANIFEST CHI TIẾT
-            } else if (customId === `selfdev_view_${sessionData.sessionId}`) {
-                const firstFile = sessionData.generatedData.files[0];
-                const codeSnippet = firstFile ? firstFile.content : 'Không tìm thấy nội dung file.';
-                const truncatedCode = codeSnippet.length > 1700 ? codeSnippet.substring(0, 1700) + '\n// ... (đã rút gọn)' : codeSnippet;
-
-                await i.reply({
-                    content: `📄 **Mã nguồn đề xuất: \`${firstFile?.path || 'slash/command.js'}\`**\n\`\`\`javascript\n${truncatedCode}\n\`\`\`\n` +
-                             `📋 **Manifest Changes:**\n\`\`\`json\n${JSON.stringify(sessionData.proposedManifest.changes, null, 2)}\n\`\`\``,
-                    flags: MessageFlags.Ephemeral
-                });
-
-            // 3. HỦY BỎ PHIÊN TẠI GIAI ĐOẠN PENDING_APPROVAL
-            } else if (customId === `selfdev_cancel_${sessionData.sessionId}`) {
-                await i.deferUpdate();
-                collector.stop('cancelled');
-                await this.applyCancel(sessionData);
-
-            // 4. HOT-RELOAD VÀO BỘ NHỚ RAM CỦA BOT
-            } else if (customId === `selfdev_reload_${sessionData.sessionId}`) {
-                await i.deferUpdate();
-
-                const commandPath = path.join(process.cwd(), 'commands', 'slash', `${sessionData.commandName}.js`);
-                let reloadOk = false;
-                let errMsg = '';
-
-                if (fs.existsSync(commandPath)) {
-                    try {
-                        const moduleUrl = pathToFileURL(commandPath).href + `?t=${Date.now()}`;
-                        const importedModule = await import(moduleUrl);
-                        const cmd = importedModule.default ?? importedModule;
-                        if (cmd && cmd.data) {
-                            sessionData.client.commands.set(cmd.data.name, cmd);
-                            reloadOk = true;
-                            Logger.info(`[SelfDev] Successfully hot-reloaded command: /${cmd.data.name}`);
-                        }
-                    } catch (e) {
-                        errMsg = e.message;
-                    }
-                }
-
-                // Nạp lại i18n
-                reloadI18n();
-
-                if (reloadOk) {
-                    await i.followUp({
-                        content: `⚡ **Hot-Reload thành công!** Đã nạp lệnh **\`/${sessionData.commandName}\`** vào RAM và làm mới i18n. Bạn có thể test ngay!`,
-                        flags: MessageFlags.Ephemeral
-                    });
-                } else {
-                    await i.followUp({
-                        content: `❌ Hot-Reload thất bại: ${errMsg || 'Không tìm thấy file lệnh đã apply'}`,
-                        flags: MessageFlags.Ephemeral
-                    });
-                }
-
-            // 5. DEPLOY SLASH COMMAND LÊN DISCORD REST API
-            } else if (customId === `selfdev_deploy_${sessionData.sessionId}`) {
-                await i.deferUpdate();
-
-                try {
-                    const loadResult = await loadCommands(path.join(process.cwd(), 'commands'), sessionData.client);
-                    await deployCommands(loadResult);
-                    Logger.info(`[SelfDev] Successfully deployed slash commands to Discord REST API`);
-
-                    await i.followUp({
-                        content: `🚀 **Deploy thành công!** Đã đồng bộ đăng ký lệnh **\`/${sessionData.commandName}\`** lên Discord REST API!`,
-                        flags: MessageFlags.Ephemeral
-                    });
-                } catch (e) {
-                    await i.followUp({
-                        content: `❌ Deploy thất bại: ${e.message}`,
-                        flags: MessageFlags.Ephemeral
-                    });
-                }
-
-            // 6. HOÀN TẤT PHIÊN SAU KHI ĐÃ RELOAD / DEPLOY
-            } else if (customId === `selfdev_done_${sessionData.sessionId}`) {
-                await i.deferUpdate();
-                collector.stop('completed');
-                sandboxManager.cleanSandbox();
-                pendingSessions.delete(sessionData.sessionId);
-
-                const doneEmbed = new EmbedBuilder()
-                    .setColor(0x2ECC71)
-                    .setTitle('🎉 Phiên phát triển tính năng hoàn tất!')
-                    .setDescription(`Lệnh **\`/${sessionData.commandName}\`** đã sẵn sàng phục vụ server. Cảm ơn chủ nhân <@${sessionData.userId}>!`)
-                    .setTimestamp();
-
-                await message.edit({ embeds: [doneEmbed], components: [] });
-            }
-        });
-
-        collector.on('end', async (_, reason) => {
-            if (reason === 'time') {
-                await this.applyCancel(sessionData, 'Hết hạn thời gian chờ duyệt (10 phút).');
-            }
-        });
-    }
-
-    /**
-     * Hủy bỏ session và dọn dẹp sandbox an toàn
-     */
-    static async applyCancel(sessionData, reasonText = null) {
-        const { progressMsg, sessionId } = sessionData;
-
-        try {
-            await sandboxManager.cleanSandbox();
-        } catch (_) { }
-
-        const cancelEmbed = new EmbedBuilder()
-            .setColor(0x95A5A6)
-            .setTitle('⏹️ Đã hủy bỏ phiên Self-Dev')
-            .setDescription(reasonText || 'Bản thảo tính năng đã được hủy bỏ và môi trường Sandbox được dọn dẹp an toàn.')
-            .setTimestamp();
-
-        await progressMsg.edit({ embeds: [cancelEmbed], components: [] }).catch(() => { });
-        pendingSessions.delete(sessionId);
     }
 
     /**
@@ -758,29 +592,23 @@ export default {
 
             const sandboxCmd = path.join(process.cwd(), 'sandbox', 'slash', `${targetName}.js`);
             const sandboxI18n = path.join(process.cwd(), 'sandbox', 'i18n', `${targetName}.json`);
-            const legacyCmd = path.join(process.cwd(), 'commands', 'slash', `${targetName}.js`);
-            const legacyI18n = path.join(process.cwd(), 'resources', 'vi', `${targetName}.json`);
             const sandboxBackupDir = path.join(process.cwd(), 'sandbox', 'backup');
 
             if (!fs.existsSync(sandboxBackupDir)) {
                 fs.mkdirSync(sandboxBackupDir, { recursive: true });
             }
 
-            // Sao lưu và xóa file lệnh (.js)
-            const sourceCmd = fs.existsSync(sandboxCmd) ? sandboxCmd : (fs.existsSync(legacyCmd) ? legacyCmd : null);
-            if (sourceCmd) {
-                fs.copyFileSync(sourceCmd, path.join(sandboxBackupDir, `${targetName}.js.bak`));
+            // Sao lưu và xóa file lệnh (.js) trong Sandbox
+            if (fs.existsSync(sandboxCmd)) {
+                fs.copyFileSync(sandboxCmd, path.join(sandboxBackupDir, `${targetName}.js.bak`));
+                fs.rmSync(sandboxCmd, { force: true });
             }
-            if (fs.existsSync(sandboxCmd)) fs.rmSync(sandboxCmd, { force: true });
-            if (fs.existsSync(legacyCmd)) fs.rmSync(legacyCmd, { force: true });
 
-            // Sao lưu và xóa file i18n (.json)
-            const sourceI18n = fs.existsSync(sandboxI18n) ? sandboxI18n : (fs.existsSync(legacyI18n) ? legacyI18n : null);
-            if (sourceI18n) {
-                fs.copyFileSync(sourceI18n, path.join(sandboxBackupDir, `${targetName}.json.bak`));
+            // Sao lưu và xóa file i18n (.json) trong Sandbox
+            if (fs.existsSync(sandboxI18n)) {
+                fs.copyFileSync(sandboxI18n, path.join(sandboxBackupDir, `${targetName}.json.bak`));
+                fs.rmSync(sandboxI18n, { force: true });
             }
-            if (fs.existsSync(sandboxI18n)) fs.rmSync(sandboxI18n, { force: true });
-            if (fs.existsSync(legacyI18n)) fs.rmSync(legacyI18n, { force: true });
 
             // Xóa khỏi client.commands trong RAM
             if (client?.commands) {
@@ -812,5 +640,153 @@ export default {
                 .setTimestamp();
             await confirmMsg.edit({ embeds: [errEmbed], components: [] });
         }
+    }
+
+    /**
+     * Tạo và thực thi script ngầm trong sandbox/scripts/ để kiểm tra dữ liệu Discord/hệ thống thực tế
+     * Trả về kết quả cho Gemini để trả lời câu hỏi của người dùng
+     */
+    static async runDynamicScript({ prompt, context }) {
+        const { client, guild, channel, user, message } = context;
+        const candidates = await geminiModelService.getCandidateModels('flash');
+
+        // Nạp prompt chỉ thị từ config/prompt/agent/AgentInstruction.md
+        const systemInstruction = loadAgentPrompt('AgentInstruction.md', {
+            '{{safeSlug}}': 'query_script'
+        });
+
+        let scriptPath = null;
+        let scriptCode = '';
+        let lastError = null;
+
+        for (const modelId of candidates) {
+            try {
+                Logger.info(`[SelfDev] 🧠 Đang gọi model (${modelId}) sinh script kiểm tra ngầm cho: "${prompt}"...`);
+                const rawOutput = await ApiKeyManager.execute(modelId, async (apiKey) => {
+                    const ai = ApiKeyManager.getClient(apiKey);
+                    const response = await ai.models.generateContent({
+                        model: modelId,
+                        contents: [{ role: 'user', parts: [{ text: `Kiểm tra dữ liệu Discord theo [CHẾ ĐỘ 1: INSPECT SCRIPT]: ${prompt}` }] }],
+                        config: {
+                            systemInstruction,
+                            responseMimeType: 'application/json',
+                            temperature: 0.1
+                        }
+                    });
+                    return response.text;
+                }, { timeoutMs: 40000 });
+
+                try {
+                    const parsed = JSON.parse(rawOutput);
+                    scriptCode = parsed.code || parsed.content || rawOutput;
+                } catch (_) {
+                    const match = rawOutput.match(/```(?:javascript|js)?([\s\S]*?)```/) || [null, rawOutput];
+                    scriptCode = match[1].trim();
+                }
+
+                // Loại bỏ markdown ticks nếu có lọt vào
+                scriptCode = scriptCode.replace(/^```(?:javascript|js)?\n?/i, '').replace(/\n?```$/i, '').trim();
+
+                geminiModelService.reportModelSuccess(modelId);
+                break; // Sinh script thành công, thoát vòng lặp model
+            } catch (modelErr) {
+                lastError = modelErr;
+                geminiModelService.reportModelFailure(modelId, modelErr.message, 5 * 60 * 1000);
+                Logger.warn(`[SelfDev] ⚠️ Model ${modelId} gặp sự cố khi sinh script: ${modelErr.message}. Tự động chuyển model tiếp theo...`);
+            }
+        }
+
+        if (!scriptCode) {
+            Logger.error(`[SelfDev] ❌ Tất cả các model đều không thể sinh script kiểm tra ngầm. Lỗi cuối: ${lastError?.message}`);
+            return this.getDirectDataFallback(guild, channel, lastError?.message);
+        }
+
+        try {
+            // Tự động phát hiện và cài đặt an toàn các thư viện npm mới nếu script yêu cầu
+            await PackageInstaller.ensureDependencies(scriptCode);
+
+            // Ghi file vào sandbox/scripts/
+            const scriptsDir = path.join(process.cwd(), 'sandbox', 'scripts');
+            if (!fs.existsSync(scriptsDir)) {
+                fs.mkdirSync(scriptsDir, { recursive: true });
+            }
+            scriptPath = path.join(scriptsDir, `query_${Date.now()}.js`);
+            fs.writeFileSync(scriptPath, scriptCode, 'utf-8');
+
+            // Nạp và thực thi script
+            const moduleUrl = pathToFileURL(scriptPath).href + `?t=${Date.now()}`;
+            const importedModule = await import(moduleUrl);
+            const runFn = importedModule.default ?? importedModule;
+
+            if (typeof runFn !== 'function') {
+                throw new Error("Script không export default một hàm async!");
+            }
+
+            Logger.info(`[SelfDev] 🚀 Bắt đầu thực thi script kiểm tra ngầm (${path.basename(scriptPath)})...`);
+
+            // Timeout guard 30s để tránh script bị treo vô hạn
+            let scriptTimer;
+            const timeoutPromise = new Promise((_, reject) => {
+                scriptTimer = setTimeout(() => {
+                    reject(new Error("Script thực thi quá 30s (timeout do tác vụ kéo dài)"));
+                }, 30000);
+                scriptTimer.unref?.();
+            });
+
+            const dataResult = await Promise.race([
+                runFn({ client, guild, channel, user, message }),
+                timeoutPromise
+            ]);
+            if (scriptTimer) clearTimeout(scriptTimer);
+
+            Logger.info(`[SelfDev] ✅ Script kiểm tra ngầm trong sandbox trả về:`, dataResult);
+            return dataResult;
+
+        } catch (scriptErr) {
+            Logger.warn(`[SelfDev] ⚠️ Lỗi trong quá trình chạy script ngầm:`, scriptErr.message);
+            return this.getDirectDataFallback(guild, channel, scriptErr.message);
+        } finally {
+            // Tự động sao lưu file script sang sandbox/backup/*.bak trước khi dọn dẹp sandbox/scripts/
+            if (scriptPath && fs.existsSync(scriptPath)) {
+                try {
+                    const backupDir = path.join(process.cwd(), 'sandbox', 'backup');
+                    if (!fs.existsSync(backupDir)) {
+                        fs.mkdirSync(backupDir, { recursive: true });
+                    }
+                    const baseName = path.basename(scriptPath);
+                    const backupPath = path.join(backupDir, `${baseName}.bak`);
+                    fs.copyFileSync(scriptPath, backupPath);
+                    fs.unlinkSync(scriptPath);
+                    Logger.info(`[SelfDev] 💾 Đã lưu bản sao lưu script vào: sandbox/backup/${baseName}.bak`);
+                } catch (bakErr) {
+                    Logger.warn(`[SelfDev] ⚠️ Lỗi khi sao lưu script vào sandbox/backup:`, bakErr.message);
+                    try { fs.unlinkSync(scriptPath); } catch (_) { }
+                }
+            }
+        }
+    }
+
+    /**
+     * Fallback lấy dữ liệu cơ bản trực tiếp từ Discord Cache khi script gặp sự cố
+     */
+    static getDirectDataFallback(guild, channel, errMsg) {
+        if (guild) {
+            try {
+                const total = guild.memberCount || guild.members.cache.size;
+                const humans = guild.members.cache.filter(m => !m.user?.bot).size;
+                const bots = guild.members.cache.filter(m => m.user?.bot).size;
+                const channelMembersCount = channel?.members?.size || total;
+                return {
+                    serverName: guild.name,
+                    totalServerMembers: total,
+                    humanMembers: humans,
+                    botMembers: bots,
+                    channelName: channel?.name || 'unknown',
+                    channelMembersCount: channelMembersCount,
+                    summary: `Server ${guild.name} có tổng cộng ${total} thành viên (${humans} người, ${bots} bot). Kênh #${channel?.name} có ${channelMembersCount} người có quyền xem.`
+                };
+            } catch (_) { }
+        }
+        return { error: errMsg };
     }
 }

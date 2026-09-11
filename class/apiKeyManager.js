@@ -1,3 +1,4 @@
+import { GoogleGenAI } from '@google/genai';
 import APIKey from '../models/APIKeys.js';
 import APIStatus from '../models/APIStatus.js';
 
@@ -7,6 +8,7 @@ class ApiKeyManager {
         this.isInitialized = false;
         this.index = 0; // Round-Robin pointer
         this.suspensionCache = new Map(); // `${key}_${modelId}` -> timestamp (ms)
+        this.clientPool = new Map(); // apiKey -> GoogleGenAI instance (connection reuse)
     }
 
     /**
@@ -82,6 +84,18 @@ class ApiKeyManager {
     }
 
     /**
+     * Lấy hoặc tạo GoogleGenAI client instance từ pool (reuse connection, tránh TLS handshake mỗi request)
+     * @param {string} apiKey
+     * @returns {GoogleGenAI}
+     */
+    getClient(apiKey) {
+        if (!this.clientPool.has(apiKey)) {
+            this.clientPool.set(apiKey, new GoogleGenAI({ apiKey }));
+        }
+        return this.clientPool.get(apiKey);
+    }
+
+    /**
      * Lấy key tiếp theo theo thuật toán Round-Robin tuần tự.
      * Cân bằng tải hoàn hảo qua tất cả các key khả dụng mà không bị dồn tải.
      */
@@ -154,6 +168,7 @@ class ApiKeyManager {
             const entry = this.pool.find(e => e.key === key);
             if (entry) entry.exhausted = true;
             this.pool = this.pool.filter(e => e.key !== key);
+            this.clientPool.delete(key); // Xóa cached client
             await APIKey.updateOne({ key }, { isActive: false, name: 'LEAKED - DISABLED' });
         } catch (e) {
             console.error('Failed to mark key leaked:', e);
@@ -174,7 +189,7 @@ class ApiKeyManager {
         }
 
         const maxRetries = options.maxRetries ?? Math.min(this.pool.length > 0 ? this.pool.length : 5, 5);
-        const timeoutMs = options.timeoutMs ?? 25000;
+        const timeoutMs = options.timeoutMs ?? 15000;
         let attempt = 0;
         let count503 = 0;
         let lastError = null;
@@ -256,8 +271,8 @@ class ApiKeyManager {
 
                 const statusCode = typeof e.status === 'number' 
                     ? e.status 
-                    : (e.statusCode || e.httpMeta?.response?.status || (e.status === 'RESOURCE_EXHAUSTED' ? 429 : 0));
-                const errorMessage = e.message || '';
+                    : (e.statusCode || e.httpMeta?.response?.status || e.error?.code || (e.status === 'RESOURCE_EXHAUSTED' ? 429 : 0));
+                const errorMessage = (e.message || '') + ' ' + (e.error?.message || '');
 
                 let suspendMs = 0;
                 let reason = 'ERROR';
@@ -285,16 +300,13 @@ class ApiKeyManager {
                     console.error(`❌ BAD REQUEST (NON-RETRYABLE): ${errorMessage}`);
                     throw e; // Dừng ngay, không thử key khác
                 }
-                // --- 503: Service Unavailable / Overloaded (Phía Google bị nghẽn) ---
-                else if (statusCode === 503 || errorMessage.includes('503') || errorMessage.includes('overloaded') || errorMessage.includes('UNAVAILABLE')) {
-                    suspendMs = 60 * 1000; // 1 phút
+                // --- 503: Service Unavailable / High Demand / Overloaded (Phía Google bị nghẽn) ---
+                else if (statusCode === 503 || errorMessage.includes('503') || errorMessage.includes('overloaded') || errorMessage.includes('UNAVAILABLE') || errorMessage.includes('high demand')) {
+                    suspendMs = 5 * 60 * 1000; // 5 phút
                     reason = 'SERVICE_UNAVAILABLE_503';
-                    shouldSuspend = true;
-                    count503++;
-                    if (count503 >= 2) {
-                        this.suspendKey(key, modelId, suspendMs, reason);
-                        throw new Error(`MODEL_OVERLOADED: Model ${modelId} is currently overloaded (503 Service Unavailable).`);
-                    }
+                    this.suspendKey(key, modelId, suspendMs, reason);
+                    // Lỗi quá tải model xảy ra trên toàn bộ server Google cho model đó, không retry key khác mà chuyển model ngay
+                    throw new Error(`MODEL_OVERLOADED: Model ${modelId} is currently experiencing high demand/overloaded (503 Service Unavailable).`);
                 }
                 // --- 500: Internal Server Error ---
                 else if (statusCode === 500 || errorMessage.includes('500') || errorMessage.includes('INTERNAL')) {

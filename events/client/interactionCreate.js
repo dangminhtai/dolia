@@ -532,6 +532,21 @@ export default (client) => {
             return;
         }
 
+        // --- 1.6 XỬ LÝ DỰ PHÒNG NÚT BẤM SANDBOX / MINIGAME HẾT HẠN HOẶC MẤT KẾT NỐI ---
+        if (interaction.isButton() || interaction.isAnySelectMenu()) {
+            // Cho phép collector cục bộ của trò chơi xử lý trước trong 1.5 giây
+            setTimeout(async () => {
+                try {
+                    if (!interaction.replied && !interaction.deferred) {
+                        await interaction.reply({
+                            content: '🫧 Ván chơi này có vẻ đã hết thời gian tương tác hoặc bot vừa được làm mới rồi nè! Bạn hãy dùng lại lệnh để mở ván mới cùng mình nha~ ✨💖',
+                            flags: MessageFlags.Ephemeral
+                        }).catch(() => { });
+                    }
+                } catch (_) { }
+            }, 1500);
+        }
+
         // --- 2. XỬ LÝ LỆNH SLASH ---
         if (interaction.isChatInputCommand()) {
             const command = client.commands.get(interaction.commandName);

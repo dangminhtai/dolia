@@ -5,6 +5,7 @@ import manifestManager from './manifest-manager.js';
 import transactionManager from './transaction-manager.js';
 import rollbackManager from './rollback-manager.js';
 import applyEngine from './apply-engine.js';
+import PackageInstaller from './package-installer.js';
 
 export {
     mappingRegistry,
@@ -13,7 +14,8 @@ export {
     manifestManager,
     transactionManager,
     rollbackManager,
-    applyEngine
+    applyEngine,
+    PackageInstaller
 };
 
 export default {
@@ -23,5 +25,6 @@ export default {
     manifestManager,
     transactionManager,
     rollbackManager,
-    applyEngine
+    applyEngine,
+    PackageInstaller
 };

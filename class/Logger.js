@@ -5,16 +5,18 @@ export default class Logger {
         return chalk.gray(`[${new Date().toLocaleTimeString('vi-VN', { hour12: false })}]`);
     }
 
-    static info(text) {
-        // [ INFO ] 12:00:00 : Client logged in
+    static info(...args) {
+        const text = args.map(a => typeof a === 'object' ? (a?.message || JSON.stringify(a)) : a).join(' ');
         console.log(`${this.getTimestamp()} ${chalk.bgBlue.bold(' INFO ')} ${chalk.blue(text)}`);
     }
 
-    static warn(text) {
+    static warn(...args) {
+        const text = args.map(a => typeof a === 'object' ? (a?.stack || a?.message || JSON.stringify(a)) : a).join(' ');
         console.log(`${this.getTimestamp()} ${chalk.bgYellow.black.bold(' WARN ')} ${chalk.yellow(text)}`);
     }
 
-    static error(text) {
+    static error(...args) {
+        const text = args.map(a => typeof a === 'object' ? (a?.stack || a?.message || JSON.stringify(a)) : a).join(' ');
         console.log(`${this.getTimestamp()} ${chalk.bgRed.white.bold(' ERROR ')} ${chalk.red(text)}`);
     }
 

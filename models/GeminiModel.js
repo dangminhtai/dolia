@@ -37,6 +37,14 @@ const GeminiModelSchema = new mongoose.Schema({
         type: Boolean, 
         default: true 
     },
+    blockedUntil: {
+        type: Date,
+        default: null
+    },
+    blockReason: {
+        type: String,
+        default: null
+    },
     lastSyncedAt: { 
         type: Date, 
         default: Date.now 

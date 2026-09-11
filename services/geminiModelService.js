@@ -16,40 +16,98 @@ class GeminiModelService {
         this.cacheTTL = 10 * 60 * 1000; // Cache 10 phút để giảm tải DB
         this.syncInterval = null;
         this.isSyncing = false;
-        this.modelCooldowns = new Map(); // modelId -> cooldownUntil (ms)
+        // In-memory mirror of DB blocks (sync mỗi 30s hoặc on-demand)
+        this.blockCache = new Map(); // modelId -> { until: Date, reason: string }
+        this.lastBlockSync = 0;
+        this.blockSyncInterval = 30 * 1000; // 30s
     }
 
     /**
-     * Báo cáo model bị lỗi (vd 503 overloaded) để tạm thời hạ độ ưu tiên
+     * Sync trạng thái block từ MongoDB vào in-memory cache
      */
-    reportModelFailure(modelId, reason = 'error', cooldownMs = 3 * 60 * 1000) {
-        if (!modelId) return;
-        const until = Date.now() + cooldownMs;
-        this.modelCooldowns.set(modelId, until);
-        if (this.cachedModels) {
-            this.cachedModels = {}; // Xóa cache để chọn model khả dụng tiếp theo
+    async syncBlockCache() {
+        try {
+            const now = new Date();
+            const blockedModels = await GeminiModel.find({
+                isActive: true,
+                blockedUntil: { $ne: null }
+            }).select('modelId blockedUntil blockReason').lean();
+
+            this.blockCache.clear();
+            for (const m of blockedModels) {
+                if (m.blockedUntil && m.blockedUntil > now) {
+                    this.blockCache.set(m.modelId, {
+                        until: m.blockedUntil,
+                        reason: m.blockReason || 'UNKNOWN'
+                    });
+                } else if (m.blockedUntil && m.blockedUntil <= now) {
+                    // Auto-clear expired blocks (non-blocking)
+                    GeminiModel.updateOne(
+                        { modelId: m.modelId },
+                        { $set: { blockedUntil: null, blockReason: null } }
+                    ).exec().catch(e => Logger.warn(`[GeminiModelService] Failed to auto-clear expired block: ${e.message}`));
+                }
+            }
+
+            this.lastBlockSync = Date.now();
+        } catch (err) {
+            Logger.warn(`[GeminiModelService] Failed to sync block cache: ${err.message}`);
         }
-        Logger.warn(`[GeminiModelService] ⏳ Tạm đưa ${modelId} vào cooldown ${Math.round(cooldownMs / 1000)}s (${reason})`);
     }
 
     /**
-     * Báo cáo model hoạt động tốt để gỡ cooldown
+     * Báo cáo model bị lỗi (vd 503 overloaded) → persistent block trong MongoDB
+     * Default block 503: 60 phút (theo yêu cầu user "block 1 tiếng")
+     */
+    async reportModelFailure(modelId, reason = 'error', cooldownMs = 60 * 60 * 1000) {
+        if (!modelId) return;
+        const until = new Date(Date.now() + cooldownMs);
+
+        // 1. Cập nhật in-memory cache ngay lập tức
+        this.blockCache.set(modelId, { until, reason });
+
+        // 2. Xóa model cache để force re-query
+        this.cachedModels = {};
+
+        // 3. Persist vào MongoDB (non-blocking)
+        GeminiModel.updateOne(
+            { modelId },
+            { $set: { blockedUntil: until, blockReason: reason } }
+        ).exec().catch(e => Logger.warn(`[GeminiModelService] Failed to persist model block: ${e.message}`));
+
+        Logger.warn(`[GeminiModelService] ⏳ Blocked ${modelId} for ${Math.round(cooldownMs / 1000)}s in MongoDB (${reason})`);
+    }
+
+    /**
+     * Báo cáo model hoạt động tốt → clear block trong DB + cache
      */
     reportModelSuccess(modelId) {
         if (!modelId) return;
-        if (this.modelCooldowns.has(modelId)) {
-            this.modelCooldowns.delete(modelId);
+        if (this.blockCache.has(modelId)) {
+            this.blockCache.delete(modelId);
+            // Non-blocking DB clear
+            GeminiModel.updateOne(
+                { modelId },
+                { $set: { blockedUntil: null, blockReason: null } }
+            ).exec().catch(e => Logger.warn(`[GeminiModelService] Failed to clear model block: ${e.message}`));
         }
     }
 
     /**
-     * Kiểm tra model có đang trong thời gian cooldown không
+     * Kiểm tra model có đang bị block không (từ in-memory cache, sync DB nếu cần)
      */
     isModelInCooldown(modelId) {
-        const until = this.modelCooldowns.get(modelId);
-        if (!until) return false;
-        if (Date.now() > until) {
-            this.modelCooldowns.delete(modelId);
+        const cached = this.blockCache.get(modelId);
+        if (!cached) return false;
+
+        const now = new Date();
+        if (now >= cached.until) {
+            this.blockCache.delete(modelId);
+            // Auto-clear trong DB (non-blocking)
+            GeminiModel.updateOne(
+                { modelId },
+                { $set: { blockedUntil: null, blockReason: null } }
+            ).exec().catch(() => {});
             return false;
         }
         return true;
@@ -57,39 +115,74 @@ class GeminiModelService {
 
     /**
      * Lấy danh sách model ứng viên từ Database, ưu tiên theo preferType:
-     * - primary models (không cooldown)
-     * - secondary models (không cooldown)
-     * - primary models (đang cooldown)
-     * - secondary models (đang cooldown)
+     * - primary models (không block)
+     * - secondary models (không block)
+     * - primary models (đang block, nhưng sắp hết)
+     * - secondary models (đang block)
      * @param {'flash' | 'flash-lite'} preferType
      * @returns {Promise<string[]>}
      */
     async getCandidateModels(preferType = 'flash-lite') {
+        // Sync block cache nếu quá hạn
+        if (Date.now() - this.lastBlockSync > this.blockSyncInterval) {
+            await this.syncBlockCache();
+        }
+
         const primaryType = preferType === 'flash' ? 'flash' : 'flash-lite';
         const secondaryType = preferType === 'flash' ? 'flash-lite' : 'flash';
 
         try {
-            const primaryList = await GeminiModel.find({ isActive: true, type: primaryType })
+            const now = new Date();
+
+            // Query tất cả model active, ưu tiên model không bị block
+            const primaryList = await GeminiModel.find({
+                isActive: true,
+                type: primaryType,
+                $or: [
+                    { blockedUntil: null },
+                    { blockedUntil: { $lte: now } }
+                ]
+            })
                 .sort({ versionMajor: -1, versionMinor: -1, versionPatch: -1 })
-                .select('modelId');
+                .select('modelId')
+                .lean();
 
-            const secondaryList = await GeminiModel.find({ isActive: true, type: secondaryType })
+            const secondaryList = await GeminiModel.find({
+                isActive: true,
+                type: secondaryType,
+                $or: [
+                    { blockedUntil: null },
+                    { blockedUntil: { $lte: now } }
+                ]
+            })
                 .sort({ versionMajor: -1, versionMinor: -1, versionPatch: -1 })
-                .select('modelId');
+                .select('modelId')
+                .lean();
 
-            const allPrimary = primaryList.map(m => m.modelId);
-            const allSecondary = secondaryList.map(m => m.modelId);
+            // Fallback: model đang bị block (nếu không còn model healthy)
+            const blockedPrimary = await GeminiModel.find({
+                isActive: true,
+                type: primaryType,
+                blockedUntil: { $gt: now }
+            })
+                .sort({ blockedUntil: 1 }) // Sắp xếp theo thời gian hết block sớm nhất
+                .select('modelId')
+                .lean();
 
-            const healthyPrimary = allPrimary.filter(m => !this.isModelInCooldown(m));
-            const healthySecondary = allSecondary.filter(m => !this.isModelInCooldown(m));
-            const cooldownPrimary = allPrimary.filter(m => this.isModelInCooldown(m));
-            const cooldownSecondary = allSecondary.filter(m => this.isModelInCooldown(m));
+            const blockedSecondary = await GeminiModel.find({
+                isActive: true,
+                type: secondaryType,
+                blockedUntil: { $gt: now }
+            })
+                .sort({ blockedUntil: 1 })
+                .select('modelId')
+                .lean();
 
             const ordered = [
-                ...healthyPrimary,
-                ...healthySecondary,
-                ...cooldownPrimary,
-                ...cooldownSecondary
+                ...primaryList.map(m => m.modelId),
+                ...secondaryList.map(m => m.modelId),
+                ...blockedPrimary.map(m => m.modelId),
+                ...blockedSecondary.map(m => m.modelId)
             ];
 
             if (ordered.length > 0) {
@@ -128,7 +221,7 @@ class GeminiModelService {
             Logger.info('[GeminiModelService] Đang quét danh sách model từ Google API...');
 
             const validModels = await ApiKeyManager.execute('model-sync', async (key) => {
-                const ai = new GoogleGenAI({ apiKey: key });
+                const ai = ApiKeyManager.getClient(key);
                 const matched = [];
 
                 for await (const m of await ai.models.list()) {
@@ -158,11 +251,22 @@ class GeminiModelService {
             });
 
             if (validModels && validModels.length > 0) {
-                // Upsert vào MongoDB
+                // Upsert vào MongoDB (không ghi đè blockedUntil/blockReason nếu đang block)
                 for (const modelData of validModels) {
                     await GeminiModel.findOneAndUpdate(
                         { modelId: modelData.modelId },
-                        { $set: modelData },
+                        {
+                            $set: {
+                                version: modelData.version,
+                                versionMajor: modelData.versionMajor,
+                                versionMinor: modelData.versionMinor,
+                                versionPatch: modelData.versionPatch,
+                                type: modelData.type,
+                                displayName: modelData.displayName,
+                                isActive: modelData.isActive,
+                                lastSyncedAt: modelData.lastSyncedAt
+                            }
+                        },
                         { upsert: true, new: true }
                     );
                 }
@@ -191,7 +295,7 @@ class GeminiModelService {
         const now = Date.now();
         if (!this.cachedModels) this.cachedModels = {};
         if (this.cachedModels[preferType] && (now - (this.lastCacheTime || 0) < this.cacheTTL)) {
-            // Kiểm tra xem model trong cache có đang bị cooldown không
+            // Kiểm tra xem model trong cache có đang bị block không
             if (!this.isModelInCooldown(this.cachedModels[preferType])) {
                 return this.cachedModels[preferType];
             }
@@ -199,7 +303,8 @@ class GeminiModelService {
 
         const candidates = await this.getCandidateModels(preferType);
         if (candidates && candidates.length > 0) {
-            const best = candidates[0];
+            // Chọn model đầu tiên không bị block
+            const best = candidates.find(m => !this.isModelInCooldown(m)) || candidates[0];
             this.cachedModels[preferType] = best;
             this.lastCacheTime = now;
             return best;
@@ -213,6 +318,16 @@ class GeminiModelService {
      * Khởi tạo service khi bot bật
      */
     async init() {
+        // Boot-time recovery: load trạng thái block từ DB
+        await this.syncBlockCache();
+        const blockedCount = this.blockCache.size;
+        if (blockedCount > 0) {
+            const blockedList = [...this.blockCache.entries()]
+                .map(([id, b]) => `${id} (${b.reason}, hết: ${b.until.toLocaleTimeString()})`)
+                .join(', ');
+            Logger.warn(`[GeminiModelService] 🔒 Boot recovery: ${blockedCount} model(s) đang bị block: ${blockedList}`);
+        }
+
         // Đồng bộ ngay khi khởi động
         await this.syncModelsFromAPI();
 
@@ -227,3 +342,4 @@ class GeminiModelService {
 }
 
 export default new GeminiModelService();
+

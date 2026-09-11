@@ -1,4 +1,3 @@
-import { GoogleGenAI } from '@google/genai';
 import ApiKeyManager from './apiKeyManager.js';
 import Logger from './Logger.js';
 import { musicTools } from '../schema/musicTools.js';
@@ -66,7 +65,7 @@ class GeminiManager {
         let radioMode = "???";
 
         if (guildId) {
-            const player = poru.players.get(guildId);
+            const player = poru?.players?.get(guildId);
             const settings = await MusicSetting.findOne({ guildId });
 
             if (settings) {
@@ -156,6 +155,19 @@ ${topSongsStr || "- Chưa có bài nào nổi bật"}
         }
 
 
+        // 3c. Prepare Available Commands & Sandbox Features
+        let availableFeaturesSummary = "Chưa có danh sách lệnh.";
+        const client = message.client || message.channel?.client || message.guild?.client;
+        if (client?.commands?.size > 0) {
+            const features = [];
+            for (const [name, cmd] of client.commands.entries()) {
+                const desc = cmd.data?.description || 'Tính năng';
+                const tag = cmd.isSandbox ? '[Sandbox Feature]' : '[Hệ thống]';
+                features.push(`- /${name} (${tag}): ${desc}`);
+            }
+            availableFeaturesSummary = features.join('\n');
+        }
+
         // 4. Prepare System Prompt Replacements
         const replacements = {
             '{{user}}': message.member?.displayName || message.author.globalName || message.author.username || 'User',
@@ -166,7 +178,7 @@ ${topSongsStr || "- Chưa có bài nào nổi bật"}
             '{{channel_name}}': message.channel.name || 'Private Chat',
             '{{current_time}}': new Date().toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' }),
             '{{time}}': new Date().toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' }), // Alias
-            '{{bot_name}}': message.client.user.username || 'Dolia',
+            '{{bot_name}}': message.client?.user?.username || 'Dolia',
 
             // Music Context
             '{{music_status}}': musicStatus,
@@ -175,7 +187,10 @@ ${topSongsStr || "- Chưa có bài nào nổi bật"}
             '{{volume}}': volume,
             '{{loop_mode}}': loopMode,
             '{{radio_mode}}': radioMode,
-            '{{listening_history_summary}}': listeningHistorySummary
+            '{{listening_history_summary}}': listeningHistorySummary,
+
+            // Available Commands & Sandbox Features
+            '{{available_features}}': availableFeaturesSummary
         };
 
         const systemInstruction = loadSystemPrompt(replacements);
@@ -189,17 +204,16 @@ ${topSongsStr || "- Chưa có bài nào nổi bật"}
                 const contents = [...baseHistory.map(h => ({ role: h.role, parts: [...h.parts] })), { ...userTurn }];
                 const newTurns = [userTurn];
 
-                const result = await ApiKeyManager.execute(modelId, async (key) => {
-                    const ai = new GoogleGenAI({ apiKey: key });
+                let functionCallAttempts = 0;
+                let finalResponseText = null;
+                let preCallText = null;
+                let lastToolResult = null;
 
-                    let functionCallAttempts = 0;
-                    let finalResponseText = null;
-                    let preCallText = null;
-                    let lastToolResultText = null;
-
-                    // Loop for Function Calling (Max 5 turns)
-                    while (functionCallAttempts < 5) {
-                        const response = await ai.models.generateContent({
+                // Loop for Function Calling (Max 5 turns)
+                while (functionCallAttempts < 5) {
+                    const response = await ApiKeyManager.execute(modelId, async (key) => {
+                        const ai = ApiKeyManager.getClient(key);
+                        return await ai.models.generateContent({
                             model: modelId,
                             contents: contents,
                             config: {
@@ -210,114 +224,126 @@ ${topSongsStr || "- Chưa có bài nào nổi bật"}
                                 topP: 0.95
                             }
                         });
+                    }, { timeoutMs: 35000 });
 
-                        const candidate = response.candidates?.[0];
-                        const content = candidate?.content;
-                        const responseParts = content?.parts || [];
+                    const candidate = response.candidates?.[0];
+                    const content = candidate?.content;
+                    const responseParts = content?.parts || [];
 
-                        // Lấy text không phải thought từ turn này nếu có
-                        const textParts = responseParts
-                            .filter(p => p.text && !p.thought)
-                            .map(p => p.text)
-                            .join('\n')
-                            .trim();
+                    // Lấy text không phải thought từ turn này nếu có
+                    const textParts = responseParts
+                        .filter(p => p.text && !p.thought)
+                        .map(p => p.text)
+                        .join('\n')
+                        .trim();
 
-                        const hasFunctionCall = responseParts.some(p => p.functionCall);
+                    const hasFunctionCall = responseParts.some(p => p.functionCall);
 
-                        if (hasFunctionCall) {
-                            if (textParts) {
-                                preCallText = textParts;
-                            }
-
-                            const callNames = responseParts
-                                .filter(p => p.functionCall)
-                                .map(p => p.functionCall.name)
-                                .join(', ');
-
-                            this.logger.info(`Function Calls detected: ${callNames}`);
-
-                            // A. Save Model Call Turn
-                            const modelCallTurn = {
-                                role: 'model',
-                                parts: responseParts
-                            };
-                            contents.push(modelCallTurn);
-                            newTurns.push(modelCallTurn);
-
-                            // B. Execute Functions & Prepare Response
-                            const functionResponseParts = [];
-
-                            for (const part of responseParts) {
-                                if (part.functionCall) {
-                                    const call = part.functionCall;
-                                    const fn = this.functions[call.name];
-                                    let apiResponse;
-
-                                    if (fn) {
-                                        try {
-                                            const args = { ...call.args, ...context };
-                                            const result = await fn(args);
-                                            apiResponse = { result: result };
-                                            if (typeof result === 'string' && result.trim()) {
-                                                lastToolResultText = result.trim();
-                                            }
-                                        } catch (error) {
-                                            apiResponse = { error: error.message };
-                                            console.error(`Error executing ${call.name}:`, error);
-                                        }
-                                    } else {
-                                        apiResponse = { error: `Function ${call.name} not found` };
-                                    }
-
-                                    // IMPORTANT: Include 'id' in functionResponse
-                                    functionResponseParts.push({
-                                        functionResponse: {
-                                            name: call.name,
-                                            response: apiResponse,
-                                            id: call.id
-                                        }
-                                    });
-                                }
-                            }
-
-                            // C. Save User Response Turn
-                            const functionResponseTurn = {
-                                role: 'user',
-                                parts: functionResponseParts
-                            };
-                            contents.push(functionResponseTurn);
-                            newTurns.push(functionResponseTurn);
-
-                        } else {
-                            // No function call -> Final Text Response
-                            finalResponseText = textParts || response.text || "";
-                            break;
+                    if (hasFunctionCall) {
+                        if (textParts) {
+                            preCallText = textParts;
                         }
-                        functionCallAttempts++;
+
+                        const callNames = responseParts
+                            .filter(p => p.functionCall)
+                            .map(p => p.functionCall.name)
+                            .join(', ');
+
+                        this.logger.info(`Function Calls detected: ${callNames}`);
+
+                        // A. Save Model Call Turn
+                        const modelCallTurn = {
+                            role: 'model',
+                            parts: responseParts
+                        };
+                        contents.push(modelCallTurn);
+                        newTurns.push(modelCallTurn);
+
+                        // B. Execute Functions & Prepare Response
+                        const functionResponseParts = [];
+
+                        for (const part of responseParts) {
+                            if (part.functionCall) {
+                                const call = part.functionCall;
+                                const fn = this.functions[call.name];
+                                let apiResponse;
+
+                                if (fn) {
+                                    try {
+                                        const args = { ...call.args, ...context };
+                                        const result = await fn(args);
+                                        apiResponse = { result: result };
+                                        lastToolResult = result;
+                                    } catch (error) {
+                                        apiResponse = { error: error.message };
+                                        console.error(`Error executing ${call.name}:`, error);
+                                    }
+                                } else {
+                                    apiResponse = { error: `Function ${call.name} not found` };
+                                }
+
+                                // IMPORTANT: Include 'id' in functionResponse
+                                functionResponseParts.push({
+                                    functionResponse: {
+                                        name: call.name,
+                                        response: apiResponse,
+                                        id: call.id
+                                    }
+                                });
+                            }
+                        }
+
+                        // C. Save User Response Turn
+                        const functionResponseTurn = {
+                            role: 'user',
+                            parts: functionResponseParts
+                        };
+                        contents.push(functionResponseTurn);
+                        newTurns.push(functionResponseTurn);
+
+                    } else {
+                        // No function call -> Final Text Response
+                        finalResponseText = textParts || response.text || "";
+                        break;
                     }
+                    functionCallAttempts++;
+                }
 
-                    // Fallback thông minh: Nếu sau khi gọi tool mà model không sinh thêm text mới
-                    if (!finalResponseText || !finalResponseText.trim()) {
-                        finalResponseText = preCallText || lastToolResultText || "Dolia đã ghi nhận và xử lý yêu cầu của bạn rồi nha! ✨💖";
+                // Fallback thông minh: Nếu sau khi gọi tool mà model không sinh thêm text mới
+                if (!finalResponseText || !finalResponseText.trim()) {
+                    if (preCallText) {
+                        finalResponseText = preCallText;
+                    } else if (lastToolResult) {
+                        if (typeof lastToolResult === 'string') {
+                            try {
+                                const parsed = JSON.parse(lastToolResult);
+                                finalResponseText = parsed.summary || parsed.message || parsed.description || lastToolResult;
+                            } catch (_) {
+                                finalResponseText = lastToolResult;
+                            }
+                        } else if (typeof lastToolResult === 'object') {
+                            finalResponseText = lastToolResult.summary || lastToolResult.message || JSON.stringify(lastToolResult);
+                        }
+                    } else {
+                        finalResponseText = "Dolia đã ghi nhận và xử lý yêu cầu của bạn rồi nha! ✨💖";
                     }
+                }
 
-                    // Lưu text phản hồi cuối cùng vào DB
-                    newTurns.push({
-                        role: 'model',
-                        parts: [{ text: finalResponseText }]
-                    });
-
-                    // 4. Save new turns to DB
-                    if (newTurns.length > 0) {
-                        await ChatHelper.saveInteraction(chatSession, newTurns);
-                    }
-
-                    return finalResponseText;
+                // Lưu text phản hồi cuối cùng vào DB
+                newTurns.push({
+                    role: 'model',
+                    parts: [{ text: finalResponseText }]
                 });
+
+                // 4. Save new turns to DB
+                if (newTurns.length > 0) {
+                    await ChatHelper.saveInteraction(chatSession, newTurns);
+                }
 
                 // Model phản hồi thành công -> gỡ cooldown nếu có và return
                 geminiModelService.reportModelSuccess(modelId);
-                return result;
+                return finalResponseText;
+
             } catch (err) {
                 lastError = err;
                 geminiModelService.reportModelFailure(modelId, err.message, 2 * 60 * 1000);

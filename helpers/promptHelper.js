@@ -65,3 +65,27 @@ export function clearPromptCache() {
     cachedRawPrompt = null;
     Logger.info('[PromptHelper] Cache cleared.');
 }
+
+/**
+ * Đọc file prompt riêng của Agent từ config/prompt/agent/ và thay thế placeholders
+ * @param {string} fileName - Tên file (ví dụ: 'AntigravityInstruction.md')
+ * @param {Object} replacements - Các cặp placeholder và giá trị (ví dụ: { '{{prompt}}': '...', '{{safeSlug}}': '...' })
+ */
+export function loadAgentPrompt(fileName, replacements = {}) {
+    try {
+        const filePath = path.join(__dirname, '../config/prompt/agent', fileName);
+        if (!fs.existsSync(filePath)) {
+            Logger.warn(`[PromptHelper] ⚠️ Agent prompt file missing: ${filePath}`);
+            return '';
+        }
+
+        let content = fs.readFileSync(filePath, 'utf-8');
+        for (const [key, value] of Object.entries(replacements)) {
+            content = content.replaceAll(key, value ?? '');
+        }
+        return content;
+    } catch (error) {
+        Logger.error(`[PromptHelper] 🔥 Error loading agent prompt (${fileName}): ${error.message}`);
+        return '';
+    }
+}

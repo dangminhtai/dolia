@@ -1,0 +1,1 @@
+mình cho bot truy cập vô Database Mongo DB cũng được mà đâu nhất thiết phải xóa đâu, kiểu như cập nhật block model trong 1 tiếng

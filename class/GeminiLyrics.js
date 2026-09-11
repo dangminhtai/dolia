@@ -1,4 +1,3 @@
-import { GoogleGenAI } from "@google/genai";
 import ApiKeyManager from "./apiKeyManager.js";
 import Logger from "./Logger.js";
 import geminiModelService from "../services/geminiModelService.js";
@@ -21,7 +20,7 @@ class GeminiLyrics {
         for (const modelId of candidates) {
             try {
                 const songData = await ApiKeyManager.execute(modelId, async (key) => {
-                    const ai = new GoogleGenAI({ apiKey: key });
+                    const ai = ApiKeyManager.getClient(key);
 
                     const config = {
                         tools: [{ googleSearch: {} }],

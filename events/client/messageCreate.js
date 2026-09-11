@@ -29,17 +29,27 @@ export default (client) => {
                 ? response.trim()
                 : (t('common.chat_empty_fallback') || 'Dolia đã ghi nhận yêu cầu của chủ nhân rồi nha! ✨💖');
 
+            const sendResponse = async (content) => {
+                try {
+                    return await message.reply(content);
+                } catch (replyErr) {
+                    // Nếu tin nhắn gốc đã bị xóa (ví dụ do lệnh xóa bulk delete), gửi trực tiếp vào kênh
+                    return await message.channel.send(content).catch(() => {});
+                }
+            };
+
             if (textToReply.length > 2000) {
                 const chunks = textToReply.match(/[\s\S]{1,2000}/g) || [];
                 for (const chunk of chunks) {
-                    await message.reply(chunk);
+                    await sendResponse(chunk);
                 }
             } else {
-                await message.reply(textToReply);
+                await sendResponse(textToReply);
             }
         } catch (error) {
             console.error('Gemini Chat Error:', error);
-            await message.reply(t('common.chat_error') || 'Dolia đang gặp một chút trục trặc kết nối, chủ nhân thử lại sau giây lát nha!');
+            const errMsg = t('common.chat_error') || 'Dolia đang gặp một chút trục trặc kết nối, bạn thử lại sau giây lát nha!';
+            await message.channel.send(errMsg).catch(() => {});
         } finally {
             clearInterval(typingInterval);
         }

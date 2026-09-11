@@ -75,26 +75,38 @@ export function t(key, params = {}, context = null) {
 
     const parts = key.split('.');
     let current = resources;
+    let found = true;
 
     for (const part of parts) {
         if (current && typeof current === 'object' && part in current) {
             current = current[part];
         } else {
-            console.warn(`[i18n] Không tìm thấy key: ${key}`);
-            return key;
+            found = false;
+            break;
         }
     }
 
-    if (typeof current !== 'string') {
+    // Nếu không tìm thấy theo dot-path, tìm kiếm tự động qua các namespace (hỗ trợ minigame sandbox)
+    if (!found) {
+        for (const ns of Object.keys(resources)) {
+            if (resources[ns] && typeof resources[ns] === 'object' && key in resources[ns]) {
+                current = resources[ns][key];
+                found = true;
+                break;
+            }
+        }
+    }
+
+    if (!found || typeof current !== 'string') {
         return key;
     }
 
     let result = current;
 
-    // Thay thế params dạng {{key}}
+    // Thay thế params dạng {{key}} hoặc {key}
     if (params && typeof params === 'object') {
         for (const [k, v] of Object.entries(params)) {
-            const regex = new RegExp(`{{\\s*${k}\\s*}}`, 'gi');
+            const regex = new RegExp(`\\{{1,2}\\s*${k}\\s*\\}{1,2}`, 'gi');
             result = result.replace(regex, v !== undefined && v !== null ? v : '');
         }
     }
