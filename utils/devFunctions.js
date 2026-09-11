@@ -1,5 +1,7 @@
 import { SelfDevService } from '../services/selfDevService.js';
 import Logger from '../class/Logger.js';
+import ApiKeyManager from '../class/apiKeyManager.js';
+import geminiModelService from '../services/geminiModelService.js';
 
 /**
  * Khởi chạy một Slash Command trực tiếp từ tin nhắn văn bản mà người dùng không cần gõ /
@@ -180,3 +182,69 @@ export async function agent_code(args) {
 
     return `Mình đã nhận yêu cầu của bạn rồi nè! Mình đang tự tay chuẩn bị và hoàn thiện tính năng "${prompt}", bạn đợi mình một chút xíu nha~ ✨🫧`;
 }
+
+/**
+ * Tra cứu thông tin trên Internet qua Google Search theo thời gian thực (Google Search Grounding)
+ */
+export async function web_search({ query }) {
+    if (!query || typeof query !== 'string') {
+        return JSON.stringify({ error: 'Vui lòng cung cấp từ khóa tìm kiếm.' });
+    }
+
+    try {
+        Logger.info(`[DevFunctions] 🌐 Đang tìm kiếm Google cho: "${query}"...`);
+
+        const candidateModels = await geminiModelService.getCandidateModels('flash-lite', 'chat');
+        let lastError = null;
+        let searchResult = null;
+
+        for (const modelId of candidateModels) {
+            try {
+                searchResult = await ApiKeyManager.execute(modelId, async (key) => {
+                    const ai = ApiKeyManager.getClient(key);
+                    return await ai.models.generateContent({
+                        model: modelId,
+                        contents: `Hãy tìm kiếm Google và tổng hợp thông tin chính xác, cập nhật nhất về câu hỏi/từ khóa sau:\n"${query}"\n\nYêu cầu: Tóm tắt các ý chính, số liệu thực tế, mốc thời gian và sự kiện cụ thể.`,
+                        config: {
+                            tools: [{ googleSearch: {} }],
+                            temperature: 0.2
+                        }
+                    });
+                }, { timeoutMs: 30000, maxRetries: 2 });
+
+                if (searchResult) break;
+            } catch (err) {
+                lastError = err;
+                Logger.warn(`[DevFunctions] ⚠️ Model ${modelId} gặp sự cố khi web_search: ${err.message}. Đang thử model tiếp theo...`);
+            }
+        }
+
+        if (!searchResult) {
+            throw lastError || new Error('Không có model nào thực hiện được web_search.');
+        }
+
+        const text = searchResult.text || '';
+        const groundingMeta = searchResult.candidates?.[0]?.groundingMetadata;
+
+        const resultObj = {
+            query: query,
+            summary: text,
+            searchQueries: groundingMeta?.webSearchQueries || [],
+            sources: (groundingMeta?.groundingChunks || []).slice(0, 5).map(c => ({
+                title: c.web?.title,
+                uri: c.web?.uri
+            }))
+        };
+
+        Logger.info(`[DevFunctions] ✅ Đã tìm kiếm thành công cho "${query}" (${resultObj.sources.length} nguồn trích dẫn)`);
+        return JSON.stringify(resultObj);
+    } catch (err) {
+        Logger.error(`[DevFunctions] ❌ Lỗi khi tìm kiếm Google cho "${query}":`, err.message);
+        return JSON.stringify({
+            query: query,
+            error: `Không thể tìm kiếm trên Google lúc này: ${err.message}`,
+            fallbackMessage: 'Hãy thử lại sau giây lát hoặc đổi từ khóa tìm kiếm.'
+        });
+    }
+}
+

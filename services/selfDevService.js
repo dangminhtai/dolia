@@ -9,6 +9,7 @@ import { loadCommands, deployCommands } from '../deployCommands.js';
 import geminiModelService from './geminiModelService.js';
 import AntigravityService from './antigravityService.js';
 import { loadAgentPrompt } from '../helpers/promptHelper.js';
+import SkillHelper from '../helpers/skillHelper.js';
 import {
     sandboxManager,
     sandboxValidator,
@@ -398,9 +399,10 @@ export class SelfDevService {
             try {
                 Logger.info(`[SelfDev] 🧠 Đang gọi Gemini Coding Model (${modelId}) cho tính năng: "${suggestedName}"...`);
 
-                const systemInstruction = loadAgentPrompt('AgentInstruction.md', {
+                const baseInstruction = loadAgentPrompt('AgentInstruction.md', {
                     '{{safeSlug}}': suggestedName
                 });
+                const systemInstruction = SkillHelper.enhanceInstructionWithSkills(baseInstruction, userPrompt);
 
                 let promptContent = `Lập trình tính năng sau cho Dolia theo [CHẾ ĐỘ 2: SLASH COMMAND]: ${userPrompt}. Tên lệnh gợi ý: ${suggestedName}. Hãy viết code thật chất lượng và trả về DUY NHẤT định dạng JSON đúng chuẩn.`;
                 if (errorFeedback && previousCode) {
@@ -684,10 +686,11 @@ export class SelfDevService {
         const { client, guild, channel, user, message } = context;
         const candidates = await geminiModelService.getCandidateModels('flash', 'agent');
 
-        // Nạp prompt chỉ thị từ config/prompt/agent/AgentInstruction.md
-        const systemInstruction = loadAgentPrompt('AgentInstruction.md', {
+        // Nạp prompt chỉ thị từ config/prompt/agent/AgentInstruction.md và nhúng skills
+        const baseInstruction = loadAgentPrompt('AgentInstruction.md', {
             '{{safeSlug}}': 'query_script'
         });
+        const systemInstruction = SkillHelper.enhanceInstructionWithSkills(baseInstruction, prompt);
 
         let scriptPath = null;
         let scriptCode = '';
@@ -759,12 +762,12 @@ export class SelfDevService {
 
             Logger.info(`[SelfDev] 🚀 Bắt đầu thực thi script kiểm tra ngầm (${path.basename(scriptPath)})...`);
 
-            // Timeout guard 30s để tránh script bị treo vô hạn
+            // Timeout guard 180s (3 phút) để tránh script bị treo vô hạn mà vẫn đáp ứng tác vụ nặng (render đồ họa / video)
             let scriptTimer;
             const timeoutPromise = new Promise((_, reject) => {
                 scriptTimer = setTimeout(() => {
-                    reject(new Error("Script thực thi quá 30s (timeout do tác vụ kéo dài)"));
-                }, 30000);
+                    reject(new Error("Script thực thi quá 3 phút (timeout do tác vụ kéo dài)"));
+                }, 180000);
                 scriptTimer.unref?.();
             });
 

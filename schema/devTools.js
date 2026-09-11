@@ -23,5 +23,19 @@ export const devTools = [
             },
             required: ["prompt", "action"]
         }
+    },
+    {
+        name: "web_search",
+        description: "Tìm kiếm thông tin thực tế trên Internet thông qua Google Search theo thời gian thực (tin tức mới nhất, sự kiện hiện tại, tra cứu nhân vật, cốt truyện, công nghệ, thời tiết, giá cả, kiến thức ngoài thế giới...). BẮT BUỘC gọi công cụ này khi người dùng hỏi về thông tin mới, tin tức, tra cứu trên mạng hoặc thông tin bạn chưa chắc chắn.",
+        parameters: {
+            type: Type.OBJECT,
+            properties: {
+                query: {
+                    type: Type.STRING,
+                    description: "Từ khóa hoặc câu hỏi tìm kiếm rõ ràng, súc tích trên Google."
+                }
+            },
+            required: ["query"]
+        }
     }
 ];

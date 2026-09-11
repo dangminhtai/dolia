@@ -79,8 +79,16 @@ export function loadAgentPrompt(fileName, replacements = {}) {
             return '';
         }
 
+        const defaultReplacements = {
+            '{{host_os}}': process.platform === 'win32' ? 'Windows (win32)' : `${process.platform}`,
+            '{{python_cmd}}': process.platform === 'win32' ? 'python' : 'python3',
+            '{{font_dir}}': process.platform === 'win32' ? 'C:\\Windows\\Fonts' : '/usr/share/fonts/truetype'
+        };
+
+        const allReplacements = { ...defaultReplacements, ...replacements };
+
         let content = fs.readFileSync(filePath, 'utf-8');
-        for (const [key, value] of Object.entries(replacements)) {
+        for (const [key, value] of Object.entries(allReplacements)) {
             content = content.replaceAll(key, value ?? '');
         }
         return content;

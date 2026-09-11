@@ -2,6 +2,7 @@ import antigravityKeyManager from '../class/antigravityKeyManager.js';
 import Logger from '../class/Logger.js';
 import geminiModelService from './geminiModelService.js';
 import { loadAgentPrompt } from '../helpers/promptHelper.js';
+import SkillHelper from '../helpers/skillHelper.js';
 
 export class AntigravityService {
     /**
@@ -24,16 +25,26 @@ export class AntigravityService {
         const activeModel = await geminiModelService.getActiveModel('flash-lite', 'agent');
         Logger.info(`[Antigravity] 🚀 Khởi chạy Antigravity Agent (Cloud Sandbox) với model: ${activeModel}...`);
 
-        // Đọc prompt tùy biến từ config/prompt/agent/AgentInstruction.md
-        const systemInstruction = loadAgentPrompt('AgentInstruction.md', {
+        // Đọc prompt tùy biến từ config/prompt/agent/AgentInstruction.md và nhúng Skills chuẩn Google Custom Agents
+        const baseInstruction = loadAgentPrompt('AgentInstruction.md', {
             '{{safeSlug}}': safeSlug
         });
+        const systemInstruction = SkillHelper.enhanceInstructionWithSkills(baseInstruction, prompt);
         const promptInstruction = `${systemInstruction}\n\n[NHIỆM VỤ HIỆN TẠI]: Hãy thiết kế và lập trình tính năng mới sau: "${prompt}". Tên lệnh được chỉ định: "${safeSlug}". Trả về DUY NHẤT một JSON hợp lệ theo [CHẾ ĐỘ 2: SLASH COMMAND]!`;
 
         return await antigravityKeyManager.execute(async (apiKey) => {
             const cachedEnv = antigravityKeyManager.getEnvironmentId();
-            const envParam = cachedEnv || "remote";
-            if (cachedEnv) {
+            const skillSources = SkillHelper.getEnvironmentSources();
+
+            let envParam = cachedEnv || "remote";
+            if (!cachedEnv && skillSources.length > 0) {
+                // Nhúng các file SKILL.md inline vào remote sandbox theo chuẩn Google Custom Agents
+                envParam = {
+                    type: "remote",
+                    sources: skillSources
+                };
+                Logger.info(`[Antigravity] 📦 Đã nhúng ${skillSources.length} skills vào environment.sources (.agents/skills/): ${skillSources.map(s => s.target).join(', ')}`);
+            } else if (cachedEnv) {
                 Logger.info(`[Antigravity] ⚡ Tái sử dụng Warm Sandbox Container ID: ${cachedEnv}`);
             }
 

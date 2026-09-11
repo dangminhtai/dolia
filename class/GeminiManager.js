@@ -29,7 +29,8 @@ class GeminiManager {
             'adjust_audio_settings': MusicFunctions.adjust_audio_settings,
             'manage_radio': MusicFunctions.manage_radio,
             'show_music_panel': MusicFunctions.show_music_panel,
-            'agent_code': DevFunctions.agent_code
+            'agent_code': DevFunctions.agent_code,
+            'web_search': DevFunctions.web_search
         };
     }
 
