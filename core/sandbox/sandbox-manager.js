@@ -138,14 +138,23 @@ export class SandboxManager {
     }
 
     /**
-     * Dọn sạch toàn bộ sandbox/
+     * Dọn dẹp file trong sandbox. TUYỆT ĐỐI KHÔNG xóa sạch sandboxRoot vì làm mất các lệnh slash command đang chạy!
      */
-    cleanSandbox() {
+    cleanSandbox(targetRelPath = null) {
         try {
-            if (fs.existsSync(this.sandboxRoot)) {
-                fs.rmSync(this.sandboxRoot, { recursive: true, force: true });
+            if (targetRelPath) {
+                const fullPath = this.resolveSafePath(targetRelPath);
+                if (fs.existsSync(fullPath)) {
+                    fs.unlinkSync(fullPath);
+                }
+            } else {
+                // Chỉ dọn thư mục tạm nếu có
+                const tempDir = path.join(this.sandboxRoot, 'temp');
+                if (fs.existsSync(tempDir)) {
+                    fs.rmSync(tempDir, { recursive: true, force: true });
+                    fs.mkdirSync(tempDir, { recursive: true });
+                }
             }
-            this.init();
         } catch (err) {
             console.warn(`[SandboxManager] Warning on cleanSandbox: ${err.message}`);
         }

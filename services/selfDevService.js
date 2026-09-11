@@ -143,6 +143,29 @@ export class SelfDevService {
                     usedModel = antiResult.usedModel;
                     commandName = generatedData.command_name || safeSlug;
                     Logger.info(`[SelfDev] ✅ Antigravity Cloud sinh mã thành công cho /${commandName}`);
+
+                    // Ghi tạm vào Sandbox để kiểm thử trước khi nạp
+                    for (const fileObj of generatedData.files) {
+                        await sandboxManager.writeFile(fileObj.path, fileObj.content);
+                    }
+                    if (generatedData.i18n && generatedData.i18n.translations) {
+                        const i18nRelPath = `i18n/${commandName}.json`;
+                        await sandboxManager.writeFile(i18nRelPath, JSON.stringify(generatedData.i18n.translations, null, 4));
+                    }
+
+                    // Tự động kiểm thử tính hợp lệ (cú pháp, runtime import, execute)
+                    const filesToValidate = [
+                        path.join(sandboxManager.sandboxDir, 'slash', `${commandName}.js`),
+                        ...(generatedData.i18n && generatedData.i18n.translations ? [path.join(sandboxManager.sandboxDir, 'i18n', `${commandName}.json`)] : [])
+                    ];
+                    const validationResults = await sandboxValidator.validateBatch(filesToValidate);
+                    if (!validationResults.valid) {
+                        Logger.warn(`[SelfDev] ⚠️ Mã nguồn từ Antigravity Cloud có lỗi kiểm thử: ${validationResults.errors.join('; ')}. Chuyển sang chế độ tự sửa nội bộ...`);
+                        lastValidationErrors = validationResults.errors;
+                        generatedData = null; // Đặt về null để vòng lặp tự sửa nội bộ tiếp quản sửa lỗi!
+                        currentStage = 'fallback';
+                        currentStageDescription = '🔄 Chuyển sang chế độ tự phát triển nội bộ để sửa lỗi...';
+                    }
                 }
             } catch (antiErr) {
                 Logger.warn(`[SelfDev] ⚠️ Antigravity Cloud gặp sự cố: ${antiErr.message}. Tự động chuyển sang chế độ dự phòng nội bộ...`);
@@ -341,9 +364,12 @@ export class SelfDevService {
             }
             Logger.error(`[SelfDev] Error in session ${sessionId}:`, error);
 
-            // Dọn dẹp sandbox nếu có lỗi
+            // Chỉ dọn dẹp file của lệnh bị lỗi, tuyệt đối không xóa sạch sandbox
             try {
-                sandboxManager.cleanSandbox();
+                if (safeSlug) {
+                    sandboxManager.cleanSandbox(`slash/${safeSlug}.js`);
+                    sandboxManager.cleanSandbox(`i18n/${safeSlug}.json`);
+                }
             } catch (_) { }
 
             const errorEmbed = new EmbedBuilder()
