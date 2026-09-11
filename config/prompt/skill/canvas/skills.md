@@ -8,7 +8,7 @@ description: Kỹ năng vẽ Canvas chuyên nghiệp cho bot Discord (bố cục
 ## 1) Nền tảng
 - Biết tạo canvas với kích thước đúng mục đích: avatar, card, banner, rank card, poster.
 - Hiểu luồng cơ bản: tạo canvas → lấy context → vẽ nền → vẽ layer → render text/icon → xuất PNG/JPG/WebP.
-- Tự do lựa chọn công cụ phù hợp: Node.js Canvas (`@napi-rs/canvas`, `canvas`) hoặc Python (`Pillow/PIL`, `matplotlib`, `numpy`) tùy tác vụ.
+- Tự do lựa chọn công cụ phù hợp: Node.js Canvas (`@napi-rs/canvas`, `sharp`, `gifencoder`) hoặc Python (`Pillow/PIL`, `matplotlib`, `numpy`, `opencv-python`) tùy tác vụ (TUYỆT ĐỐI KHÔNG dùng package `canvas` cũ vì lỗi build C++ trên Windows).
 - Biết kiểm tra chất lượng ảnh ở nhiều kích thước.
 
 ## 2) Bố cục
