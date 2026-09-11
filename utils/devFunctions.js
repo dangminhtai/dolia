@@ -1,3 +1,4 @@
+import { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
 import { SelfDevService } from '../services/selfDevService.js';
 import Logger from '../class/Logger.js';
 import ApiKeyManager from '../class/apiKeyManager.js';
@@ -136,16 +137,123 @@ export async function agent_code(args) {
 
     if (isScript) {
         Logger.info(`[DevFunctions] 🔍 Chạy script ngầm trong sandbox (action: "${lowerAction}"): "${prompt}"...`);
+
+        // Gửi tin nhắn tiến trình chờ sự kiện thời gian thực (tin nhắn ngắn hạn, tự ẩn sau khi hoàn tất hoặc bấm nút ẩn)
+        let statusMsg = null;
+        let progressInterval = null;
+        let collector = null;
+        const startTime = Date.now();
+
+        let currentStage = 'init';
+        let currentStageDescription = '💭 Dolia đang lên kịch bản và chuẩn bị dữ liệu...';
+
+        const stageColors = {
+            init: 0x5DADE2,       // xanh dương nhạt
+            thinking: 0x9B59B6,   // tím (suy nghĩ)
+            coding: 0xE67E22,     // cam (viết code)
+            packages: 0xF39C12,   // vàng cam (chuẩn bị thư viện)
+            executing: 0x3498DB,  // xanh dương đậm (thực thi sandbox)
+            completed: 0x2ECC71,  // xanh lá (hoàn thành)
+            failed: 0xE74C3C,     // đỏ (lỗi)
+        };
+
+        const createWaitEmbed = (elapsed, stage, desc) => {
+            return new EmbedBuilder()
+                .setColor(stageColors[stage] || 0x5DADE2)
+                .setTitle('✨ Dolia đang thực hiện yêu cầu của bạn nè... 🫧')
+                .setDescription(
+                    `⏳ **Thời gian:** ${elapsed} giây...\n` +
+                    `💭 **Trạng thái:** ${desc}\n\n` +
+                    `*(Bạn đợi mình một xíu nha, mình đang thực hiện ngay đây nè~ 💖)*`
+                )
+                .setTimestamp();
+        };
+
+        const dismissBtnId = `dismiss_wait_${Date.now()}`;
+        const dismissRow = new ActionRowBuilder().addComponents(
+            new ButtonBuilder()
+                .setCustomId(dismissBtnId)
+                .setLabel('Ẩn thông báo')
+                .setEmoji('🗑️')
+                .setStyle(ButtonStyle.Secondary)
+        );
+
+        try {
+            if (message && typeof message.reply === 'function') {
+                statusMsg = await message.reply({
+                    embeds: [createWaitEmbed(0, currentStage, currentStageDescription)],
+                    components: [dismissRow]
+                }).catch(() => null);
+            }
+            if (!statusMsg && channel && typeof channel.send === 'function') {
+                statusMsg = await channel.send({
+                    embeds: [createWaitEmbed(0, currentStage, currentStageDescription)],
+                    components: [dismissRow]
+                }).catch(() => null);
+            }
+        } catch (e) {
+            Logger.warn('[DevFunctions] Không thể gửi tin nhắn tiến trình chờ:', e.message);
+        }
+
+        if (statusMsg) {
+            const filter = (btnInt) => btnInt.customId === dismissBtnId && (btnInt.user.id === user?.id || SelfDevService.isOwner(btnInt.user.id));
+            collector = statusMsg.createMessageComponentCollector({ filter, time: 180000 });
+            collector.on('collect', async (btnInt) => {
+                await btnInt.deferUpdate().catch(() => {});
+                await statusMsg.delete().catch(() => {});
+            });
+
+            progressInterval = setInterval(async () => {
+                const elapsed = Math.floor((Date.now() - startTime) / 1000);
+                const updatedEmbed = createWaitEmbed(elapsed, currentStage, currentStageDescription);
+                await statusMsg.edit({ embeds: [updatedEmbed], components: [dismissRow] }).catch(() => {});
+            }, 2500);
+        }
+
+        const onProgress = (progress) => {
+            if (progress && typeof progress === 'object') {
+                currentStage = progress.stage || currentStage;
+                currentStageDescription = progress.text || currentStageDescription;
+            } else if (typeof progress === 'string') {
+                currentStageDescription = progress;
+            }
+            if (statusMsg) {
+                const elapsed = Math.floor((Date.now() - startTime) / 1000);
+                const updatedEmbed = createWaitEmbed(elapsed, currentStage, currentStageDescription);
+                statusMsg.edit({ embeds: [updatedEmbed], components: [dismissRow] }).catch(() => {});
+            }
+        };
+
         try {
             const inspectionResult = await SelfDevService.runDynamicScript({
                 prompt,
                 action: lowerAction,
-                context: { client, guild, channel, user, message }
+                context: { client, guild, channel, user, message },
+                onProgress
             });
+
+            if (statusMsg) {
+                onProgress({ stage: 'completed', text: '✨ Đã hoàn thành xuất sắc! Đang đóng gói kết quả cho bạn... 🎉' });
+            }
+
             return typeof inspectionResult === 'string' ? inspectionResult : JSON.stringify(inspectionResult);
         } catch (err) {
             Logger.error('[DevFunctions] Lỗi chạy dynamic script:', err);
             return JSON.stringify({ error: err.message });
+        } finally {
+            if (progressInterval) {
+                clearInterval(progressInterval);
+                progressInterval = null;
+            }
+            if (collector) {
+                collector.stop();
+            }
+            // Tin nhắn ngắn hạn: Tự động ẩn/xóa sau 2.5 giây khi kết quả hoàn tất hiển thị
+            if (statusMsg) {
+                setTimeout(() => {
+                    statusMsg.delete().catch(() => {});
+                }, 2500);
+            }
         }
     }
 

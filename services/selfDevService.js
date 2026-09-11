@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { pathToFileURL } from 'url';
-import { EmbedBuilder, MessageFlags } from 'discord.js';
+import { EmbedBuilder, MessageFlags, ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
 import ApiKeyManager from '../class/apiKeyManager.js';
 import Logger from '../class/Logger.js';
 import { reloadI18n, t } from './i18nService.js';
@@ -65,7 +65,7 @@ export class SelfDevService {
         // Gửi Embed thông báo nhẹ nhàng ban đầu theo đúng phong cách Dolia (xưng mình - bạn)
         const statusEmbed = new EmbedBuilder()
             .setColor(0x5DADE2)
-            .setTitle('✨ Dolia đang chuẩn bị trò chơi cho bạn nè...')
+            .setTitle('✨ Dolia đang chuẩn bị tính năng cho bạn nè... 🫧')
             .setDescription(
                 `⏳ **Thời gian:** 0 giây...\n` +
                 `💭 **Trạng thái:** 💭 Dolia đang lên ý tưởng trò chơi thật vui cho bạn nè...\n\n` +
@@ -73,13 +73,32 @@ export class SelfDevService {
             )
             .setTimestamp();
 
+        const dismissBtnId = `dismiss_session_${Date.now()}`;
+        const dismissRow = new ActionRowBuilder().addComponents(
+            new ButtonBuilder()
+                .setCustomId(dismissBtnId)
+                .setLabel('Ẩn thông báo')
+                .setEmoji('🗑️')
+                .setStyle(ButtonStyle.Secondary)
+        );
+
         let progressMsg;
         if (replyTarget && replyTarget.deferred) {
-            progressMsg = await replyTarget.editReply({ embeds: [statusEmbed] });
+            progressMsg = await replyTarget.editReply({ embeds: [statusEmbed], components: [dismissRow] }).catch(() => null);
         } else if (replyTarget) {
-            progressMsg = await replyTarget.reply({ embeds: [statusEmbed] });
+            progressMsg = await replyTarget.reply({ embeds: [statusEmbed], components: [dismissRow] }).catch(() => null);
         } else {
-            progressMsg = await channel.send({ embeds: [statusEmbed] });
+            progressMsg = await channel.send({ embeds: [statusEmbed], components: [dismissRow] }).catch(() => null);
+        }
+
+        let collector = null;
+        if (progressMsg && typeof progressMsg.createMessageComponentCollector === 'function') {
+            const filter = (btnInt) => btnInt.customId === dismissBtnId && (btnInt.user.id === user?.id || SelfDevService.isOwner(btnInt.user.id));
+            collector = progressMsg.createMessageComponentCollector({ filter, time: 300000 });
+            collector.on('collect', async (btnInt) => {
+                await btnInt.deferUpdate().catch(() => {});
+                await progressMsg.delete().catch(() => {});
+            });
         }
 
         let currentStageDescription = '💭 Dolia đang lên ý tưởng trò chơi thật vui cho bạn nè...';
@@ -105,7 +124,7 @@ export class SelfDevService {
 
             const liveEmbed = new EmbedBuilder()
                 .setColor(stageColors[currentStage] || 0x5DADE2)
-                .setTitle('✨ Dolia đang chuẩn bị trò chơi cho bạn nè...')
+                .setTitle('✨ Dolia đang chuẩn bị trò chơi cho bạn nè... 🫧')
                 .setDescription(
                     `⏳ **Thời gian:** ${elapsed} giây...\n` +
                     `💭 **Trạng thái:** ${currentStageDescription}\n\n` +
@@ -113,7 +132,7 @@ export class SelfDevService {
                 )
                 .setTimestamp();
 
-            await progressMsg.edit({ embeds: [liveEmbed] }).catch(() => { });
+            await progressMsg.edit({ embeds: [liveEmbed], components: [dismissRow] }).catch(() => { });
         }, 3000);
 
         try {
@@ -358,12 +377,19 @@ export class SelfDevService {
                 )
                 .setTimestamp();
 
-            await progressMsg.edit({ embeds: [fallbackEmbed], components: [] }).catch(() => { });
+            await progressMsg.edit({ embeds: [fallbackEmbed], components: [dismissRow] }).catch(() => { });
+            // Tin nhắn ngắn hạn: Tự động xóa thông báo sau 10 giây
+            setTimeout(() => {
+                progressMsg?.delete().catch(() => {});
+            }, 10000);
 
         } catch (error) {
             if (progressInterval) {
                 clearInterval(progressInterval);
                 progressInterval = null;
+            }
+            if (collector) {
+                collector.stop();
             }
             Logger.error(`[SelfDev] Error in session ${sessionId}:`, error);
 
@@ -381,7 +407,11 @@ export class SelfDevService {
                 .setDescription(`Trong lúc hoàn thiện lệnh **\`/${safeSlug}\`**, mình gặp chút khó khăn nên chưa xong được nè.\nBạn cho mình thử lại sau nha! 🫧`)
                 .setTimestamp();
 
-            await progressMsg.edit({ embeds: [errorEmbed], components: [] }).catch(() => { });
+            await progressMsg.edit({ embeds: [errorEmbed], components: [dismissRow] }).catch(() => { });
+            // Tin nhắn ngắn hạn: Tự động xóa thông báo lỗi sau 10 giây
+            setTimeout(() => {
+                progressMsg?.delete().catch(() => {});
+            }, 10000);
         }
     }
 
@@ -662,7 +692,11 @@ export class SelfDevService {
                 .setDescription(`Mình đã gỡ bỏ hoàn toàn lệnh **\`/${targetName}\`** theo yêu cầu của bạn rồi nha! Bạn yên tâm là mình vẫn lưu trữ lại phòng khi bạn muốn dùng lại sau nè~ 🫧✨`)
                 .setTimestamp();
 
-            await confirmMsg.edit({ embeds: [successEmbed], components: [] });
+            await confirmMsg.edit({ embeds: [successEmbed], components: [] }).catch(() => {});
+            // Tin nhắn ngắn hạn: Tự động xóa sau 8 giây
+            setTimeout(() => {
+                confirmMsg?.delete().catch(() => {});
+            }, 8000);
 
             // Deploy lại commands lên Discord API (forceDeploy: true)
             const loadResult = await loadCommands(null, client);
@@ -676,7 +710,11 @@ export class SelfDevService {
                 .setTitle('Ấy da, có chút trục trặc nhỏ rồi... 🥺')
                 .setDescription(`Mình chưa gỡ bỏ được lệnh này nè, bạn thử lại sau giúp mình nha! 🫧`)
                 .setTimestamp();
-            await confirmMsg.edit({ embeds: [errEmbed], components: [] });
+            await confirmMsg.edit({ embeds: [errEmbed], components: [] }).catch(() => {});
+            // Tin nhắn ngắn hạn: Tự động xóa sau 8 giây
+            setTimeout(() => {
+                confirmMsg?.delete().catch(() => {});
+            }, 8000);
         }
     }
 
@@ -688,9 +726,11 @@ export class SelfDevService {
      * Tạo và thực thi script ngầm trong sandbox/workspaces/<channelId>/ để kiểm tra dữ liệu Discord/hệ thống thực tế
      * Hỗ trợ Chained Modification kế thừa mã nguồn script cũ theo chuẩn Google Custom Agents & Managed Environment
      */
-    static async runDynamicScript({ prompt, context, action = 'create_script' }) {
+    static async runDynamicScript({ prompt, context, action = 'create_script', onProgress = null }) {
         const { client, guild, channel, user, message } = context;
         const candidates = await geminiModelService.getCandidateModels('flash', 'agent');
+
+        onProgress?.({ stage: 'thinking', text: '💭 Dolia đang phân tích yêu cầu và chuẩn bị kịch bản...' });
 
         // Lấy thông tin Agent Session đã lưu trong MongoDB cho user và channel này
         let agentSession = null;
@@ -718,6 +758,7 @@ export class SelfDevService {
         let promptContent = `Kiểm tra dữ liệu Discord theo [CHẾ ĐỘ 1: INSPECT SCRIPT]: ${prompt}`;
         if (isModify && lastScript && lastScript.code) {
             Logger.info(`[SelfDev] 🔄 Kích hoạt Chained Script Modification cho kênh #${channel?.name || channel?.id}: Kế thừa script trước đó (${lastScript.name || 'last_script.js'})...`);
+            onProgress?.({ stage: 'thinking', text: '🔄 Dolia đang kế thừa mã nguồn từ phiên trước và chuẩn bị các chỉnh sửa mới...' });
             promptContent = `[CHẾ ĐỘ 1: MODIFY SCRIPT - KẾ THỪA MÃ NGUỒN CŨ TRONG WORKSPACE]:\nBạn đang tiếp tục phiên làm việc trong môi trường (workspace) của kênh này.\n\n[MÃ NGUỒN CŨ ĐÃ HOẠT ĐỘNG THÀNH CÔNG TRƯỚC ĐÓ]:\n\`\`\`javascript\n${lastScript.code}\n\`\`\`\n\n[YÊU CẦU SỬA ĐỔI TỪ NGƯỜI DÙNG]:\n"${prompt}"\n\n[NGUYÊN TẮC BẮT BUỘC]:\n1. Sửa trực tiếp trên mã nguồn cũ, kế thừa 100% bố cục, màu sắc, font chữ, animation timeline và các hiệu ứng đã có.\n2. CHỈ thay đổi hoặc loại bỏ đúng các chi tiết mà người dùng yêu cầu (ví dụ: chỉ giữ lại avatar của người dùng, bỏ avatar khác).\n3. Trả về mã nguồn hoàn chỉnh đã sửa, hàm run() luôn trả về trường 'reply' theo đúng phong cách Dolia.`;
         }
 
@@ -729,6 +770,7 @@ export class SelfDevService {
             if (geminiModelService.isAgentBlocked(modelId)) continue;
             try {
                 Logger.info(`[SelfDev] 🧠 Đang gọi model (${modelId}) sinh script kiểm tra ngầm cho: "${prompt}"...`);
+                onProgress?.({ stage: 'coding', text: `✍️ Dolia đang sinh mã lệnh tối ưu với model ${modelId}...` });
                 const rawOutput = await ApiKeyManager.execute(modelId, async (apiKey) => {
                     const ai = ApiKeyManager.getClient(apiKey);
                     const response = await ai.models.generateContent({
@@ -760,6 +802,7 @@ export class SelfDevService {
                 lastError = modelErr;
                 geminiModelService.reportModelFailure(modelId, modelErr.message, 5 * 60 * 1000);
                 Logger.warn(`[SelfDev] ⚠️ Model ${modelId} gặp sự cố khi sinh script: ${modelErr.message}. Tự động chuyển model tiếp theo...`);
+                onProgress?.({ stage: 'coding', text: `🔄 Model ${modelId} bận, đang tự động đổi sang model tiếp theo...` });
             }
         }
 
@@ -775,6 +818,7 @@ export class SelfDevService {
 
         try {
             // Tự động phát hiện và cài đặt an toàn các thư viện npm mới nếu script yêu cầu
+            onProgress?.({ stage: 'packages', text: '📦 Dolia đang kiểm tra và chuẩn bị thư viện/tài nguyên cần thiết...' });
             await PackageInstaller.ensureDependencies(scriptCode);
 
             // Ghi file vào sandbox/scripts/
@@ -799,6 +843,7 @@ export class SelfDevService {
             }
 
             Logger.info(`[SelfDev] 🚀 Bắt đầu thực thi script kiểm tra ngầm (${path.basename(scriptPath)})...`);
+            onProgress?.({ stage: 'executing', text: '🚀 Đang thực thi mã lệnh và kết xuất dữ liệu trong sandbox... 🎬' });
 
             // Timeout guard 180s (3 phút) để tránh script bị treo vô hạn mà vẫn đáp ứng tác vụ nặng (render đồ họa / video)
             let scriptTimer;
@@ -816,6 +861,7 @@ export class SelfDevService {
             if (scriptTimer) clearTimeout(scriptTimer);
 
             Logger.info(`[SelfDev] ✅ Script kiểm tra ngầm trong sandbox trả về:`, dataResult);
+            onProgress?.({ stage: 'completed', text: '✨ Đã thực thi xong! Đang kiểm tra và chuẩn bị kết quả gửi đến bạn...' });
 
             // Cập nhật lastScript vào Agent Session của Channel trong MongoDB để phục vụ Modify ở lượt sau
             if (user?.id && channel?.id && scriptCode) {
