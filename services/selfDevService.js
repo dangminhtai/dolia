@@ -797,33 +797,69 @@ export class SelfDevService {
                         const parsed = JSON.parse(rawOutput);
                         scriptCode = parsed.code || parsed.content || null;
                     } catch (_) {
-                        const match = rawOutput.match(/```(?:javascript|js)?([\s\S]*?)```/);
-                        if (match) {
-                            scriptCode = match[1].trim();
+                        const jsMatch = rawOutput.match(/```(?:javascript|js)\b\s*([\s\S]*?)\s*```/i);
+                        if (jsMatch) {
+                            scriptCode = jsMatch[1].trim();
                         } else {
-                            const matchCode = rawOutput.match(/"code"\s*:\s*"([\s\S]*)"\s*\}?\s*$/);
-                            if (matchCode) {
+                            const blockMatch = rawOutput.match(/```(?:[a-zA-Z0-9_-]+)?\s*([\s\S]*?)\s*```/);
+                            const blockContent = blockMatch ? blockMatch[1].trim() : rawOutput.trim();
+                            try {
+                                const p = JSON.parse(blockContent);
+                                scriptCode = p.code || p.content || null;
+                            } catch (_) {
+                                const jsonMatch = blockContent.match(/\{[\s\S]*\}/);
+                                if (jsonMatch) {
+                                    try {
+                                        const p = JSON.parse(jsonMatch[0].trim());
+                                        scriptCode = p.code || p.content || null;
+                                    } catch (_) {}
+                                }
+                            }
+                        }
+                    }
+
+                    if (!scriptCode) {
+                        const matchCode = rawOutput.match(/"code"\s*:\s*"([\s\S]*?)"\s*(?:,\s*"|\}$)/);
+                        if (matchCode) {
+                            try {
+                                scriptCode = JSON.parse(`"${matchCode[1]}"`).trim();
+                            } catch (_) {
                                 scriptCode = matchCode[1]
                                     .replace(/\\n/g, '\n')
                                     .replace(/\\"/g, '"')
-                                    .replace(/\\\\/g, '\\');
+                                    .replace(/\\\\/g, '\\')
+                                    .trim();
                             }
                         }
                     }
 
                     // Loại bỏ markdown ticks nếu có lọt vào
                     if (scriptCode) {
-                        scriptCode = scriptCode.replace(/^```(?:javascript|js)?\n?/i, '').replace(/\n?```$/i, '').trim();
+                        scriptCode = scriptCode.replace(/^```(?:[a-zA-Z0-9_-]+)?\s*/i, '').replace(/\s*```$/i, '').trim();
                     }
 
                     // Kiểm tra an toàn: Tuyệt đối không để nguyên khối JSON ghi vào file .js
-                    if (scriptCode && scriptCode.startsWith('{') && scriptCode.includes('"code"')) {
-                        const matchCode = scriptCode.match(/"code"\s*:\s*"([\s\S]*)"\s*\}?\s*$/);
-                        if (matchCode) {
-                            scriptCode = matchCode[1]
-                                .replace(/\\n/g, '\n')
-                                .replace(/\\"/g, '"')
-                                .replace(/\\\\/g, '\\');
+                    if (scriptCode && (scriptCode.includes('"code"') || scriptCode.includes('"type"'))) {
+                        const firstBrace = scriptCode.indexOf('{');
+                        const lastBrace = scriptCode.lastIndexOf('}');
+                        if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+                            try {
+                                const p = JSON.parse(scriptCode.substring(firstBrace, lastBrace + 1));
+                                if (p.code) scriptCode = p.code.trim();
+                            } catch (_) {
+                                const matchCode = scriptCode.match(/"code"\s*:\s*"([\s\S]*?)"\s*(?:,\s*"|\}$)/);
+                                if (matchCode) {
+                                    try {
+                                        scriptCode = JSON.parse(`"${matchCode[1]}"`).trim();
+                                    } catch (_) {
+                                        scriptCode = matchCode[1]
+                                            .replace(/\\n/g, '\n')
+                                            .replace(/\\"/g, '"')
+                                            .replace(/\\\\/g, '\\')
+                                            .trim();
+                                    }
+                                }
+                            }
                         }
                     }
 
