@@ -4,6 +4,7 @@ import mongoose from 'mongoose';
 const commandSchema = new mongoose.Schema({
     name: { type: String, required: true, unique: true },
     dataJSON: { type: Object, required: true },
+    dataHash: { type: String, default: null },
     updatedAt: { type: Date, default: Date.now },
 });
 

@@ -2,20 +2,17 @@ import dotenv from 'dotenv';
 dotenv.config();
 import fs from 'fs';
 import path from 'path';
-import discord from 'discord.js';
-const { REST, Routes } = discord;
 import { pathToFileURL } from 'url';
-import { commandChanges } from './utils/compareCommands.js';
-import Command from './models/Command.js';
+import Logger from './class/Logger.js';
+import { autoDeployCommandsIfChanged } from './services/commandDeploymentService.js';
 
 /**
  * Quét đệ quy một thư mục lệnh và nạp vào danh sách
  */
 async function scanCommandDirectory(dir, client, isSandbox = false) {
     const commandsToDeploy = [];
-    let hasChanges = false;
 
-    if (!fs.existsSync(dir)) return { commands: commandsToDeploy, hasChanges };
+    if (!fs.existsSync(dir)) return commandsToDeploy;
 
     const files = fs.readdirSync(dir, { withFileTypes: true });
 
@@ -23,9 +20,8 @@ async function scanCommandDirectory(dir, client, isSandbox = false) {
         const fullPath = path.join(dir, file.name);
 
         if (file.isDirectory()) {
-            const subResult = await scanCommandDirectory(fullPath, client, isSandbox);
-            commandsToDeploy.push(...subResult.commands);
-            if (subResult.hasChanges) hasChanges = true;
+            const subCommands = await scanCommandDirectory(fullPath, client, isSandbox);
+            commandsToDeploy.push(...subCommands);
         } else if (file.isFile() && file.name.endsWith('.js')) {
             const modulePath = pathToFileURL(fullPath).href + `?t=${Date.now()}`;
             try {
@@ -38,18 +34,14 @@ async function scanCommandDirectory(dir, client, isSandbox = false) {
 
                     const cmdData = cmd.data.toJSON();
                     commandsToDeploy.push(cmdData);
-
-                    // So sánh xem lệnh này có thay đổi so với DB không
-                    const changed = await commandChanges(cmd);
-                    if (changed) hasChanges = true;
                 }
             } catch (err) {
-                console.error(`❌ Lỗi nạp lệnh từ ${file.name}:`, err.message);
+                Logger.error(`❌ Lỗi nạp lệnh từ ${file.name}:`, err.message);
             }
         }
     }
 
-    return { commands: commandsToDeploy, hasChanges };
+    return commandsToDeploy;
 }
 
 /**
@@ -59,105 +51,48 @@ async function scanCommandDirectory(dir, client, isSandbox = false) {
  */
 async function loadCommands(dir = null, client = null) {
     const commandsToDeploy = [];
-    let hasChanges = false;
 
     // 1. Thư mục mã nguồn gốc
     const primaryDir = dir || path.join(process.cwd(), 'commands');
-    const primaryResult = await scanCommandDirectory(primaryDir, client, false);
-    commandsToDeploy.push(...primaryResult.commands);
-    if (primaryResult.hasChanges) hasChanges = true;
+    const primaryCommands = await scanCommandDirectory(primaryDir, client, false);
+    commandsToDeploy.push(...primaryCommands);
 
     // 2. Thư mục mở rộng Sandbox (chứa các tính năng do Dolia tự sinh)
     const sandboxDir = path.join(process.cwd(), 'sandbox', 'slash');
     if (fs.existsSync(sandboxDir)) {
-        const sandboxResult = await scanCommandDirectory(sandboxDir, client, true);
-        commandsToDeploy.push(...sandboxResult.commands);
-        if (sandboxResult.hasChanges) hasChanges = true;
+        const sandboxCommands = await scanCommandDirectory(sandboxDir, client, true);
+        commandsToDeploy.push(...sandboxCommands);
     }
 
-    return { commands: commandsToDeploy, hasChanges };
+    return { commands: commandsToDeploy };
 }
 
+/**
+ * Deploy commands lên Discord API thông qua commandDeploymentService (SHA-256 hash detection chuẩn Furina)
+ *
+ * @param {Array|Object} loadResult - Danh sách command JSON hoặc object { commands }
+ * @param {boolean} forceDeploy - Bắt buộc deploy bất kể có thay đổi hay không
+ */
 async function deployCommands(loadResult, forceDeploy = false) {
-    let { commands, hasChanges } = loadResult;
+    const commands = Array.isArray(loadResult) ? loadResult : (loadResult?.commands || []);
 
-    if (commands.length === 0) return;
-
-    // 1. Kiểm tra xem có lệnh nào trong DB bị xóa khỏi mã nguồn không
-    try {
-        const currentNames = new Set(commands.map(c => c.name));
-
-        // Quét các file .js trên ổ đĩa để bảo vệ lệnh đang bị lỗi nạp tạm thời, không xóa nhầm khỏi DB
-        const diskFileNames = new Set();
-        const dirsToScan = [
-            path.join(process.cwd(), 'commands'),
-            path.join(process.cwd(), 'sandbox', 'slash')
-        ];
-        for (const dir of dirsToScan) {
-            if (fs.existsSync(dir)) {
-                const scan = (d) => {
-                    for (const item of fs.readdirSync(d, { withFileTypes: true })) {
-                        const itemPath = path.join(d, item.name);
-                        if (item.isDirectory()) scan(itemPath);
-                        else if (item.isFile() && item.name.endsWith('.js')) {
-                            diskFileNames.add(item.name.replace(/\.js$/, ''));
-                        }
-                    }
-                };
-                scan(dir);
-            }
-        }
-
-        // Chỉ xóa lệnh trong DB nếu lệnh đó KHÔNG nạp được VÀ file mã nguồn cũng KHÔNG còn trên đĩa
-        const preservedNames = Array.from(new Set([...currentNames, ...diskFileNames]));
-        const deleted = await Command.deleteMany({ name: { $nin: preservedNames } });
-        if (deleted && deleted.deletedCount > 0) {
-            console.log(`🗑️ Removed ${deleted.deletedCount} deleted command(s) from database.`);
-            hasChanges = true;
-        }
-    } catch (error) {
-        console.error('Error cleaning deleted commands from database:', error);
+    if (commands.length === 0) {
+        Logger.warn('[Deploy] Không có lệnh nào được tìm thấy để deploy.');
+        return { deployed: false, reason: 'empty' };
     }
 
-    // 2. Kiểm tra lệch số lượng giữa DB và mã nguồn
-    try {
-        const dbCount = await Command.countDocuments();
-        if (dbCount !== commands.length) {
-            hasChanges = true;
+    // Lọc trùng tên command (lấy bản ghi cuối cùng)
+    const uniqueCommandsMap = new Map();
+    for (const cmd of commands) {
+        if (uniqueCommandsMap.has(cmd.name)) {
+            Logger.warn(`[Deploy] ⚠️ Trùng tên command: /${cmd.name} — chỉ lấy phiên bản cuối cùng.`);
         }
-    } catch (_) { }
-
-    if (!hasChanges && !forceDeploy) {
-        console.log('✅ No command changes detected. Skipping deployment.');
-        return;
+        uniqueCommandsMap.set(cmd.name, cmd);
     }
+    const uniqueCommands = Array.from(uniqueCommandsMap.values());
 
-    const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_TOKEN);
-
-    try {
-        console.log(`🚀 Deploying ${commands.length} commands to Discord REST API...`);
-        const data = await rest.put(
-            Routes.applicationCommands(process.env.CLIENT_ID),
-            { body: commands }
-        );
-        console.log(`✅ Successfully deployed ${data.length} command(s) to Discord.`);
-
-        // CHỈ LƯU VÀO DATABASE SAU KHI DISCORD API ĐÃ NHẬN LỆNH THÀNH CÔNG!
-        for (const cmd of commands) {
-            await Command.findOneAndUpdate(
-                { name: cmd.name },
-                {
-                    name: cmd.name,
-                    description: cmd.description,
-                    dataJSON: cmd
-                },
-                { upsert: true, new: true }
-            );
-        }
-    } catch (error) {
-        console.error('❌ Error during deployment:', error);
-        throw error;
-    }
+    // Tự động kiểm tra mã băm SHA-256 (dataHash) và chỉ deploy khi có thay đổi thực sự
+    return await autoDeployCommandsIfChanged(uniqueCommands, { forceDeploy });
 }
 
 export { loadCommands, deployCommands };
