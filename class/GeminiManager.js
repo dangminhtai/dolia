@@ -46,15 +46,18 @@ class GeminiManager {
         const userId = message.author.id;
         const channelId = message.channel.id;
         const guildId = message.guild?.id;
+        const displayName = message.member?.displayName || message.author.globalName || message.author.username || 'User';
 
-        // 1. Get Session & History
-        const chatSession = await ChatHelper.getChatSession(userId, channelId);
+        // 1. Get Session & History (Ngữ cảnh phòng chat nhóm chung - Multi-participant Channel Session theo chuẩn Google AI Studio)
+        const chatSession = await ChatHelper.getChatSession(channelId, userId);
         const baseHistory = await ChatHelper.getHistory(userId, chatSession);
 
-        // 2. Add Current User Message
+        // 2. Add Current User Message with Speaker Prefix ([DisplayName]: content)
         const userTurn = {
             role: 'user',
-            parts: [{ text: message.cleanContent }]
+            parts: [{ text: `[${displayName}]: ${message.cleanContent}` }],
+            authorId: userId,
+            authorName: displayName
         };
 
         // 3. Prepare Music Data for Context
@@ -360,7 +363,7 @@ ${topSongsStr || "- Chưa có bài nào nổi bật"}
 
                 // 4. Save new turns to DB
                 if (newTurns.length > 0) {
-                    await ChatHelper.saveInteraction(chatSession, newTurns);
+                    await ChatHelper.saveInteraction(chatSession, newTurns, { id: userId, name: displayName });
                 }
 
                 // Model phản hồi thành công -> gỡ cooldown nếu có và return

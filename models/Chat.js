@@ -11,11 +11,13 @@ const partSchema = new mongoose.Schema({
 const chatTurnSchema = new mongoose.Schema({
     role: { type: String, required: true, enum: ['user', 'model'] },
     parts: [partSchema],
+    authorId: { type: String, default: null },
+    authorName: { type: String, default: null },
     createdAt: { type: Date, default: Date.now }
 }, { _id: false });
 
 const chatSchema = new mongoose.Schema({
-    userId: { type: String, required: true },
+    userId: { type: String, default: 'channel_shared' },
     channelId: { type: String, required: true },
     turns: [chatTurnSchema],
     agentSession: {
@@ -32,6 +34,7 @@ const chatSchema = new mongoose.Schema({
     }
 });
 
+chatSchema.index({ channelId: 1 });
 chatSchema.index({ userId: 1, channelId: 1 });
 
 export default mongoose.model("Chat", chatSchema);

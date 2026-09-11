@@ -1,11 +1,18 @@
 import Chat from '../models/Chat.js';
 import User from '../models/User.js';
 
-export async function getChatSession(userId, channelId) {
+export async function getChatSession(channelId, userId = null) {
     try {
-        let chatSession = await Chat.findOne({ userId, channelId });
+        // 1. Tìm session chung của channel (ưu tiên channel_shared, sau đó đến session bất kỳ của channel)
+        let chatSession = await Chat.findOne({ channelId, userId: 'channel_shared' });
+        if (!chatSession && userId) {
+            chatSession = await Chat.findOne({ channelId, userId });
+        }
         if (!chatSession) {
-            chatSession = new Chat({ userId, channelId, turns: [] });
+            chatSession = await Chat.findOne({ channelId });
+        }
+        if (!chatSession) {
+            chatSession = new Chat({ userId: 'channel_shared', channelId, turns: [] });
         }
         return chatSession;
     } catch (error) {
@@ -16,27 +23,31 @@ export async function getChatSession(userId, channelId) {
 
 export async function getHistory(userId, chatSession) {
     try {
-        const user = await User.findOne({ userId });
-        const limit = user?.chatLimit || 20;
+        const user = userId ? await User.findOne({ userId }) : null;
+        const limit = user?.chatLimit || 25;
 
         if (!chatSession || !chatSession.turns || chatSession.turns.length === 0) return [];
 
         // 1. Get raw turns (Lấy dư ra một chút để có thể lọc bớt)
         const rawTurns = chatSession.turns.slice(-(limit + 6));
 
-        // 2. Map & Clean Data (FIX CRITICAL: p.toObject crash)
+        // 2. Map & Clean Data (Định dạng Speaker Prefix [DisplayName]: text chuẩn Google AI Studio)
         let history = rawTurns.map(turn => {
             if (!turn || !turn.parts) return null;
 
             const parts = turn.parts.map(p => {
-                // [FIX 1] Kiểm tra p có tồn tại không trước khi gọi toObject
                 if (!p) return null;
-
-                // [FIX 2] Handle Mongoose Document safely
                 const partData = (p && typeof p.toObject === 'function') ? p.toObject() : p;
 
                 const cleanPart = {};
-                if (partData.text) cleanPart.text = partData.text;
+                if (partData.text) {
+                    let text = partData.text;
+                    // Chuẩn hóa định danh người nói nếu chưa có prefix [Name]
+                    if (turn.role === 'user' && turn.authorName && !text.startsWith('[')) {
+                        text = `[${turn.authorName}]: ${text}`;
+                    }
+                    cleanPart.text = text;
+                }
                 if (partData.functionCall) cleanPart.functionCall = partData.functionCall;
                 if (partData.functionResponse) cleanPart.functionResponse = partData.functionResponse;
                 if (partData.thoughtSignature) cleanPart.thoughtSignature = partData.thoughtSignature;
@@ -54,9 +65,6 @@ export async function getHistory(userId, chatSession) {
         }).filter(t => t !== null);
 
         // 3. SANITIZE (FIX CRITICAL: Error 400 Dangling Function Call)
-        // Nếu turn cuối cùng là Model và chứa FunctionCall, nghĩa là nó bị "treo".
-        // Ta phải xóa nó đi vì turn tiếp theo sẽ là User Text (message mới).
-        // Quy tắc Gemini: Model(Call) bắt buộc phải đi kèm User(Response).
         if (history.length > 0) {
             const lastTurn = history[history.length - 1];
             const isModel = lastTurn.role === 'model';
@@ -69,7 +77,6 @@ export async function getHistory(userId, chatSession) {
         }
 
         // 4. Ensure starts with User (Clean context)
-        // [FIX CRITICAL] Nếu xóa Model đầu tiên, phải kiểm tra xem nó có để lại FunctionResponse mồ côi không.
         while (history.length > 0) {
             const firstTurn = history[0];
 
@@ -79,14 +86,11 @@ export async function getHistory(userId, chatSession) {
             }
 
             if (firstTurn.role === 'user') {
-                // Nếu User turn này là một FunctionResponse mồ côi (do Model Call vừa bị xóa hoặc bị slice mất) -> Xóa luôn.
                 const isOrphanResponse = firstTurn.parts.some(p => p.functionResponse);
                 if (isOrphanResponse) {
                     history.shift();
                     continue;
                 }
-
-                // Nếu là User text bình thường -> OK, dừng lại.
                 break;
             }
         }
@@ -94,11 +98,11 @@ export async function getHistory(userId, chatSession) {
         return history;
     } catch (error) {
         console.error('Error in getHistory (Fixed):', error);
-        return []; // Trả về mảng rỗng để reset context nếu lỗi quá nặng
+        return [];
     }
 }
 
-export async function saveInteraction(chatSession, newContents) {
+export async function saveInteraction(chatSession, newContents, authorInfo = null) {
     try {
         for (const content of newContents) {
             const dbParts = content.parts.map(p => {
@@ -109,22 +113,26 @@ export async function saveInteraction(chatSession, newContents) {
                 if (p.thoughtSignature) part.thoughtSignature = p.thoughtSignature;
                 if (p.thought !== undefined) part.thought = p.thought;
 
-                // Fallback for simple string parts
                 if (!part.text && !part.functionCall && !part.functionResponse && typeof p === 'string') {
                     part.text = p;
                 }
                 return part;
             });
 
+            const authorId = content.role === 'user' ? (content.authorId || authorInfo?.id || null) : null;
+            const authorName = content.role === 'user' ? (content.authorName || authorInfo?.name || null) : null;
+
             chatSession.turns.push({
                 role: content.role,
-                parts: dbParts
+                parts: dbParts,
+                authorId,
+                authorName
             });
         }
 
-        // Limit history size in DB
-        if (chatSession.turns.length > 50) {
-            chatSession.turns = chatSession.turns.slice(-50);
+        // Limit history size in DB (Lưu 60 lượt hội thoại gần nhất cho phòng chat nhóm)
+        if (chatSession.turns.length > 60) {
+            chatSession.turns = chatSession.turns.slice(-60);
         }
 
         await chatSession.save();
@@ -134,11 +142,12 @@ export async function saveInteraction(chatSession, newContents) {
 }
 
 /**
- * Lấy thông tin Agent Session (environmentId, lastInteractionId, lastScript) theo channel và user
+ * Lấy thông tin Agent Session (environmentId, lastInteractionId, lastScript) theo channel
  */
 export async function getAgentSession(userId, channelId) {
     try {
-        const session = await Chat.findOne({ userId, channelId }).select('agentSession');
+        const session = await Chat.findOne({ channelId, userId: 'channel_shared' }).select('agentSession')
+            || await Chat.findOne({ channelId }).select('agentSession');
         return session?.agentSession || null;
     } catch (error) {
         console.error('Error getting agent session:', error);
@@ -147,11 +156,11 @@ export async function getAgentSession(userId, channelId) {
 }
 
 /**
- * Cập nhật Agent Session (environmentId, lastInteractionId, lastScript, workspacePath)
+ * Cập nhật Agent Session (environmentId, lastInteractionId, lastScript, workspacePath) theo channel
  */
 export async function updateAgentSession(userId, channelId, updates = {}) {
     try {
-        const chatSession = await getChatSession(userId, channelId);
+        const chatSession = await getChatSession(channelId, userId);
         if (!chatSession.agentSession) {
             chatSession.agentSession = {};
         }
