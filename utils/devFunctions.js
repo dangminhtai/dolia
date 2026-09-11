@@ -139,7 +139,7 @@ export async function agent_code(args) {
                 prompt,
                 context: { client, guild, channel, user, message }
             });
-            return JSON.stringify(inspectionResult);
+            return typeof inspectionResult === 'string' ? inspectionResult : JSON.stringify(inspectionResult);
         } catch (err) {
             Logger.error('[DevFunctions] Lỗi chạy dynamic script:', err);
             return JSON.stringify({ error: err.message });

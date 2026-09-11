@@ -302,6 +302,28 @@ ${topSongsStr || "- Chưa có bài nào nổi bật"}
                         contents.push(functionResponseTurn);
                         newTurns.push(functionResponseTurn);
 
+                        // D. TỐI ƯU HÓA 2-REQUEST: Bỏ qua Request 3 nếu Agent đã thực thi xong và có phản hồi Persona hoàn chỉnh
+                        const hasAgentCall = responseParts.some(p => p.functionCall?.name === 'agent_code');
+                        if (hasAgentCall && lastToolResult) {
+                            let agentReplyText = null;
+                            if (typeof lastToolResult === 'string') {
+                                try {
+                                    const parsed = JSON.parse(lastToolResult);
+                                    agentReplyText = parsed.reply || parsed.message || parsed.description || parsed.summary || parsed.status || null;
+                                } catch (_) {
+                                    agentReplyText = lastToolResult;
+                                }
+                            } else if (typeof lastToolResult === 'object') {
+                                agentReplyText = lastToolResult.reply || lastToolResult.message || lastToolResult.description || lastToolResult.summary || lastToolResult.status || null;
+                            }
+
+                            if (agentReplyText && typeof agentReplyText === 'string' && agentReplyText.trim()) {
+                                this.logger.info(`[GeminiManager] ⚡ Tối ưu 2-Request: Trả về trực tiếp phản hồi từ Agent (bỏ qua Request 3).`);
+                                finalResponseText = agentReplyText;
+                                break;
+                            }
+                        }
+
                     } else {
                         // No function call -> Final Text Response
                         finalResponseText = textParts || response.text || "";
