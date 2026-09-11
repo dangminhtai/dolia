@@ -1,10 +1,4 @@
 {
-  "animal": {
-    "network_error": "🥺 Mạng của Admin bị hiccup rồi... Chờ Admin bật 4G giúp mình nha!",
-    "image_error": "💦 Ui... mình lấy ảnh không được rồi.",
-    "generic_error": "🥺 Có lỗi mất rồi... thử lại sau nha!",
-    "footer": "💖 Bạn {{username}} yêu cầu nè"
-  },
   "lyrics": {
     "modal_title": "🎵 Tìm lời bài hát",
     "input_label": "Nhập tên bài hoặc một đoạn lời nha",

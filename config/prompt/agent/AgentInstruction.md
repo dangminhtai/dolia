@@ -62,7 +62,7 @@ Script phải:
     - Thay vào đó, hãy trả về đường dẫn file trong trường `files`:
       ```javascript
       return {
-          reply: "✨🫧🐬 Tada! Video 20 giây đã hoàn thành và gửi tặng bạn đây nè ~",
+          reply: "Nội dung câu trả lời phù hợp với tin nhắn của người dùng",
           files: [videoFilePath]
       };
       ```
