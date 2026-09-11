@@ -152,7 +152,7 @@ export class SelfDevService {
 
             // Ưu tiên 2: Fallback chế độ sinh mã nội bộ nếu Antigravity Cloud chưa trả về dữ liệu
             if (!generatedData) {
-                const codingModelId = await geminiModelService.getActiveModel('flash-lite');
+                const codingModelId = await geminiModelService.getActiveModel('flash-lite', 'agent');
 
                 while (attempt < MAX_RETRIES) {
                     attempt++;
@@ -353,7 +353,7 @@ export class SelfDevService {
      * Gọi Gemini Coding Model từ Database (Ưu tiên Flash-Lite trước rồi đến Flash)
      */
     static async callGeminiCodingModel(userPrompt, suggestedName, preferredModelId = null, errorFeedback = null, previousCode = null) {
-        const candidates = await geminiModelService.getCandidateModels('flash-lite');
+        const candidates = await geminiModelService.getCandidateModels('flash-lite', 'agent');
         if (preferredModelId && !candidates.includes(preferredModelId)) {
             candidates.unshift(preferredModelId);
         }
@@ -361,6 +361,7 @@ export class SelfDevService {
         let lastError = null;
 
         for (const modelId of candidates) {
+            if (geminiModelService.isAgentBlocked(modelId)) continue;
             try {
                 Logger.info(`[SelfDev] 🧠 Đang gọi Gemini Coding Model (${modelId}) cho tính năng: "${suggestedName}"...`);
 
@@ -648,7 +649,7 @@ export class SelfDevService {
      */
     static async runDynamicScript({ prompt, context }) {
         const { client, guild, channel, user, message } = context;
-        const candidates = await geminiModelService.getCandidateModels('flash');
+        const candidates = await geminiModelService.getCandidateModels('flash', 'agent');
 
         // Nạp prompt chỉ thị từ config/prompt/agent/AgentInstruction.md
         const systemInstruction = loadAgentPrompt('AgentInstruction.md', {
@@ -660,6 +661,7 @@ export class SelfDevService {
         let lastError = null;
 
         for (const modelId of candidates) {
+            if (geminiModelService.isAgentBlocked(modelId)) continue;
             try {
                 Logger.info(`[SelfDev] 🧠 Đang gọi model (${modelId}) sinh script kiểm tra ngầm cho: "${prompt}"...`);
                 const rawOutput = await ApiKeyManager.execute(modelId, async (apiKey) => {

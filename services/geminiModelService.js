@@ -17,7 +17,8 @@ class GeminiModelService {
         this.syncInterval = null;
         this.isSyncing = false;
         // In-memory mirror of DB blocks (sync mỗi 30s hoặc on-demand)
-        this.blockCache = new Map(); // modelId -> { until: Date, reason: string }
+        this.blockCache = new Map(); // modelId -> { until: Date, reason: string } (chat / transient)
+        this.agentBlockCache = new Map(); // modelId -> { until: Date, reason: string } (agent pipeline)
         this.lastBlockSync = 0;
         this.blockSyncInterval = 30 * 1000; // 30s
     }
@@ -30,11 +31,17 @@ class GeminiModelService {
             const now = new Date();
             const blockedModels = await GeminiModel.find({
                 isActive: true,
-                blockedUntil: { $ne: null }
-            }).select('modelId blockedUntil blockReason').lean();
+                $or: [
+                    { blockedUntil: { $ne: null } },
+                    { agentBlockedUntil: { $ne: null } }
+                ]
+            }).select('modelId blockedUntil blockReason agentBlockedUntil agentBlockReason').lean();
 
             this.blockCache.clear();
+            this.agentBlockCache.clear();
+
             for (const m of blockedModels) {
+                // 1. Transient Chat Block
                 if (m.blockedUntil && m.blockedUntil > now) {
                     this.blockCache.set(m.modelId, {
                         until: m.blockedUntil,
@@ -47,6 +54,19 @@ class GeminiModelService {
                         { $set: { blockedUntil: null, blockReason: null } }
                     ).exec().catch(e => Logger.warn(`[GeminiModelService] Failed to auto-clear expired block: ${e.message}`));
                 }
+
+                // 2. Agent Specific Block (Antigravity & SelfDev)
+                if (m.agentBlockedUntil && m.agentBlockedUntil > now) {
+                    this.agentBlockCache.set(m.modelId, {
+                        until: m.agentBlockedUntil,
+                        reason: m.agentBlockReason || 'MANUAL_BLOCK'
+                    });
+                } else if (m.agentBlockedUntil && m.agentBlockedUntil <= now) {
+                    GeminiModel.updateOne(
+                        { modelId: m.modelId },
+                        { $set: { agentBlockedUntil: null, agentBlockReason: null } }
+                    ).exec().catch(e => Logger.warn(`[GeminiModelService] Failed to auto-clear expired agent block: ${e.message}`));
+                }
             }
 
             this.lastBlockSync = Date.now();
@@ -56,8 +76,66 @@ class GeminiModelService {
     }
 
     /**
-     * Báo cáo model bị lỗi (vd 503 overloaded) → persistent block trong MongoDB
-     * Default block 503: 60 phút (theo yêu cầu user "block 1 tiếng")
+     * Block model RIÊNG CHO AGENT (Antigravity & SelfDev)
+     * KHÔNG ẢNH HƯỞNG đến chat bình thường của Dolia!
+     */
+    async blockAgentModel(modelId, reason = 'MANUAL_BLOCK', cooldownMs = 24 * 60 * 60 * 1000) {
+        if (!modelId) return;
+        const until = new Date(Date.now() + cooldownMs);
+
+        // 1. Cập nhật cache agent ngay lập tức
+        this.agentBlockCache.set(modelId, { until, reason });
+
+        // 2. Xóa model cache để force query lại
+        this.cachedModels = {};
+
+        // 3. Persist vào MongoDB
+        await GeminiModel.updateOne(
+            { modelId },
+            { $set: { agentBlockedUntil: until, agentBlockReason: reason } }
+        ).exec().catch(e => Logger.warn(`[GeminiModelService] Failed to persist agent block: ${e.message}`));
+
+        Logger.warn(`[GeminiModelService] 🚫 [AGENT ONLY] Blocked ${modelId} for ${Math.round(cooldownMs / 1000)}s (${reason})`);
+    }
+
+    /**
+     * Unblock model cho AGENT
+     */
+    async unblockAgentModel(modelId) {
+        if (!modelId) return;
+        this.agentBlockCache.delete(modelId);
+        this.cachedModels = {};
+
+        await GeminiModel.updateOne(
+            { modelId },
+            { $set: { agentBlockedUntil: null, agentBlockReason: null } }
+        ).exec().catch(e => Logger.warn(`[GeminiModelService] Failed to clear agent block: ${e.message}`));
+
+        Logger.info(`[GeminiModelService] 🟢 [AGENT ONLY] Unblocked ${modelId}`);
+    }
+
+    /**
+     * Kiểm tra model có đang bị block cho AGENT không
+     */
+    isAgentBlocked(modelId) {
+        const cached = this.agentBlockCache.get(modelId);
+        if (!cached) return false;
+
+        const now = new Date();
+        if (now >= cached.until) {
+            this.agentBlockCache.delete(modelId);
+            GeminiModel.updateOne(
+                { modelId },
+                { $set: { agentBlockedUntil: null, agentBlockReason: null } }
+            ).exec().catch(() => {});
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * Báo cáo model bị lỗi trong chat thường (vd 503 overloaded) → persistent block trong MongoDB
+     * Default block 503: 60 phút
      */
     async reportModelFailure(modelId, reason = 'error', cooldownMs = 60 * 60 * 1000) {
         if (!modelId) return;
@@ -79,7 +157,8 @@ class GeminiModelService {
     }
 
     /**
-     * Báo cáo model hoạt động tốt → clear block trong DB + cache
+     * Báo cáo model hoạt động tốt trong chat thường → clear block trong DB + cache
+     * CHÚ Ý: KHÔNG clear agentBlockedUntil!
      */
     reportModelSuccess(modelId) {
         if (!modelId) return;
@@ -94,7 +173,7 @@ class GeminiModelService {
     }
 
     /**
-     * Kiểm tra model có đang bị block không (từ in-memory cache, sync DB nếu cần)
+     * Kiểm tra model có đang bị block chat thường không
      */
     isModelInCooldown(modelId) {
         const cached = this.blockCache.get(modelId);
@@ -120,9 +199,10 @@ class GeminiModelService {
      * - primary models (đang block, nhưng sắp hết)
      * - secondary models (đang block)
      * @param {'flash' | 'flash-lite'} preferType
+     * @param {'chat' | 'agent'} scope - Phạm vi: 'chat' (bình thường, không bị block bởi /block-agent) hoặc 'agent' (Antigravity/SelfDev)
      * @returns {Promise<string[]>}
      */
-    async getCandidateModels(preferType = 'flash-lite') {
+    async getCandidateModels(preferType = 'flash-lite', scope = 'chat') {
         // Sync block cache nếu quá hạn
         if (Date.now() - this.lastBlockSync > this.blockSyncInterval) {
             await this.syncBlockCache();
@@ -134,14 +214,27 @@ class GeminiModelService {
         try {
             const now = new Date();
 
+            // Nếu scope là agent: chỉ lọc theo agentBlockedUntil
+            // Nếu scope là chat: chỉ lọc theo blockedUntil (hoàn toàn bỏ qua agentBlockedUntil!)
+            const blockCondition = scope === 'agent'
+                ? {
+                    $or: [
+                        { agentBlockedUntil: null },
+                        { agentBlockedUntil: { $lte: now } }
+                    ]
+                }
+                : {
+                    $or: [
+                        { blockedUntil: null },
+                        { blockedUntil: { $lte: now } }
+                    ]
+                };
+
             // Query tất cả model active, ưu tiên model không bị block
             const primaryList = await GeminiModel.find({
                 isActive: true,
                 type: primaryType,
-                $or: [
-                    { blockedUntil: null },
-                    { blockedUntil: { $lte: now } }
-                ]
+                ...blockCondition
             })
                 .sort({ versionMajor: -1, versionMinor: -1, versionPatch: -1 })
                 .select('modelId')
@@ -150,31 +243,29 @@ class GeminiModelService {
             const secondaryList = await GeminiModel.find({
                 isActive: true,
                 type: secondaryType,
-                $or: [
-                    { blockedUntil: null },
-                    { blockedUntil: { $lte: now } }
-                ]
+                ...blockCondition
             })
                 .sort({ versionMajor: -1, versionMinor: -1, versionPatch: -1 })
                 .select('modelId')
                 .lean();
 
-            // Fallback: model đang bị block (nếu không còn model healthy)
+            // Fallback: model đang bị block (chỉ dùng nếu tất cả model đều bị block)
+            const fallbackBlockField = scope === 'agent' ? 'agentBlockedUntil' : 'blockedUntil';
             const blockedPrimary = await GeminiModel.find({
                 isActive: true,
                 type: primaryType,
-                blockedUntil: { $gt: now }
+                [fallbackBlockField]: { $gt: now }
             })
-                .sort({ blockedUntil: 1 }) // Sắp xếp theo thời gian hết block sớm nhất
+                .sort({ [fallbackBlockField]: 1 }) // Sắp xếp theo thời gian hết block sớm nhất
                 .select('modelId')
                 .lean();
 
             const blockedSecondary = await GeminiModel.find({
                 isActive: true,
                 type: secondaryType,
-                blockedUntil: { $gt: now }
+                [fallbackBlockField]: { $gt: now }
             })
-                .sort({ blockedUntil: 1 })
+                .sort({ [fallbackBlockField]: 1 })
                 .select('modelId')
                 .lean();
 
@@ -289,23 +380,26 @@ class GeminiModelService {
      * - Nếu preferType === 'flash': Ưu tiên flash cao nhất (khả dụng) -> fallback flash-lite cao nhất
      * - Nếu preferType === 'flash-lite': Ưu tiên flash-lite cao nhất (khả dụng) -> fallback flash cao nhất
      * @param {'flash' | 'flash-lite'} preferType
+     * @param {'chat' | 'agent'} scope - Phạm vi: 'chat' (mặc định) hoặc 'agent'
      * @returns {Promise<string>}
      */
-    async getActiveModel(preferType = 'flash-lite') {
+    async getActiveModel(preferType = 'flash-lite', scope = 'chat') {
+        const cacheKey = `${preferType}_${scope}`;
         const now = Date.now();
         if (!this.cachedModels) this.cachedModels = {};
-        if (this.cachedModels[preferType] && (now - (this.lastCacheTime || 0) < this.cacheTTL)) {
-            // Kiểm tra xem model trong cache có đang bị block không
-            if (!this.isModelInCooldown(this.cachedModels[preferType])) {
-                return this.cachedModels[preferType];
+        if (this.cachedModels[cacheKey] && (now - (this.lastCacheTime || 0) < this.cacheTTL)) {
+            const cached = this.cachedModels[cacheKey];
+            const isBlocked = scope === 'agent' ? this.isAgentBlocked(cached) : this.isModelInCooldown(cached);
+            if (!isBlocked) {
+                return cached;
             }
         }
 
-        const candidates = await this.getCandidateModels(preferType);
+        const candidates = await this.getCandidateModels(preferType, scope);
         if (candidates && candidates.length > 0) {
-            // Chọn model đầu tiên không bị block
-            const best = candidates.find(m => !this.isModelInCooldown(m)) || candidates[0];
-            this.cachedModels[preferType] = best;
+            // Chọn model đầu tiên không bị block trong scope tương ứng
+            const best = candidates.find(m => scope === 'agent' ? !this.isAgentBlocked(m) : !this.isModelInCooldown(m)) || candidates[0];
+            this.cachedModels[cacheKey] = best;
             this.lastCacheTime = now;
             return best;
         }
@@ -314,18 +408,26 @@ class GeminiModelService {
     }
 
     /**
-
      * Khởi tạo service khi bot bật
      */
     async init() {
         // Boot-time recovery: load trạng thái block từ DB
         await this.syncBlockCache();
-        const blockedCount = this.blockCache.size;
-        if (blockedCount > 0) {
+        const chatBlockedCount = this.blockCache.size;
+        const agentBlockedCount = this.agentBlockCache.size;
+
+        if (chatBlockedCount > 0) {
             const blockedList = [...this.blockCache.entries()]
                 .map(([id, b]) => `${id} (${b.reason}, hết: ${b.until.toLocaleTimeString()})`)
                 .join(', ');
-            Logger.warn(`[GeminiModelService] 🔒 Boot recovery: ${blockedCount} model(s) đang bị block: ${blockedList}`);
+            Logger.warn(`[GeminiModelService] 🔒 Boot recovery (Chat): ${chatBlockedCount} model(s) đang cooldown: ${blockedList}`);
+        }
+
+        if (agentBlockedCount > 0) {
+            const blockedList = [...this.agentBlockCache.entries()]
+                .map(([id, b]) => `${id} (${b.reason}, hết: ${b.until.toLocaleTimeString()})`)
+                .join(', ');
+            Logger.warn(`[GeminiModelService] 🚫 Boot recovery [AGENT ONLY]: ${agentBlockedCount} model(s) đang bị block: ${blockedList}`);
         }
 
         // Đồng bộ ngay khi khởi động

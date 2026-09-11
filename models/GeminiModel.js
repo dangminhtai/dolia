@@ -45,6 +45,15 @@ const GeminiModelSchema = new mongoose.Schema({
         type: String,
         default: null
     },
+    // Block riêng cho Agent pipeline (Antigravity & SelfDev), không ảnh hưởng chat thường
+    agentBlockedUntil: {
+        type: Date,
+        default: null
+    },
+    agentBlockReason: {
+        type: String,
+        default: null
+    },
     lastSyncedAt: { 
         type: Date, 
         default: Date.now 

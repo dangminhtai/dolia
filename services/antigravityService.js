@@ -21,7 +21,7 @@ export class AntigravityService {
             .substring(0, 32);
 
         // Ưu tiên flash-lite cho Antigravity Cloud: nhanh hơn, quota rộng hơn, giữ render Discord mượt
-        const activeModel = await geminiModelService.getActiveModel('flash-lite');
+        const activeModel = await geminiModelService.getActiveModel('flash-lite', 'agent');
         Logger.info(`[Antigravity] 🚀 Khởi chạy Antigravity Agent (Cloud Sandbox) với model: ${activeModel}...`);
 
         // Đọc prompt tùy biến từ config/prompt/agent/AgentInstruction.md
