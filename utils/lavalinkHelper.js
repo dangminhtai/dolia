@@ -1,3 +1,4 @@
+import { t as tr } from '../services/i18nService.js';
 import User from '../models/User.js';
 import Logger from '../class/Logger.js';
 
@@ -10,10 +11,10 @@ export const LoadType = {
 };
 
 export const PROVIDER_NAMES = {
-    'ytsearch': 'YouTube',
-    'ytmsearch': 'YouTube Music',
-    'scsearch': 'SoundCloud',
-    'spsearch': 'Spotify'
+    'ytsearch': tr('messages.providers.ytsearch'),
+    'ytmsearch': tr('messages.providers.ytmsearch'),
+    'scsearch': tr('messages.providers.scsearch'),
+    'spsearch': tr('messages.providers.spsearch')
 };
 
 export const VALID_PROVIDERS = Object.keys(PROVIDER_NAMES);
@@ -79,7 +80,7 @@ export async function getUserMusicSource(userId, defaultSource = 'ytsearch') {
             return userConfig.musicProvider;
         }
     } catch (e) {
-        console.error('Lỗi khi đọc musicProvider của user:', e.message);
+        console.error(tr('logs.lavalinkhelper.error_loi_khi_doc_musicprovider_cua_user'), e.message);
     }
     return defaultSource;
 }
@@ -94,25 +95,25 @@ export async function getUserMusicSource(userId, defaultSource = 'ytsearch') {
  * @param {Object} [options.requester] Requester object để gắn vào track
  * @returns {Promise<{res: Object, source: string|null, providerName: string}>}
  */
-export async function resolveWithProvider({ poru, query, userId, userTag = 'Unknown', requester }) {
+export async function resolveWithProvider({ poru, query, userId, userTag = tr('messages.lavalinkhelper.text_unknown'), requester }) {
     const isUrl = /^https?:\/\//.test(query);
     const source = isUrl ? null : await getUserMusicSource(userId);
-    const providerName = isUrl ? 'Link trực tiếp (URL)' : (PROVIDER_NAMES[source] || source);
+    const providerName = isUrl ? tr('messages.lavalinkhelper.text_link_truc_tiep_url') : (PROVIDER_NAMES[source] || source);
 
-    Logger.info(`[Music] 🔍 Tìm kiếm: "${query}" | User: ${userTag} | Provider: ${providerName} (${source || 'direct'})`);
+    Logger.info(tr('logs.lavalinkhelper.info_music_tim_kiem_user_provider', { query: query, userTag: userTag, providerName: providerName, value: source || 'direct' }));
 
     const res = await poru.resolve({ query, source, requester });
 
     const trackCount = res?.tracks?.length || 0;
     if (!res || isFailed(res?.loadType)) {
-        Logger.warn(`[Music] ❌ Thất bại: loadType="${res?.loadType}" | Nguồn: [${providerName}]`);
+        Logger.warn(tr('logs.lavalinkhelper.warn_music_that_bai_loadtype_nguon', { loadType: res?.loadType, providerName: providerName }));
     } else if (isEmpty(res?.loadType, res?.tracks)) {
-        Logger.warn(`[Music] ⚠️ Rỗng: Không tìm thấy bài nào từ [${providerName}] | Query: "${query}"`);
+        Logger.warn(tr('logs.lavalinkhelper.warn_music_rong_khong_tim_thay_bai_nao', { providerName: providerName, query: query }));
     } else {
         const firstTrack = res.tracks[0];
-        const firstTitle = firstTrack?.info?.title || 'Unknown';
+        const firstTitle = firstTrack?.info?.title || tr('messages.lavalinkhelper.text_unknown');
         const sourceName = firstTrack?.info?.sourceName || source || 'unknown';
-        Logger.success(`[Music] ✨ Thành công: [${res.loadType}] tìm thấy ${trackCount} bài | Bài đầu: "${firstTitle}" [Nguồn: ${sourceName}]`);
+        Logger.success(tr('logs.lavalinkhelper.success_music_thanh_cong_tim_thay_bai_bai', { loadType: res.loadType, trackCount: trackCount, firstTitle: firstTitle, sourceName: sourceName }));
     }
 
     return { res, source, providerName };

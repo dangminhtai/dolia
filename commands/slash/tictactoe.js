@@ -1,3 +1,4 @@
+import { t as tr } from '../../services/i18nService.js';
 // commands/slash/tictactoe.js
 import { SlashCommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ComponentType, ApplicationIntegrationType, InteractionContextType } from 'discord.js';
 import { t } from '../../services/i18nService.js';
@@ -5,12 +6,12 @@ import { t } from '../../services/i18nService.js';
 export default {
     data: new SlashCommandBuilder()
         .setName('tictactoe')
-        .setDescription('Chơi Tic-Tac-Toe cùng nhau')
+        .setDescription(tr('commands.tictactoe.setdescription_choi_tic_tac_toe_cung_nhau'))
         .setIntegrationTypes(ApplicationIntegrationType.GuildInstall, ApplicationIntegrationType.UserInstall)
         .setContexts(InteractionContextType.Guild, InteractionContextType.BotDM, InteractionContextType.PrivateChannel)
         .addUserOption(option =>
             option.setName('opponent')
-                .setDescription('Chọn bạn để chơi cùng')
+                .setDescription(tr('commands.tictactoe.setdescription_chon_ban_de_choi_cung'))
                 .setRequired(false)
         ),
 
@@ -38,7 +39,7 @@ export default {
 
                     // --- SỬA LỖI Ở ĐÂY ---
                     // Sử dụng \u200b (Zero Width Space) thay vì khoảng trắng thường
-                    let label = val ? val : '\u200b';
+                    let label = val ? val : tr('commands.tictactoe.empty_cell_label');
                     let style = ButtonStyle.Secondary;
 
                     if (val === 'X') {
@@ -231,7 +232,7 @@ export default {
                 return false;
             }
         } catch (err) {
-            console.error('[tictactoe]', err);
+            console.error(tr('logs.tictactoe.error_tictactoe'), err);
             try {
                 if (!interaction.replied && !interaction.deferred) {
                     await interaction.reply({ content: t('games.tictactoe.error'), ephemeral: true }).catch(() => {});

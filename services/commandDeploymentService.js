@@ -1,3 +1,4 @@
+import { t as tr } from './i18nService.js';
 import crypto from 'crypto';
 import discord from 'discord.js';
 const { REST, Routes } = discord;
@@ -126,17 +127,17 @@ export async function putDiscordCommands(commands, env = process.env) {
  */
 export async function autoDeployCommandsIfChanged(commands, { forceDeploy = false, env = process.env } = {}) {
     if (env.AUTO_DEPLOY_COMMANDS === 'false') {
-        Logger.info('[Deploy] Auto command deploy bị tắt bởi AUTO_DEPLOY_COMMANDS=false');
+        Logger.info(tr('logs.commanddeploymentservice.info_deploy_auto_command_deploy_bi_tat_boi'));
         return { deployed: false, reason: 'disabled' };
     }
 
     if (!env.DISCORD_TOKEN || !env.CLIENT_ID) {
-        Logger.warn('[Deploy] Bỏ qua deploy lệnh vì thiếu DISCORD_TOKEN hoặc CLIENT_ID.');
+        Logger.warn(tr('logs.commanddeploymentservice.warn_deploy_bo_qua_deploy_lenh_vi_thieu'));
         return { deployed: false, reason: 'missing_env' };
     }
 
     if (!commands || commands.length === 0) {
-        Logger.warn('[Deploy] Không có lệnh nào được tìm thấy để deploy.');
+        Logger.warn(tr('logs.commanddeploymentservice.warn_deploy_khong_co_lenh_nao_duoc_tim'));
         return { deployed: false, reason: 'empty' };
     }
 
@@ -145,12 +146,12 @@ export async function autoDeployCommandsIfChanged(commands, { forceDeploy = fals
     const diff = getDeploymentDiff(currentCommands, storedCommands);
 
     if (!diff.shouldDeploy && !forceDeploy) {
-        Logger.info(`[Deploy] ✅ Slash commands không thay đổi (${currentCommands.length} lệnh). Bỏ qua deploy Discord REST API.`);
+        Logger.info(tr('logs.commanddeploymentservice.info_deploy_slash_commands_khong_thay_doi_lenh', { length: currentCommands.length }));
         return { deployed: false, reason: 'unchanged', diff };
     }
 
     if (forceDeploy) {
-        Logger.info(`[Deploy] ⚡ Bắt buộc deploy lệnh (forceDeploy=true)...`);
+        Logger.info(tr('logs.commanddeploymentservice.info_deploy_bat_buoc_deploy_lenh_forcedeploy_true'));
     } else {
         Logger.info(
             `[Deploy] 🔍 Phát hiện thay đổi slash commands: ` +
@@ -161,7 +162,7 @@ export async function autoDeployCommandsIfChanged(commands, { forceDeploy = fals
     const deployed = await putDiscordCommands(currentCommands, env);
     await saveCommandSnapshots(currentCommands);
 
-    Logger.info(`[Deploy] ✅ Đã deploy thành công ${deployed.length} slash command(s) lên Discord.`);
+    Logger.info(tr('logs.commanddeploymentservice.info_deploy_da_deploy_thanh_cong_slash_command', { length: deployed.length }));
     return { deployed: true, count: deployed.length, diff };
 }
 

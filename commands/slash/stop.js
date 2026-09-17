@@ -1,3 +1,4 @@
+import { t as tr } from '../../services/i18nService.js';
 import { SlashCommandBuilder } from 'discord.js';
 import { poru } from '../../utils/LavalinkManager.js';
 import { t } from '../../services/i18nService.js';
@@ -5,7 +6,7 @@ import { t } from '../../services/i18nService.js';
 export default {
     data: new SlashCommandBuilder()
         .setName('stop')
-        .setDescription('Dừng nhạc và tắt chế độ 24/7'),
+        .setDescription(tr('commands.stop.setdescription_dung_nhac_va_tat_che_do_24')),
 
     async execute(interaction) {
         const player = poru.players.get(interaction.guild.id);

@@ -1,3 +1,4 @@
+import { t as tr } from '../services/i18nService.js';
 import { GoogleGenAI } from '@google/genai';
 import APIKey from '../models/APIKeys.js';
 import APIStatus from '../models/APIStatus.js';
@@ -48,7 +49,7 @@ class ApiKeyManager {
                 });
             }
         } catch (error) {
-            console.warn('⚠️ Could not query API Keys from Database:', error.message);
+            console.warn(tr('logs.apikeymanager.warn_could_not_query_api_keys_from_database'), error.message);
         }
 
         // Giữ lại trạng thái exhausted nếu trước đó đã bị đánh dấu
@@ -61,12 +62,12 @@ class ApiKeyManager {
         });
 
         if (this.pool.length === 0) {
-            console.warn('⚠️ No active API Keys found in Environment (.env) or Database.');
+            console.warn(tr('logs.apikeymanager.warn_no_active_api_keys_found_in_environment'));
             return;
         }
 
         this.isInitialized = true;
-        console.log(`✅ Loaded ${this.pool.length} API Keys (${poolMap.size} available from env/DB).`);
+        console.log(tr('logs.apikeymanager.log_loaded_api_keys_available_from_env_db', { length: this.pool.length, size: poolMap.size }));
     }
 
     /**
@@ -154,9 +155,9 @@ class ApiKeyManager {
             { key, model: modelId },
             { suspendedUntil: until, reason: reason },
             { upsert: true }
-        ).catch(e => console.warn(`[ApiKeyManager] Background APIStatus save error: ${e.message}`));
+        ).catch(e => console.warn(tr('logs.apikeymanager.warn_apikeymanager_background_apistatus_save_error', { message: e.message })));
 
-        console.warn(`⏳ Suspended key ...${key.slice(-4)} for ${Math.round(ms / 1000)}s on ${modelId} (${reason})`);
+        console.warn(tr('logs.apikeymanager.warn_suspended_key_for_s_on', { value: key.slice(-4), value2: Math.round(ms / 1000), modelId: modelId, reason: reason }));
     }
 
     /**
@@ -164,14 +165,14 @@ class ApiKeyManager {
      */
     async markLeaked(key) {
         try {
-            console.error(`🚫 Key ...${key.slice(-4)} marked as LEAKED/INVALID and disabled.`);
+            console.error(tr('logs.apikeymanager.error_key_marked_as_leaked_invalid_and_disabled', { value: key.slice(-4) }));
             const entry = this.pool.find(e => e.key === key);
             if (entry) entry.exhausted = true;
             this.pool = this.pool.filter(e => e.key !== key);
             this.clientPool.delete(key); // Xóa cached client
             await APIKey.updateOne({ key }, { isActive: false, name: 'LEAKED - DISABLED' });
         } catch (e) {
-            console.error('Failed to mark key leaked:', e);
+            console.error(tr('logs.apikeymanager.error_failed_to_mark_key_leaked'), e);
         }
     }
 
@@ -220,7 +221,7 @@ class ApiKeyManager {
                 APIKey.updateOne({ key: key }, {
                     $inc: { usageCount: 1 },
                     $set: { lastUsed: Date.now() }
-                }).exec().catch(err => console.error('Failed to update Key usage stats:', err.message));
+                }).exec().catch(err => console.error(tr('logs.apikeymanager.error_failed_to_update_key_usage_stats'), err.message));
 
                 return result;
             } catch (e) {
@@ -228,7 +229,7 @@ class ApiKeyManager {
 
                 // Xử lý khi request bị timeout
                 if (e._isTimeout) {
-                    console.warn(`⏱️ Key ...${key.slice(-4)} timed out sau ${timeoutMs}ms trên ${modelId}. Chuyển key ngay...`);
+                    console.warn(tr('logs.apikeymanager.warn_key_timed_out_sau_ms_tren_chuyen', { value: key.slice(-4), timeoutMs: timeoutMs, modelId: modelId }));
                     this.suspendKey(key, modelId, 30 * 1000, 'TIMEOUT_30s');
                     attempt++;
                     if (attempt < maxRetries) {
@@ -239,7 +240,7 @@ class ApiKeyManager {
 
                 // Không retry với lỗi cú pháp code lập trình
                 if (e instanceof TypeError || e instanceof ReferenceError || e instanceof SyntaxError) {
-                    console.error(`❌ CODE / SYNTAX BUG (NON-RETRYABLE): ${e.message}`, e.stack);
+                    console.error(tr('logs.apikeymanager.error_code_syntax_bug_non_retryable', { message: e.message }), e.stack);
                     throw e;
                 }
 
@@ -265,7 +266,7 @@ class ApiKeyManager {
                 );
 
                 if (!isGoogleApiError) {
-                    console.error(`❌ APPLICATION LOGIC / PARSING ERROR (NOT GOOGLE API): ${e.message}`);
+                    console.error(tr('logs.apikeymanager.error_application_logic_parsing_error_not_google_api', { message: e.message }));
                     throw e; // Ném ra ngay, KHÔNG phạt key, KHÔNG retry tốn quota!
                 }
 
@@ -297,7 +298,7 @@ class ApiKeyManager {
                 }
                 // --- 400: Bad Request / Invalid Argument (Lỗi phía client/prompt) ---
                 else if (statusCode === 400 || errorMessage.includes('invalid_request') || errorMessage.includes('INVALID_ARGUMENT')) {
-                    console.error(`❌ BAD REQUEST (NON-RETRYABLE): ${errorMessage}`);
+                    console.error(tr('logs.apikeymanager.error_bad_request_non_retryable', { errorMessage: errorMessage }));
                     throw e; // Dừng ngay, không thử key khác
                 }
                 // --- 503: Service Unavailable / High Demand / Overloaded (Phía Google bị nghẽn) ---
@@ -322,7 +323,7 @@ class ApiKeyManager {
                 // --- Lỗi khác ---
                 else {
                     const statusCodeText = statusCode ? statusCode.toString() : 'UNKNOWN';
-                    console.warn(`⚠️ Generic error ${statusCodeText}: ${errorMessage}`);
+                    console.warn(tr('logs.apikeymanager.warn_generic_error', { statusCodeText: statusCodeText, errorMessage: errorMessage }));
                     suspendMs = 30 * 1000;
                     reason = `GENERIC_${statusCodeText}`;
                     shouldSuspend = true;
@@ -336,7 +337,7 @@ class ApiKeyManager {
 
                 // Chuyển key kế tiếp tức thì chỉ sau 100ms (loại bỏ hoàn toàn exponential backoff vô lý)
                 if (attempt < maxRetries) {
-                    console.log(`🔄 Rotating key... (${attempt}/${maxRetries}) in 100ms`);
+                    console.log(tr('logs.apikeymanager.log_rotating_key_in_100ms', { attempt: attempt, maxRetries: maxRetries }));
                     await new Promise(r => setTimeout(r, 100));
                 }
             }

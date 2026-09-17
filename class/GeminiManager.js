@@ -1,3 +1,4 @@
+import { t as tr } from '../services/i18nService.js';
 import ApiKeyManager from './apiKeyManager.js';
 import Logger from './Logger.js';
 import { musicTools } from '../schema/musicTools.js';
@@ -14,10 +15,10 @@ import geminiModelService from '../services/geminiModelService.js';
 class GeminiManager {
     constructor() {
         this.logger = {
-            info: (msg) => Logger.info(`[Gemini] ${msg}`),
-            warn: (msg) => Logger.warn(`[Gemini] ${msg}`),
-            error: (msg) => Logger.error(`[Gemini] ${msg}`),
-            log: (msg) => Logger.info(`[Gemini] ${msg}`)
+            info: (msg) => Logger.info(tr('logs.geminimanager.info_gemini', { msg: msg })),
+            warn: (msg) => Logger.warn(tr('logs.geminimanager.warn_gemini', { msg: msg })),
+            error: (msg) => Logger.error(tr('logs.geminimanager.error_gemini', { msg: msg })),
+            log: (msg) => Logger.info(tr('logs.geminimanager.info_gemini', { msg: msg }))
         };
         // Tools definition
         this.tools = [{ functionDeclarations: [...musicTools, ...devTools] }];
@@ -67,7 +68,7 @@ class GeminiManager {
                             attachedFileTexts.push(`[Tệp đính kèm: ${att.name}]\n\`\`\`javascript\n${fileContent}\n\`\`\``);
                         }
                     } catch (attErr) {
-                        console.error('Không thể đọc file đính kèm:', attErr.message);
+                        console.error(tr('logs.geminimanager.error_khong_the_doc_file_dinh_kem'), attErr.message);
                     }
                 }
             }
@@ -177,7 +178,7 @@ ${topSongsStr || "- Chưa có bài nào nổi bật"}
 `;
             }
         } catch (err) {
-            console.error("Error fetching MusicLog:", err);
+            console.error(tr('logs.geminimanager.error_error_fetching_musiclog'), err);
             listeningHistorySummary = "Không thể lấy dữ liệu lịch sử lúc này.";
         }
 
@@ -278,7 +279,7 @@ ${topSongsStr || "- Chưa có bài nào nổi bật"}
                             .map(p => p.functionCall.name)
                             .join(', ');
 
-                        this.logger.info(`Function Calls detected: ${callNames}`);
+                        this.logger.info(tr('logs.geminimanager.info_function_calls_detected', { callNames: callNames }));
 
                         // A. Save Model Call Turn
                         const modelCallTurn = {
@@ -305,7 +306,7 @@ ${topSongsStr || "- Chưa có bài nào nổi bật"}
                                         lastToolResult = result;
                                     } catch (error) {
                                         apiResponse = { error: error.message };
-                                        console.error(`Error executing ${call.name}:`, error);
+                                        console.error(tr('logs.geminimanager.error_error_executing', { name: call.name }), error);
                                     }
                                 } else {
                                     apiResponse = { error: `Function ${call.name} not found` };
@@ -358,7 +359,7 @@ ${topSongsStr || "- Chưa có bài nào nổi bật"}
                             if (alreadySent) alreadySentToChannel = true;
 
                             if ((agentReplyText && typeof agentReplyText === 'string' && agentReplyText.trim()) || agentFiles.length > 0 || alreadySent) {
-                                this.logger.info(`[GeminiManager] ⚡ Tối ưu 2-Request: Trả về trực tiếp phản hồi từ Agent (bỏ qua Request 3).`);
+                                this.logger.info(tr('logs.geminimanager.info_geminimanager_toi_uu_2_request_tra_ve'));
                                 finalResponseText = (typeof agentReplyText === 'string') ? agentReplyText : "";
                                 break;
                             }
@@ -388,7 +389,7 @@ ${topSongsStr || "- Chưa có bài nào nổi bật"}
                             finalResponseText = lastToolResult.reply || lastToolResult.summary || lastToolResult.message || JSON.stringify(lastToolResult);
                         }
                     } else {
-                        finalResponseText = "Dolia đã ghi nhận và xử lý yêu cầu của bạn rồi nha! ✨💖";
+                        finalResponseText = tr('messages.geminimanager.text_dolia_da_ghi_nhan_va_xu_ly');
                     }
                 }
 
@@ -405,7 +406,7 @@ ${topSongsStr || "- Chưa có bài nào nổi bật"}
                     .trim();
 
                 if (!finalResponseText) {
-                    finalResponseText = "Tada! Dolia đã hoàn thành xong tác vụ cho bạn rồi nè! ✨🐬💖";
+                    finalResponseText = tr('messages.geminimanager.text_tada_dolia_da_hoan_thanh_xong_tac');
                 }
 
                 // Lưu text phản hồi cuối cùng vào DB
@@ -433,7 +434,7 @@ ${topSongsStr || "- Chưa có bài nào nổi bật"}
             } catch (err) {
                 lastError = err;
                 geminiModelService.reportModelFailure(modelId, err.message, 2 * 60 * 1000);
-                this.logger.warn(`Model ${modelId} gặp sự cố: ${err.message}. Đang thử model tiếp theo...`);
+                this.logger.warn(tr('logs.geminimanager.warn_model_gap_su_co_dang_thu_model', { modelId: modelId, message: err.message }));
             }
         }
 

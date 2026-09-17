@@ -1,3 +1,4 @@
+import { t as tr } from '../services/i18nService.js';
 import { Poru } from 'poru';
 import RadioSong from '../models/RadioSong.js';
 import MusicLog from '../models/MusicLog.js';
@@ -32,7 +33,7 @@ async function getSafeChannel(channelId) {
         }
         return channel;
     } catch (e) {
-        console.error(`❌ Không tìm thấy channel ${channelId}:`, e.message);
+        console.error(tr('logs.lavalinkmanager.error_khong_tim_thay_channel', { channelId: channelId }), e.message);
         return null;
     }
 }
@@ -43,7 +44,7 @@ async function getRandomTrack() {
         const randomSong = await RadioSong.aggregate([{ $sample: { size: 1 } }]);
         return randomSong.length > 0 ? randomSong[0] : null;
     } catch (e) {
-        console.error("Lỗi lấy nhạc Random:", e);
+        console.error(tr('logs.lavalinkmanager.error_loi_lay_nhac_random'), e);
         return null;
     }
 }
@@ -69,15 +70,15 @@ export function initLavalink(discordClient) {
             if (err.message && err.message.includes('No Session id found')) {
                 return;
             }
-            Logger.warn(`[Lavalink] Poru packetUpdate handled error: ${err.message}`);
+            Logger.warn(tr('logs.lavalinkmanager.warn_lavalink_poru_packetupdate_handled_error', { message: err.message }));
         }
     };
 
     poru.init(client);
 
-    poru.on('nodeConnect', node => console.log(`✅ [Lavalink] Node ${node.name} đã kết nối!`));
-    poru.on('nodeDisconnect', node => console.log(`❌ [Lavalink] Mất kết nối Node: ${node.name}`));
-    poru.on('nodeError', (node, error) => console.log(`⚠️ [Lavalink] Node ${node.name} lỗi: ${error.message}`));
+    poru.on('nodeConnect', node => console.log(tr('logs.lavalinkmanager.log_lavalink_node_da_ket_noi', { name: node.name })));
+    poru.on('nodeDisconnect', node => console.log(tr('logs.lavalinkmanager.log_lavalink_mat_ket_noi_node', { name: node.name })));
+    poru.on('nodeError', (node, error) => console.log(tr('logs.lavalinkmanager.log_lavalink_node_loi', { name: node.name, message: error.message })));
 
     // --- SỰ KIỆN TRACK START (BẮT ĐẦU PHÁT) ---
     poru.on('trackStart', async (player, track) => {
@@ -85,15 +86,15 @@ export function initLavalink(discordClient) {
         const channel = await getSafeChannel(player.textChannel);
 
         const duration = track.info.length;
-        const timeString = track.info.isStream ? "🔴 LIVE" : new Date(duration).toISOString().slice(14, 19);
-        const requester = track.info.requester?.tag || client.user?.tag || 'Unknown';
+        const timeString = track.info.isStream ? tr('messages.lavalinkmanager.text_live') : new Date(duration).toISOString().slice(14, 19);
+        const requester = track.info.requester?.tag || client.user?.tag || tr('messages.lavalinkmanager.text_unknown');
         const sourceName = track.info.sourceName || 'unknown';
 
-        Logger.info(`[Music] ▶️ Bắt đầu phát: "${track.info.title}" [${timeString}] | Kênh: ${track.info.author} | Provider gốc: [${sourceName}]`);
+        Logger.info(tr('logs.lavalinkmanager.info_music_bat_dau_phat_kenh_provider_goc', { title: track.info.title, timeString: timeString, author: track.info.author, sourceName: sourceName }));
 
         if (channel) {
             // Gửi tin nhắn (Catch lỗi nếu bot thiếu quyền gửi tin)
-            channel.send(t('music.track_start', { title: track.info.title, time: timeString, requester: requester })).catch(e => console.error("Không gửi được tin nhắn trackStart:", e.message));
+            channel.send(t('music.track_start', { title: track.info.title, time: timeString, requester: requester })).catch(e => console.error(tr('logs.lavalinkmanager.error_khong_gui_duoc_tin_nhan_trackstart'), e.message));
         }
 
         // Đồng bộ Queue DB
@@ -117,13 +118,13 @@ export function initLavalink(discordClient) {
                 requesterTag: track.info.requester?.tag || client.user.tag,
                 isAutoPlay: player.isAutoplay || false
             });
-        } catch (err) { console.error('Lỗi log nhạc:', err.message); }
+        } catch (err) { console.error(tr('logs.lavalinkmanager.error_loi_log_nhac'), err.message); }
     });
 
     // --- SỰ KIỆN TRACK ERROR (NHẠC LỖI) ---
     // Cái này cực quan trọng: Nếu bài hát lỗi, nó sẽ không crash mà tự gọi queueEnd hoặc skip
     poru.on('trackError', async (player, track, error) => {
-        console.error(`⚠️ Track Lỗi [${track.info.title}]:`, error);
+        console.error(tr('logs.lavalinkmanager.error_track_loi', { title: track.info.title }), error);
 
         // Gửi thông báo lỗi cho người dùng
         const channel = await getSafeChannel(player.textChannel);
@@ -142,7 +143,7 @@ export function initLavalink(discordClient) {
     });
 
     poru.on('trackStuck', async (player, track, threshold) => {
-        console.warn(`⚠️ Track bị kẹt [${track.info.title}] quá ${threshold}ms -> Đang Auto Skip...`);
+        console.warn(tr('logs.lavalinkmanager.warn_track_bi_ket_qua_ms_dang_auto', { title: track.info.title, threshold: threshold }));
 
         const channel = await getSafeChannel(player.textChannel);
         if (channel) {
@@ -154,7 +155,7 @@ export function initLavalink(discordClient) {
         try {
             player.stop();
         } catch (err) {
-            console.error("Lỗi khi cố stop track bị kẹt:", err);
+            console.error(tr('logs.lavalinkmanager.error_loi_khi_co_stop_track_bi_ket'), err);
             // Nếu stop lỗi (vd player chết), thử destroy luôn để reset
             player.destroy();
         }
@@ -190,7 +191,7 @@ export function initLavalink(discordClient) {
                 return; // QUAN TRỌNG: Return để không chạy code bên dưới
             } else {
                 // Nếu bài lấy từ DB bị lỗi link -> Thử lấy bài khác ngay lập tức (Đệ quy nhẹ)
-                console.log("Bài Radio bị lỗi, đang thử bài khác...");
+                console.log(tr('logs.lavalinkmanager.log_bai_radio_bi_loi_dang_thu_bai'));
                 // poru.emit('queueEnd', player); // Gọi lại sự kiện này để thử lại (Cẩn thận loop vô tận, nên thôi)
             }
         }

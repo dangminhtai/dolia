@@ -1,3 +1,4 @@
+import { t as tr } from '../../services/i18nService.js';
 import fs from 'fs';
 import path from 'path';
 
@@ -122,7 +123,7 @@ export class TransactionManager {
             const resultPath = path.join(transactionData.txDir, 'result.json');
             fs.writeFileSync(resultPath, JSON.stringify(transactionData, null, 2), 'utf-8');
         } catch (e) {
-            console.error('[TransactionManager] Failed to save result.json:', e);
+            console.error(tr('logs.transaction_manager.error_transactionmanager_failed_to_save_result_json'), e);
         }
     }
 

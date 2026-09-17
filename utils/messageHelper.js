@@ -1,3 +1,4 @@
+import { t as tr } from '../services/i18nService.js';
 import { AttachmentBuilder } from "discord.js";
 import fs from "fs";
 import path from "path";
@@ -31,7 +32,7 @@ export async function sendSafeMessage(message, content, options = {}) {
     const file = new AttachmentBuilder(filePath);
 
     const replyData = {
-        content: options.fileContent || "Tin nhắn quá dài, xem file 👉",
+        content: options.fileContent || tr('messages.messagehelper.text_tin_nhan_qua_dai_xem_file'),
         files: [file],
     };
 
@@ -45,6 +46,6 @@ export async function sendSafeMessage(message, content, options = {}) {
     try {
         fs.unlinkSync(filePath);
     } catch (err) {
-        console.error("Failed to delete temp file:", err);
+        console.error(tr('logs.messagehelper.error_failed_to_delete_temp_file'), err);
     }
 }

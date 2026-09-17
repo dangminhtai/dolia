@@ -1,3 +1,4 @@
+import { t as tr } from '../../services/i18nService.js';
 import { Events, MessageFlags } from "discord.js";
 import { handleBlockAgentMenu } from '../../commands/slash/block-agent.js';
 
@@ -330,7 +331,7 @@ export default (client) => {
                                                 targetPlayer.queue.add(track);
                                                 tracksToAdd.push({ title: tTrack.title, url: tTrack.url, author: tTrack.author, duration: tTrack.duration, requester: interaction.user.tag, addedAt: new Date() });
                                             }
-                                        } catch (e) { console.error("Error resolving playlist track:", e); }
+                                        } catch (e) { console.error(tr('logs.interactioncreate.error_error_resolving_playlist_track'), e); }
                                     }
 
                                     if (targetPlayer.queue.length > 0) {
@@ -356,7 +357,7 @@ export default (client) => {
                 }
 
             } catch (err) {
-                console.error("Music Panel Error:", err);
+                console.error(tr('logs.interactioncreate.error_music_panel_error'), err);
                 // Cố gắng reply nếu chưa reply
                 if (!interaction.replied && !interaction.deferred) await interaction.reply({ content: t('panel.errors.process_error'), ephemeral: true }).catch(() => { });
                 else if (interaction.deferred) await interaction.followUp({ content: t('panel.errors.process_error'), ephemeral: true }).catch(() => { });
@@ -376,7 +377,7 @@ export default (client) => {
                         return interaction.editReply(t('general.lyrics.not_found', { query }));
                     }
                     const embed = new EmbedBuilder()
-                        .setTitle(`🎵 ${data.song_title}`)
+                        .setTitle(tr('messages.interactioncreate.settitle_settitle', { song_title: data.song_title }))
                         .setAuthor({ name: data.artist })
                         .setColor(0x1DB954)
                         .setThumbnail(data.thumbnail_url || 'https://cdn-icons-png.flaticon.com/512/3844/3844724.png')
@@ -392,7 +393,7 @@ export default (client) => {
                         embed.setDescription(data.lyrics);
                         await interaction.editReply({ embeds: [embed] });
                     } else {
-                        embed.setDescription(data.lyrics.substring(0, 1900) + '...\n\n' + t('general.lyrics.full_lyrics_hint'));
+                        embed.setDescription(tr('messages.interactioncreate.setdescription_setdescription', { value: data.lyrics.substring(0, 1900), value2: t('general.lyrics.full_lyrics_hint') }));
                         await interaction.editReply({ embeds: [embed] });
                         await sendSafeMessage(interaction, data.lyrics, {
                             forceFile: true,
@@ -401,7 +402,7 @@ export default (client) => {
                         });
                     }
                 } catch (error) {
-                    console.error('Lyrics Modal Error:', error);
+                    console.error(tr('logs.interactioncreate.error_lyrics_modal_error'), error);
                     await interaction.editReply(t('general.lyrics.error'));
                 }
             }
@@ -413,9 +414,9 @@ export default (client) => {
             try {
                 await handleBlockAgentMenu(interaction);
             } catch (err) {
-                console.error('Block-Agent Menu Error:', err);
+                console.error(tr('logs.interactioncreate.error_block_agent_menu_error'), err);
                 if (!interaction.replied && !interaction.deferred) {
-                    await interaction.reply({ content: '❌ Lỗi khi xử lý block/unblock model!', flags: MessageFlags.Ephemeral }).catch(() => {});
+                    await interaction.reply({ content: tr('messages.interactioncreate.content_loi_khi_xu_ly_block_unblock_model'), flags: MessageFlags.Ephemeral }).catch(() => {});
                 }
             }
             return;
@@ -426,7 +427,7 @@ export default (client) => {
             try {
                 if (!interaction.deferred && !interaction.replied) {
                     await interaction.reply({
-                        content: '✨ Lệnh đã được tự động áp dụng và nạp vào hệ thống rồi nha! Bạn có thể sử dụng lệnh trực tiếp trên Discord luôn nhé~ 💖',
+                        content: tr('messages.interactioncreate.content_lenh_da_duoc_tu_dong_ap_dung'),
                         flags: MessageFlags.Ephemeral
                     });
                 }
@@ -441,7 +442,7 @@ export default (client) => {
                 try {
                     if (!interaction.replied && !interaction.deferred) {
                         await interaction.reply({
-                            content: '🫧 Ván chơi này có vẻ đã hết thời gian tương tác hoặc bot vừa được làm mới rồi nè! Bạn hãy dùng lại lệnh để mở ván mới cùng mình nha~ ✨💖',
+                            content: tr('messages.interactioncreate.content_van_choi_nay_co_ve_da_het'),
                             flags: MessageFlags.Ephemeral
                         }).catch(() => { });
                     }
@@ -462,7 +463,7 @@ export default (client) => {
             try {
                 await command.execute(interaction);
             } catch (error) {
-                console.error("Command Execution Error:", error);
+                console.error(tr('logs.interactioncreate.error_command_execution_error'), error);
                 try {
                     if (interaction.deferred) {
                         await interaction.editReply({ content: t('common.command_error') }).catch(() => { });

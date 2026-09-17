@@ -1,3 +1,4 @@
+import { t as tr } from './i18nService.js';
 import antigravityKeyManager from '../class/antigravityKeyManager.js';
 import Logger from '../class/Logger.js';
 import geminiModelService from './geminiModelService.js';
@@ -28,7 +29,7 @@ export class AntigravityService {
 
         // Ưu tiên flash-lite cho Antigravity Cloud: nhanh hơn, quota rộng hơn, giữ render Discord mượt
         const activeModel = await geminiModelService.getActiveModel('flash-lite', 'agent');
-        Logger.info(`[Antigravity] 🚀 Khởi chạy Antigravity Agent (Cloud Sandbox - Mode: ${mode}) với model: ${activeModel}...`);
+        Logger.info(tr('logs.antigravityservice.info_antigravity_khoi_chay_antigravity_agent_cloud_sandbox', { mode: mode, activeModel: activeModel }));
 
         // Đọc prompt tùy biến từ config/prompt/agent/AgentInstruction.md và nhúng Skills chuẩn Google Custom Agents
         const baseInstruction = loadAgentPrompt('AgentInstruction.md', {
@@ -60,7 +61,7 @@ export class AntigravityService {
             let envParam = sessionEnv?.environmentId || "remote";
             let previousInteractionId = sessionEnv?.lastInteractionId || null;
 
-            Logger.info(`[Antigravity] 🔍 Nạp Session kênh [${context?.channel?.id || 'unknown'}]: environmentId=${sessionEnv?.environmentId || 'null (sẽ tạo mới remote container)'}, previousInteractionId=${previousInteractionId || 'null'}`);
+            Logger.info(tr('logs.antigravityservice.info_antigravity_nap_session_kenh_environmentid_previousinteractionid', { value: context?.channel?.id || 'unknown', value2: sessionEnv?.environmentId || 'null (sẽ tạo mới remote container)', value3: previousInteractionId || 'null' }));
 
             if (!sessionEnv?.environmentId && skillSources.length > 0) {
                 // Nhúng các file SKILL.md inline vào remote sandbox theo chuẩn Google Custom Agents
@@ -68,9 +69,9 @@ export class AntigravityService {
                     type: "remote",
                     sources: skillSources
                 };
-                Logger.info(`[Antigravity] 📦 Đã nhúng ${skillSources.length} skills vào environment.sources (.agents/skills/): ${skillSources.map(s => s.target).join(', ')}`);
+                Logger.info(tr('logs.antigravityservice.info_antigravity_da_nhung_skills_vao_environment_sources', { length: skillSources.length, value: skillSources.map(s => s.target).join(', ') }));
             } else if (sessionEnv?.environmentId) {
-                Logger.info(`[Antigravity] ⚡ Tái sử dụng Warm Sandbox Container ID: ${sessionEnv.environmentId}${previousInteractionId ? ` (Chained Interaction: ${previousInteractionId})` : ''}`);
+                Logger.info(tr('logs.antigravityservice.info_antigravity_tai_su_dung_warm_sandbox_container', { environmentId: sessionEnv.environmentId, value: previousInteractionId ? ` (Chained Interaction: ${previousInteractionId})` : '' }));
             }
 
             const url = `https://generativelanguage.googleapis.com/v1beta/interactions?alt=sse&key=${apiKey}`;
@@ -144,7 +145,7 @@ export class AntigravityService {
                         if (eventType === 'interaction.created' && eventObj.interaction) {
                             const newEnvId = eventObj.interaction.environment_id;
                             const newInteractionId = eventObj.interaction.id;
-                            Logger.info(`[Antigravity] ☁️ Google Cloud Interaction Created: environmentId="${newEnvId || 'null'}", interactionId="${newInteractionId || 'null'}"`);
+                            Logger.info(tr('logs.antigravityservice.info_antigravity_google_cloud_interaction_created_environmentid_interactionid', { value: newEnvId || 'null', value2: newInteractionId || 'null' }));
                             if (newEnvId) {
                                 antigravityKeyManager.setEnvironmentId(newEnvId, sessionKey, newInteractionId);
                                 if (context?.user?.id && context?.channel?.id) {
@@ -155,36 +156,36 @@ export class AntigravityService {
                                 }
                             }
                             if (typeof onProgress === 'function') {
-                                onProgress({ stage: 'connected', text: '☁️ Dolia đã kết nối không gian đám mây thành công!', event: eventType });
+                                onProgress({ stage: 'connected', text: tr('messages.antigravityservice.text_dolia_da_ket_noi_khong_gian_dam'), event: eventType });
                             }
                         } else if (eventType === 'step.start') {
                             const stepType = eventObj.step?.type;
                             const stepName = eventObj.step?.name || '';
                             if (stepType === 'thought') {
                                 if (typeof onProgress === 'function') {
-                                    onProgress({ stage: 'thinking', text: '💭 Dolia đang phân tích và thiết kế luật chơi cho bạn...', event: eventType, stepType });
+                                    onProgress({ stage: 'thinking', text: tr('messages.antigravityservice.text_dolia_dang_phan_tich_va_thiet_ke'), event: eventType, stepType });
                                 }
                             } else if (stepType === 'code_execution_call') {
                                 if (typeof onProgress === 'function') {
-                                    onProgress({ stage: 'coding', text: '✍️ Dolia đang viết mã lệnh và kiểm thử trên đám mây...', event: eventType, stepType });
+                                    onProgress({ stage: 'coding', text: tr('messages.antigravityservice.text_dolia_dang_viet_ma_lenh_va_kiem'), event: eventType, stepType });
                                 }
                             } else if (stepType === 'function_call') {
-                                const toolLabel = stepName === 'write_file' ? 'lưu file' : stepName === 'google_search' ? 'tìm kiếm Google' : stepName === 'url_context' ? 'đọc tài liệu' : 'gọi công cụ';
+                                const toolLabel = stepName === 'write_file' ? tr('messages.antigravityservice.text_luu_file') : stepName === 'google_search' ? tr('messages.antigravityservice.text_tim_kiem_google') : stepName === 'url_context' ? tr('messages.antigravityservice.text_doc_tai_lieu') : tr('messages.antigravityservice.text_goi_cong_cu');
                                 if (typeof onProgress === 'function') {
-                                    onProgress({ stage: 'tool_call', text: `🔧 Dolia đang ${toolLabel} trên đám mây...`, event: eventType, stepType, toolName: stepName });
+                                    onProgress({ stage: 'tool_call', text: tr('messages.antigravityservice.text_dolia_dang_tren_dam_may', { toolLabel: toolLabel }), event: eventType, stepType, toolName: stepName });
                                 }
                             } else if (stepType === 'model_output') {
                                 if (typeof onProgress === 'function') {
-                                    onProgress({ stage: 'output', text: '✨ Gần xong rồi nè, mình đang đóng gói kết quả cho bạn! 💖', event: eventType, stepType });
+                                    onProgress({ stage: 'output', text: tr('messages.antigravityservice.text_gan_xong_roi_ne_minh_dang_dong'), event: eventType, stepType });
                                 }
                             } else if (typeof onProgress === 'function') {
-                                onProgress({ stage: 'step', text: `⚙️ Dolia đang xử lý bước: ${stepType || 'unknown'}...`, event: eventType, stepType });
+                                onProgress({ stage: 'step', text: tr('messages.antigravityservice.text_dolia_dang_xu_ly_buoc', { value: stepType || 'unknown' }), event: eventType, stepType });
                             }
                         } else if (eventType === 'step.end') {
                             const stepType = eventObj.step?.type;
                             if (stepType === 'code_execution_call') {
                                 if (typeof onProgress === 'function') {
-                                    onProgress({ stage: 'code_done', text: '✅ Mã lệnh đã kiểm thử xong trên đám mây!', event: eventType, stepType });
+                                    onProgress({ stage: 'code_done', text: tr('messages.antigravityservice.text_ma_lenh_da_kiem_thu_xong_tren'), event: eventType, stepType });
                                 }
                             }
                         } else if (eventType === 'step.delta') {
@@ -193,7 +194,7 @@ export class AntigravityService {
                             }
                         } else if (eventType === 'interaction.completed') {
                             finalInteraction = eventObj.interaction;
-                            Logger.info(`[Antigravity] ✅ Google Cloud Interaction Completed: environmentId="${finalInteraction?.environment_id || 'null'}", interactionId="${finalInteraction?.id || 'null'}"`);
+                            Logger.info(tr('logs.antigravityservice.info_antigravity_google_cloud_interaction_completed_environmentid_interactionid', { value: finalInteraction?.environment_id || 'null', value2: finalInteraction?.id || 'null' }));
                             if (finalInteraction?.environment_id) {
                                 antigravityKeyManager.setEnvironmentId(finalInteraction.environment_id, sessionKey, finalInteraction.id);
                                 if (context?.user?.id && context?.channel?.id) {
@@ -204,19 +205,19 @@ export class AntigravityService {
                                 }
                             }
                             if (typeof onProgress === 'function') {
-                                onProgress({ stage: 'completed', text: '🎉 Antigravity Cloud đã hoàn tất!', event: eventType });
+                                onProgress({ stage: 'completed', text: tr('messages.antigravityservice.text_antigravity_cloud_da_hoan_tat'), event: eventType });
                             }
                         } else if (eventType === 'interaction.failed') {
-                            Logger.error(`[Antigravity] ❌ Interaction failed: ${JSON.stringify(eventObj.error || eventObj)}`);
+                            Logger.error(tr('logs.antigravityservice.error_antigravity_interaction_failed', { value: JSON.stringify(eventObj.error || eventObj) }));
                             if (typeof onProgress === 'function') {
-                                onProgress({ stage: 'failed', text: '❌ Đám mây gặp sự cố...', event: eventType });
+                                onProgress({ stage: 'failed', text: tr('messages.antigravityservice.text_dam_may_gap_su_co'), event: eventType });
                             }
                         }
                     } catch (_) { }
                 }
             }
 
-            Logger.info(`[Antigravity] ✅ Antigravity Cloud stream hoàn tất.`);
+            Logger.info(tr('logs.antigravityservice.info_antigravity_antigravity_cloud_stream_hoan_tat'));
 
             // Trích xuất output hoàn chỉnh từ finalInteraction nếu có
             if (finalInteraction && Array.isArray(finalInteraction.steps)) {

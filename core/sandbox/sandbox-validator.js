@@ -1,10 +1,9 @@
 import fs from 'fs';
 import path from 'path';
-import { exec } from 'child_process';
+import { execFile } from 'child_process';
 import { promisify } from 'util';
-import { pathToFileURL } from 'url';
 
-const execPromise = promisify(exec);
+const execFilePromise = promisify(execFile);
 
 /**
  * SandboxValidator - Hệ thống Validator mô-đun mở rộng
@@ -43,7 +42,7 @@ export class SandboxValidator {
     async validateJavaScript(filePath) {
         const errors = [];
         try {
-            await execPromise(`node -c "${filePath}"`);
+            await execFilePromise(process.execPath, ['--check', path.resolve(filePath)], { windowsHide: true });
         } catch (syntaxErr) {
             errors.push(`Lỗi cú pháp JavaScript (node -c): ${syntaxErr.message}`);
         }
@@ -134,15 +133,10 @@ export class SandboxValidator {
                 errors.push(`Slash Command thiếu phương thức thực thi "execute(interaction)".`);
             }
 
-            // Thử import runtime thực tế để bắt các lỗi module (sai named export, CommonJS vs ESM, missing package...)
-            const fileUrl = pathToFileURL(filePath).href + `?t=${Date.now()}`;
-            const importedModule = await import(fileUrl);
-            const cmd = importedModule.default ?? importedModule;
-            if (!cmd || !cmd.data) {
-                errors.push(`File lệnh không export default một SlashCommand hợp lệ (thiếu thuộc tính 'data').`);
-            }
+            // Import executes top-level code. Validation must not execute generated code.
+            // The existing command loader still checks the actual exported command when loading.
         } catch (e) {
-            errors.push(`Lỗi nạp module / runtime import: ${e.message}`);
+            errors.push(`Không thể đọc cấu trúc lệnh: ${e.message}`);
         }
         return errors;
     }

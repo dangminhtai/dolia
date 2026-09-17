@@ -1,3 +1,4 @@
+import { t as tr } from '../../services/i18nService.js';
 import fs from 'fs';
 import path from 'path';
 import { exec } from 'child_process';
@@ -77,12 +78,12 @@ export class PackageInstaller {
 
         // 1. Kiểm tra tính hợp lệ của tên package để chống Command Injection
         if (!NPM_PACKAGE_NAME_REGEX.test(cleanName)) {
-            Logger.warn(`[PackageInstaller] ⚠️ Tên package không hợp lệ hoặc không an toàn: "${pkgName}"`);
+            Logger.warn(tr('logs.package_installer.warn_packageinstaller_ten_package_khong_hop_le_hoac', { pkgName: pkgName }));
             return false;
         }
 
         if (BLOCKED_PACKAGES.has(cleanName)) {
-            Logger.warn(`[PackageInstaller] ⚠️ Package "${cleanName}" nằm trong danh sách bảo vệ.`);
+            Logger.warn(tr('logs.package_installer.warn_packageinstaller_package_nam_trong_danh_sach_bao', { cleanName: cleanName }));
             return false;
         }
 
@@ -90,16 +91,16 @@ export class PackageInstaller {
             return true; // Đã cài sẵn, bỏ qua
         }
 
-        Logger.info(`[PackageInstaller] 📦 Phát hiện thư viện mới! Đang tự động cài đặt "${cleanName}" vào dự án...`);
+        Logger.info(tr('logs.package_installer.info_packageinstaller_phat_hien_thu_vien_moi_dang', { cleanName: cleanName }));
         try {
             await execPromise(`npm install ${cleanName} --no-audit --prefer-offline`, {
                 cwd: process.cwd(),
                 timeout: 60000
             });
-            Logger.info(`[PackageInstaller] ✅ Đã cài đặt thành công "${cleanName}"! Dự án và Sandbox có thể sử dụng ngay.`);
+            Logger.info(tr('logs.package_installer.info_packageinstaller_da_cai_dat_thanh_cong_du', { cleanName: cleanName }));
             return true;
         } catch (err) {
-            Logger.error(`[PackageInstaller] ❌ Cài đặt thư viện "${cleanName}" thất bại: ${err.message}`);
+            Logger.error(tr('logs.package_installer.error_packageinstaller_cai_dat_thu_vien_that_bai', { cleanName: cleanName, message: err.message }));
             return false;
         }
     }

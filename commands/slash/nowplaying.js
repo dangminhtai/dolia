@@ -1,15 +1,16 @@
+import { t as tr } from '../../services/i18nService.js';
 import { SlashCommandBuilder, EmbedBuilder } from 'discord.js';
 import { poru } from '../../utils/LavalinkManager.js';
 import { t } from '../../services/i18nService.js';
 
 // Hàm helper để vẽ thanh process bar [======....]
 function createProgressBar(current, total, size = 15) {
-    if (total === 0) return '🔘' + '▬'.repeat(size); // Live stream
+    if (total === 0) return tr('commands.nowplaying.progress_position') + tr('commands.nowplaying.progress_empty').repeat(size); // Live stream
     const progress = Math.round((size * current) / total);
     const emptyProgress = size - progress;
 
-    const progressText = '▬'.repeat(progress).replace(/.$/, '🔘'); // Thay ký tự cuối bằng nút tròn
-    const emptyProgressText = '▬'.repeat(emptyProgress);
+    const progressText = tr('commands.nowplaying.progress_empty').repeat(progress).replace(/.$/, tr('commands.nowplaying.progress_position')); // Thay ký tự cuối bằng nút tròn
+    const emptyProgressText = tr('commands.nowplaying.progress_empty').repeat(emptyProgress);
 
     return progressText + emptyProgressText;
 }
@@ -23,7 +24,7 @@ function formatTime(ms) {
 export default {
     data: new SlashCommandBuilder()
         .setName('nowplaying')
-        .setDescription('Xem bài hát đang phát'),
+        .setDescription(tr('commands.nowplaying.setdescription_xem_bai_hat_dang_phat')),
 
     async execute(interaction) {
         const player = poru.players.get(interaction.guild.id);
@@ -39,14 +40,14 @@ export default {
         const embed = new EmbedBuilder()
             .setColor('#FF0000') // Màu đỏ YouTube
             .setTitle(t('music.nowplaying.title'))
-            .setDescription(`[**${track.info.title}**](${track.info.uri})`)
+            .setDescription(tr('commands.nowplaying.setdescription_setdescription', { title: track.info.title, uri: track.info.uri }))
             .setThumbnail(track.info.artworkUrl || track.info.image) // Ảnh thumbnail (Poru v5 tự lấy)
             .addFields(
                 { name: t('music.nowplaying.field_artist'), value: track.info.author, inline: true },
-                { name: t('music.nowplaying.field_requester'), value: track.info.requester?.tag || 'Radio 24/7', inline: true },
+                { name: t('music.nowplaying.field_requester'), value: track.info.requester?.tag || tr('messages.music.radio_requester'), inline: true },
                 {
                     name: t('music.nowplaying.field_time'),
-                    value: `\`${formatTime(currentPos)} / ${track.info.isStream ? 'LIVE' : formatTime(totalDuration)}\``,
+                    value: `\`${formatTime(currentPos)} / ${track.info.isStream ? tr('messages.music.live') : formatTime(totalDuration)}\``,
                     inline: false
                 },
                 {

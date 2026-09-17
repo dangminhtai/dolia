@@ -1,3 +1,4 @@
+import { t as tr } from '../../services/i18nService.js';
 import { SlashCommandBuilder, EmbedBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder } from 'discord.js';
 import GeminiLyrics from '../../class/GeminiLyrics.js';
 import { sendSafeMessage } from '../../utils/messageHelper.js';
@@ -6,7 +7,7 @@ import { t } from '../../services/i18nService.js';
 export default {
     data: new SlashCommandBuilder()
         .setName('lyrics')
-        .setDescription('Tìm kiếm lời bài hát bằng Dolia AI'),
+        .setDescription(tr('commands.lyrics.setdescription_tim_kiem_loi_bai_hat_bang_dolia')),
 
     async execute(interaction) {
         const modal = new ModalBuilder()

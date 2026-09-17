@@ -1,3 +1,4 @@
+import { t as tr } from '../../services/i18nService.js';
 import fs from 'fs';
 import path from 'path';
 import manifestManager from './manifest-manager.js';
@@ -21,7 +22,7 @@ export class ApplyEngine {
             throw new Error('APPLY_BLOCKED: Giao dịch bị chặn vì chưa nhận được phê duyệt (APPROVED) từ Chủ nhân.');
         }
 
-        console.log(`[ApplyEngine] 🚀 Bắt đầu quy trình Apply cho đề xuất từ Host...`);
+        console.log(tr('logs.apply_engine.log_applyengine_bat_dau_quy_trinh_apply_cho'));
 
         // 2. HOST RE-VALIDATION: Tự kiểm tra độc lập toàn bộ manifest và các file nguồn
         const reval = await manifestManager.revalidateManifest(manifest);
@@ -32,7 +33,7 @@ export class ApplyEngine {
 
         // 3. TRANSACTION BEGIN: Mở phiên giao dịch và chuẩn bị snapshot backup
         const txData = transactionManager.beginTransaction(manifest, options);
-        console.log(`[ApplyEngine] 📋 Khởi tạo giao dịch ${txData.transactionId}`);
+        console.log(tr('logs.apply_engine.log_applyengine_khoi_tao_giao_dich', { transactionId: txData.transactionId }));
 
         try {
             // 4. BACKUP & ATOMIC COPY / DELETE
@@ -59,12 +60,12 @@ export class ApplyEngine {
                     } else {
                         txData.createdFiles.push(targetRelative);
                     }
-                    console.log(`[ApplyEngine] 📦 Đã áp dụng [${change.action.toUpperCase()}]: ${targetRelative}`);
+                    console.log(tr('logs.apply_engine.log_applyengine_da_ap_dung', { value: change.action.toUpperCase(), targetRelative: targetRelative }));
                 } else if (change.action === 'delete') {
                     if (fs.existsSync(change.fullTargetPath)) {
                         fs.rmSync(change.fullTargetPath, { recursive: true, force: true });
                         txData.deletedFiles.push(targetRelative);
-                        console.log(`[ApplyEngine] 🗑️ Đã xóa [DELETE]: ${targetRelative}`);
+                        console.log(tr('logs.apply_engine.log_applyengine_da_xoa_delete', { targetRelative: targetRelative }));
                     }
                 }
             }
@@ -86,7 +87,7 @@ export class ApplyEngine {
                 appliedChangesCount: reval.verifiedChanges.length
             });
 
-            console.log(`[ApplyEngine] ✨ Giao dịch ${txData.transactionId} đã COMMIT thành công! Trạng thái: READY_FOR_RELOAD`);
+            console.log(tr('logs.apply_engine.log_applyengine_giao_dich_da_commit_thanh_cong', { transactionId: txData.transactionId }));
 
             return {
                 status: 'APPLIED',
@@ -97,7 +98,7 @@ export class ApplyEngine {
             };
 
         } catch (applyErr) {
-            console.error(`[ApplyEngine] ❌ Lỗi trong quá trình Apply: ${applyErr.message}`);
+            console.error(tr('logs.apply_engine.error_applyengine_loi_trong_qua_trinh_apply', { message: applyErr.message }));
 
             // Tự động kích hoạt Rollback để bảo vệ 100% tính toàn vẹn của production
             await rollbackManager.rollback(txData, applyErr.message);

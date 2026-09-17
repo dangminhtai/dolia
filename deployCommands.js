@@ -1,3 +1,4 @@
+import { t as tr } from './services/i18nService.js';
 import dotenv from 'dotenv';
 dotenv.config();
 import fs from 'fs';
@@ -36,7 +37,7 @@ async function scanCommandDirectory(dir, client, isSandbox = false) {
                     commandsToDeploy.push(cmdData);
                 }
             } catch (err) {
-                Logger.error(`❌ Lỗi nạp lệnh từ ${file.name}:`, err.message);
+                Logger.error(tr('logs.deploycommands.error_loi_nap_lenh_tu', { name: file.name }), err.message);
             }
         }
     }
@@ -77,7 +78,7 @@ async function deployCommands(loadResult, forceDeploy = false) {
     const commands = Array.isArray(loadResult) ? loadResult : (loadResult?.commands || []);
 
     if (commands.length === 0) {
-        Logger.warn('[Deploy] Không có lệnh nào được tìm thấy để deploy.');
+        Logger.warn(tr('logs.deploycommands.warn_deploy_khong_co_lenh_nao_duoc_tim'));
         return { deployed: false, reason: 'empty' };
     }
 
@@ -85,7 +86,7 @@ async function deployCommands(loadResult, forceDeploy = false) {
     const uniqueCommandsMap = new Map();
     for (const cmd of commands) {
         if (uniqueCommandsMap.has(cmd.name)) {
-            Logger.warn(`[Deploy] ⚠️ Trùng tên command: /${cmd.name} — chỉ lấy phiên bản cuối cùng.`);
+            Logger.warn(tr('logs.deploycommands.warn_deploy_trung_ten_command_chi_lay_phien', { name: cmd.name }));
         }
         uniqueCommandsMap.set(cmd.name, cmd);
     }

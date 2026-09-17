@@ -1,3 +1,4 @@
+import { t as tr } from '../services/i18nService.js';
 import { EmbedBuilder } from 'discord.js';
 import { SelfDevService } from '../services/selfDevService.js';
 import Logger from '../class/Logger.js';
@@ -10,7 +11,7 @@ import geminiModelService from '../services/geminiModelService.js';
 export async function executeCommandFromMessage(cmdName, message, client) {
     if (!client) client = message?.client || message?.channel?.client || message?.guild?.client;
     if (!client?.commands) {
-        return { success: false, message: 'Danh sách lệnh chưa sẵn sàng.' };
+        return { success: false, message: tr('messages.devfunctions.text_danh_sach_lenh_chua_san_sang') };
     }
 
     const cleanInput = (cmdName || '').trim().toLowerCase().replace(/^\//, '');
@@ -36,11 +37,11 @@ export async function executeCommandFromMessage(cmdName, message, client) {
     }
 
     if (!command) {
-        return { success: false, message: `Không tìm thấy trò chơi hoặc lệnh "${cmdName}" trong hệ thống.` };
+        return { success: false, message: tr('messages.devfunctions.text_khong_tim_thay_tro_choi_hoac_lenh', { cmdName: cmdName }) };
     }
 
     try {
-        Logger.info(`[DevFunctions] 🎮 Đang thực thi lệnh /${command.data.name} cho user ${message.author?.id} (${message.author?.username})...`);
+        Logger.info(tr('logs.devfunctions.info_devfunctions_dang_thuc_thi_lenh_cho_user', { name: command.data.name, id: message.author?.id, username: message.author?.username }));
 
         let sentMsg = null;
         const fakeInteraction = {
@@ -98,10 +99,10 @@ export async function executeCommandFromMessage(cmdName, message, client) {
         return { 
             success: true, 
             commandName: command.data.name, 
-            message: `Trò chơi /${command.data.name} đã được khởi chạy thành công ngay tại kênh chat!` 
+            message: tr('messages.devfunctions.text_tro_choi_da_duoc_khoi_chay_thanh', { name: command.data.name })
         };
     } catch (err) {
-        Logger.error(`[DevFunctions] Lỗi khi chạy lệnh /${command.data.name}:`, err);
+        Logger.error(tr('logs.devfunctions.error_devfunctions_loi_khi_chay_lenh', { name: command.data.name }), err);
         return { success: false, error: err.message };
     }
 }
@@ -112,7 +113,7 @@ export async function executeCommandFromMessage(cmdName, message, client) {
 export async function agent_code(args) {
     const { prompt, feature_name, action, user, channel, guild, message } = args;
 
-    Logger.info(`[DevFunctions] agent_code tool invoked by user ${user?.id} (${user?.username}): action="${action}", prompt="${prompt}", feature_name="${feature_name}"`);
+    Logger.info(tr('logs.devfunctions.info_devfunctions_agent_code_tool_invoked_by_user', { id: user?.id, username: user?.username, action: action, prompt: prompt, feature_name: feature_name }));
 
     const client = channel?.client || guild?.client || message?.client;
     const lowerAction = (action || '').toLowerCase();
@@ -124,7 +125,7 @@ export async function agent_code(args) {
 
     if (isRunFeature) {
         const targetCmd = feature_name || prompt;
-        Logger.info(`[DevFunctions] 🎮 Yêu cầu khởi chạy tính năng/game: "${targetCmd}"...`);
+        Logger.info(tr('logs.devfunctions.info_devfunctions_yeu_cau_khoi_chay_tinh_nang', { targetCmd: targetCmd }));
         const runResult = await executeCommandFromMessage(targetCmd, message, client);
         return JSON.stringify(runResult);
     }
@@ -136,7 +137,7 @@ export async function agent_code(args) {
                      lowerAction === 'inspect_data';
 
     if (isScript) {
-        Logger.info(`[DevFunctions] 🔍 Chạy script ngầm trong sandbox (action: "${lowerAction}"): "${prompt}"...`);
+        Logger.info(tr('logs.devfunctions.info_devfunctions_chay_script_ngam_trong_sandbox_action', { lowerAction: lowerAction, prompt: prompt }));
 
         // Gửi tin nhắn tiến trình chờ sự kiện thời gian thực (tin nhắn ngắn hạn, tự ẩn sau khi hoàn tất hoặc bấm nút ẩn)
         let statusMsg = null;
@@ -145,7 +146,7 @@ export async function agent_code(args) {
         const startTime = Date.now();
 
         let currentStage = 'init';
-        let currentStageDescription = '💭 Dolia đang lên kịch bản và chuẩn bị dữ liệu...';
+        let currentStageDescription = tr('messages.devfunctions.text_dolia_dang_len_kich_ban_va_chuan');
 
         const stageColors = {
             init: 0x5DADE2,       // xanh dương nhạt
@@ -160,11 +161,9 @@ export async function agent_code(args) {
         const createWaitEmbed = (elapsed, stage, desc) => {
             return new EmbedBuilder()
                 .setColor(stageColors[stage] || 0x5DADE2)
-                .setTitle('✨ Dolia đang thực hiện yêu cầu của bạn nè... 🫧')
+                .setTitle(tr('messages.devfunctions.settitle_dolia_dang_thuc_hien_yeu_cau_cua'))
                 .setDescription(
-                    `⏳ **Thời gian:** ${elapsed} giây...\n` +
-                    `💭 **Trạng thái:** ${desc}\n\n` +
-                    `*(Bạn đợi mình một xíu nha, mình đang thực hiện ngay đây nè~ 💖)*`
+                    tr('messages.devfunctions.setdescription_thoi_gian_giay_trang_thai_ban_doi', { elapsed: elapsed, desc: desc })
                 )
                 .setTimestamp();
         };
@@ -182,7 +181,7 @@ export async function agent_code(args) {
                 }).catch(() => null);
             }
         } catch (e) {
-            Logger.warn('[DevFunctions] Không thể gửi tin nhắn tiến trình chờ:', e.message);
+            Logger.warn(tr('logs.devfunctions.warn_devfunctions_khong_the_gui_tin_nhan_tien'), e.message);
         }
 
         if (statusMsg) {
@@ -216,12 +215,12 @@ export async function agent_code(args) {
             });
 
             if (statusMsg) {
-                onProgress({ stage: 'completed', text: '✨ Đã hoàn thành xuất sắc! Đang đóng gói kết quả cho bạn... 🎉' });
+                onProgress({ stage: 'completed', text: tr('messages.devfunctions.text_da_hoan_thanh_xuat_sac_dang_dong') });
             }
 
             return typeof inspectionResult === 'string' ? inspectionResult : JSON.stringify(inspectionResult);
         } catch (err) {
-            Logger.error('[DevFunctions] Lỗi chạy dynamic script:', err);
+            Logger.error(tr('logs.devfunctions.error_devfunctions_loi_chay_dynamic_script'), err);
             return JSON.stringify({ error: err.message });
         } finally {
             if (progressInterval) {
@@ -239,7 +238,7 @@ export async function agent_code(args) {
 
     // Các tác vụ thay đổi mã nguồn (tạo/xóa/sửa tính năng) chỉ dành cho Owner
     if (!SelfDevService.isOwner(user?.id)) {
-        return "Tính năng này chỉ dành riêng cho bạn chủ nhân của mình thôi nha! 🫧";
+        return tr('messages.devfunctions.text_tinh_nang_nay_chi_danh_rieng_cho');
     }
 
     // 2. Xử lý kịch bản xóa lệnh khỏi Sandbox
@@ -253,10 +252,10 @@ export async function agent_code(args) {
             channel,
             client
         }).catch(err => {
-            Logger.error('[DevFunctions] Error starting Delete session:', err);
+            Logger.error(tr('logs.devfunctions.error_devfunctions_error_starting_delete_session'), err);
         });
 
-        return `Mình đã nhận yêu cầu gỡ bỏ lệnh từ bạn rồi nè! Mình đang tiến hành kiểm tra và gỡ bỏ an toàn ngay nha~ 🫧`;
+        return tr('messages.devfunctions.text_minh_da_nhan_yeu_cau_go_bo');
     }
 
     // Kích hoạt tiến trình Self-Dev tạo mới tính năng (Tự động Apply an toàn)
@@ -268,10 +267,10 @@ export async function agent_code(args) {
         client,
         originalMessage: message
     }).catch(err => {
-        Logger.error('[DevFunctions] Error starting Self-Dev session:', err);
+        Logger.error(tr('logs.devfunctions.error_devfunctions_error_starting_self_dev_session'), err);
     });
 
-    return `Mình đã nhận yêu cầu của bạn rồi nè! Mình đang tự tay chuẩn bị và hoàn thiện tính năng "${prompt}", bạn đợi mình một chút xíu nha~ ✨🫧`;
+    return tr('messages.devfunctions.text_minh_da_nhan_yeu_cau_cua_ban', { prompt: prompt });
 }
 
 /**
@@ -279,11 +278,11 @@ export async function agent_code(args) {
  */
 export async function web_search({ query }) {
     if (!query || typeof query !== 'string') {
-        return JSON.stringify({ error: 'Vui lòng cung cấp từ khóa tìm kiếm.' });
+        return JSON.stringify({ error: tr('messages.devfunctions.text_vui_long_cung_cap_tu_khoa_tim') });
     }
 
     try {
-        Logger.info(`[DevFunctions] 🌐 Đang tìm kiếm Google cho: "${query}"...`);
+        Logger.info(tr('logs.devfunctions.info_devfunctions_dang_tim_kiem_google_cho', { query: query }));
 
         const candidateModels = await geminiModelService.getCandidateModels('flash-lite', 'chat');
         let lastError = null;
@@ -306,12 +305,12 @@ export async function web_search({ query }) {
                 if (searchResult) break;
             } catch (err) {
                 lastError = err;
-                Logger.warn(`[DevFunctions] ⚠️ Model ${modelId} gặp sự cố khi web_search: ${err.message}. Đang thử model tiếp theo...`);
+                Logger.warn(tr('logs.devfunctions.warn_devfunctions_model_gap_su_co_khi_web', { modelId: modelId, message: err.message }));
             }
         }
 
         if (!searchResult) {
-            throw lastError || new Error('Không có model nào thực hiện được web_search.');
+            throw lastError || new Error(tr('messages.devfunctions.text_khong_co_model_nao_thuc_hien_duoc'));
         }
 
         const text = searchResult.text || '';
@@ -327,14 +326,14 @@ export async function web_search({ query }) {
             }))
         };
 
-        Logger.info(`[DevFunctions] ✅ Đã tìm kiếm thành công cho "${query}" (${resultObj.sources.length} nguồn trích dẫn)`);
+        Logger.info(tr('logs.devfunctions.info_devfunctions_da_tim_kiem_thanh_cong_cho', { query: query, length: resultObj.sources.length }));
         return JSON.stringify(resultObj);
     } catch (err) {
-        Logger.error(`[DevFunctions] ❌ Lỗi khi tìm kiếm Google cho "${query}":`, err.message);
+        Logger.error(tr('logs.devfunctions.error_devfunctions_loi_khi_tim_kiem_google_cho', { query: query }), err.message);
         return JSON.stringify({
             query: query,
-            error: `Không thể tìm kiếm trên Google lúc này: ${err.message}`,
-            fallbackMessage: 'Hãy thử lại sau giây lát hoặc đổi từ khóa tìm kiếm.'
+            error: tr('messages.devfunctions.text_khong_the_tim_kiem_tren_google_luc', { message: err.message }),
+            fallbackMessage: tr('messages.devfunctions.text_hay_thu_lai_sau_giay_lat_hoac')
         });
     }
 }

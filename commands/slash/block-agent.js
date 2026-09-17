@@ -1,3 +1,4 @@
+import { t as tr } from '../../services/i18nService.js';
 import {
     SlashCommandBuilder,
     ApplicationIntegrationType,
@@ -21,39 +22,39 @@ const BLOCK_DURATIONS = {
 };
 
 const DURATION_LABELS = {
-    '1h': '1 giờ',
-    '6h': '6 giờ',
-    '24h': '24 giờ',
-    '7d': '7 ngày',
-    'permanent': 'Vĩnh viễn'
+    '1h': tr('commands.block_agent.1h_1_gio'),
+    '6h': tr('commands.block_agent.6h_6_gio'),
+    '24h': tr('commands.block_agent.24h_24_gio'),
+    '7d': tr('commands.block_agent.7d_7_ngay'),
+    'permanent': tr('commands.block_agent.permanent_vinh_vien')
 };
 
 export default {
     data: new SlashCommandBuilder()
         .setName('block-agent')
-        .setDescription('Quản lý block/unblock model AI cho Agent pipeline (Chỉ Chủ nhân)')
+        .setDescription(tr('commands.block_agent.setdescription_quan_ly_block_unblock_model_ai_cho'))
         .setIntegrationTypes(ApplicationIntegrationType.GuildInstall, ApplicationIntegrationType.UserInstall)
         .setContexts(InteractionContextType.Guild, InteractionContextType.BotDM, InteractionContextType.PrivateChannel)
         .addStringOption(option =>
             option.setName('action')
-                .setDescription('Hành động muốn thực hiện')
+                .setDescription(tr('commands.block_agent.setdescription_hanh_dong_muon_thuc_hien'))
                 .setRequired(true)
                 .addChoices(
-                    { name: '🚫 Block model(s)', value: 'block' },
-                    { name: '✅ Unblock model(s)', value: 'unblock' },
-                    { name: '📊 Xem trạng thái', value: 'status' }
+                    { name: tr('commands.block_agent.name_block_model_s'), value: 'block' },
+                    { name: tr('commands.block_agent.name_unblock_model_s'), value: 'unblock' },
+                    { name: tr('commands.block_agent.name_xem_trang_thai'), value: 'status' }
                 )
         )
         .addStringOption(option =>
             option.setName('duration')
-                .setDescription('Thời gian block (mặc định: 24h)')
+                .setDescription(tr('commands.block_agent.setdescription_thoi_gian_block_mac_dinh_24h'))
                 .setRequired(false)
                 .addChoices(
-                    { name: '1 giờ', value: '1h' },
-                    { name: '6 giờ', value: '6h' },
-                    { name: '24 giờ (Mặc định)', value: '24h' },
-                    { name: '7 ngày', value: '7d' },
-                    { name: 'Vĩnh viễn', value: 'permanent' }
+                    { name: tr('commands.block_agent.name_1_gio'), value: '1h' },
+                    { name: tr('commands.block_agent.name_6_gio'), value: '6h' },
+                    { name: tr('commands.block_agent.name_24_gio_mac_dinh'), value: '24h' },
+                    { name: tr('commands.block_agent.name_7_ngay'), value: '7d' },
+                    { name: tr('commands.block_agent.name_vinh_vien'), value: 'permanent' }
                 )
         ),
 
@@ -61,7 +62,7 @@ export default {
         // Owner check
         if (!SelfDevService.isOwner(interaction.user.id)) {
             return interaction.reply({
-                content: '🔒 Chỉ có chủ nhân mới được quản lý block model!',
+                content: tr('commands.block_agent.content_chi_co_chu_nhan_moi_duoc_quan'),
                 flags: MessageFlags.Ephemeral
             });
         }
@@ -101,15 +102,15 @@ async function showStatus(interaction, allModels) {
 
     const lines = allModels.map(m => {
         const isBlocked = m.agentBlockedUntil && m.agentBlockedUntil > now;
-        const statusIcon = isBlocked ? '🔴' : '🟢';
-        const typeIcon = m.type === 'flash' ? '⚡' : '💡';
+        const statusIcon = isBlocked ? tr('commands.block_agent.status_blocked') : tr('commands.block_agent.status_available');
+        const typeIcon = m.type === 'flash' ? tr('commands.block_agent.type_flash_icon') : tr('commands.block_agent.type_lite_icon');
 
         let blockInfo = '';
         if (isBlocked) {
             const remaining = m.agentBlockedUntil - now;
             const hours = Math.floor(remaining / 3600000);
             const minutes = Math.floor((remaining % 3600000) / 60000);
-            blockInfo = ` ── 🔒 Block Agent còn **${hours}h${minutes}m** (${m.agentBlockReason || 'N/A'})`;
+            blockInfo = tr('messages.block_agent.text_block_agent_con_hm', { hours: hours, minutes: minutes, value: m.agentBlockReason || 'N/A' });
         }
 
         return `${statusIcon} ${typeIcon} \`${m.modelId}\`${blockInfo}`;
@@ -118,13 +119,12 @@ async function showStatus(interaction, allModels) {
     const blockedCount = allModels.filter(m => m.agentBlockedUntil && m.agentBlockedUntil > now).length;
 
     const embed = new EmbedBuilder()
-        .setTitle('📊 Trạng thái Model Agent (Antigravity & SelfDev)')
+        .setTitle(tr('commands.block_agent.settitle_trang_thai_model_agent_antigravity_selfdev'))
         .setDescription(
-            (lines.join('\n') || 'Không có model nào trong database.') +
-            '\n\n💡 *Lưu ý: Trạng thái block ở đây CHỈ áp dụng cho Antigravity & SelfDev Agent. Chat bình thường của Dolia KHÔNG bị block.*'
+            tr('commands.block_agent.setdescription_luu_y_trang_thai_block_o_day', { value: (lines.join('\n') || tr('messages.block_agent.text_khong_co_model_nao_trong_database')) })
         )
         .setColor(blockedCount > 0 ? 0xFF6B6B : 0x51CF66)
-        .setFooter({ text: `${allModels.length} model | ${blockedCount} đang bị block cho Agent` })
+        .setFooter({ text: tr('commands.block_agent.text_model_dang_bi_block_cho_agent', { length: allModels.length, blockedCount: blockedCount }) })
         .setTimestamp();
 
     await interaction.editReply({ embeds: [embed] });
@@ -139,23 +139,23 @@ async function showBlockMenu(interaction, allModels, duration) {
 
     if (availableModels.length === 0) {
         return interaction.editReply({
-            content: '⚠️ Tất cả model đều đang bị block cho Agent rồi! Dùng `unblock` để mở lại.'
+            content: tr('commands.block_agent.content_tat_ca_model_deu_dang_bi_block')
         });
     }
 
     const options = availableModels.slice(0, 25).map(m => {
-        const typeLabel = m.type === 'flash' ? '⚡Flash' : '💡Lite';
+        const typeLabel = m.type === 'flash' ? tr('commands.block_agent.text_flash') : tr('commands.block_agent.text_lite');
         return {
             label: m.modelId,
-            description: `${typeLabel} | v${m.version}`,
+            description: tr('commands.block_agent.description_v', { typeLabel: typeLabel, version: m.version }),
             value: `blockagent_${m.modelId}_${duration}`,
-            emoji: m.type === 'flash' ? '⚡' : '💡'
+            emoji: m.type === 'flash' ? tr('commands.block_agent.type_flash_icon') : tr('commands.block_agent.type_lite_icon')
         };
     });
 
     const selectMenu = new StringSelectMenuBuilder()
         .setCustomId('blockagent_block_menu')
-        .setPlaceholder(`🚫 Chọn model để block Agent (${DURATION_LABELS[duration]})`)
+        .setPlaceholder(tr('commands.block_agent.setplaceholder_chon_model_de_block_agent', { value: DURATION_LABELS[duration] }))
         .setMinValues(1)
         .setMaxValues(Math.min(options.length, 25))
         .addOptions(options);
@@ -163,11 +163,9 @@ async function showBlockMenu(interaction, allModels, duration) {
     const row = new ActionRowBuilder().addComponents(selectMenu);
 
     const embed = new EmbedBuilder()
-        .setTitle('🚫 Block Model cho Agent (Antigravity & SelfDev)')
+        .setTitle(tr('commands.block_agent.settitle_block_model_cho_agent_antigravity_selfdev'))
         .setDescription(
-            `Chọn một hoặc nhiều model để block trong **${DURATION_LABELS[duration]}**.\n\n` +
-            `• **Ảnh hưởng:** Antigravity Cloud Sandbox & SelfDev Pipeline sẽ bỏ qua các model này.\n` +
-            `• **Chat thường:** Chat với Dolia **hoàn toàn KHÔNG bị ảnh hưởng** và vẫn dùng bình thường!`
+            tr('commands.block_agent.setdescription_chon_mot_hoac_nhieu_model_de_block', { value: DURATION_LABELS[duration] })
         )
         .setColor(0xFF6B6B)
         .setTimestamp();
@@ -184,7 +182,7 @@ async function showUnblockMenu(interaction, allModels) {
 
     if (blockedModels.length === 0) {
         return interaction.editReply({
-            content: '✅ Không có model nào đang bị block cho Agent! Mọi thứ hoạt động bình thường.'
+            content: tr('commands.block_agent.content_khong_co_model_nao_dang_bi_block')
         });
     }
 
@@ -194,15 +192,15 @@ async function showUnblockMenu(interaction, allModels) {
         const minutes = Math.floor((remaining % 3600000) / 60000);
         return {
             label: m.modelId,
-            description: `🔒 Còn ${hours}h${minutes}m | ${m.agentBlockReason || 'N/A'}`,
+            description: tr('commands.block_agent.description_con_hm', { hours: hours, minutes: minutes, value: m.agentBlockReason || 'N/A' }),
             value: `blockagent_unblock_${m.modelId}`,
-            emoji: '🔴'
+            emoji: tr('commands.block_agent.emoji_emoji')
         };
     });
 
     const selectMenu = new StringSelectMenuBuilder()
         .setCustomId('blockagent_unblock_menu')
-        .setPlaceholder('✅ Chọn model để unblock cho Agent')
+        .setPlaceholder(tr('commands.block_agent.setplaceholder_chon_model_de_unblock_cho_agent'))
         .setMinValues(1)
         .setMaxValues(Math.min(options.length, 25))
         .addOptions(options);
@@ -210,10 +208,9 @@ async function showUnblockMenu(interaction, allModels) {
     const row = new ActionRowBuilder().addComponents(selectMenu);
 
     const embed = new EmbedBuilder()
-        .setTitle('✅ Unblock Model cho Agent')
+        .setTitle(tr('commands.block_agent.settitle_unblock_model_cho_agent'))
         .setDescription(
-            `Chọn một hoặc nhiều model để gỡ block cho Agent.\n` +
-            `Model được unblock sẽ ngay lập tức có thể được Antigravity/SelfDev sử dụng lại.`
+            tr('commands.block_agent.setdescription_chon_mot_hoac_nhieu_model_de_go')
         )
         .setColor(0x51CF66)
         .setTimestamp();
@@ -227,7 +224,7 @@ async function showUnblockMenu(interaction, allModels) {
 export async function handleBlockAgentMenu(interaction) {
     if (!SelfDevService.isOwner(interaction.user.id)) {
         return interaction.reply({
-            content: '🔒 Bạn không có quyền thực hiện thao tác này!',
+            content: tr('commands.block_agent.content_ban_khong_co_quyen_thuc_hien_thao'),
             flags: MessageFlags.Ephemeral
         });
     }
@@ -253,17 +250,16 @@ export async function handleBlockAgentMenu(interaction) {
                 `MANUAL_BLOCK (by owner, ${DURATION_LABELS[durationKey] || '24h'})`,
                 cooldownMs
             );
-            results.push(`🔴 \`${modelId}\` — blocked Agent ${DURATION_LABELS[durationKey] || '24h'}`);
+            results.push(tr('messages.block_agent.text_blocked_agent', { modelId: modelId, value: DURATION_LABELS[durationKey] || '24h' }));
         }
 
         const embed = new EmbedBuilder()
-            .setTitle('🚫 Đã Block Model(s) cho Agent')
+            .setTitle(tr('commands.block_agent.settitle_da_block_model_s_cho_agent'))
             .setDescription(
-                results.join('\n') +
-                '\n\n💡 *Chat thông thường của Dolia vẫn hoạt động bình thường, không bị ảnh hưởng.*'
+                tr('commands.block_agent.setdescription_chat_thong_thuong_cua_dolia_van_hoat', { value: results.join('\n') })
             )
             .setColor(0xFF6B6B)
-            .setFooter({ text: `${results.length} model đã bị block cho Agent` })
+            .setFooter({ text: tr('commands.block_agent.text_model_da_bi_block_cho_agent', { length: results.length }) })
             .setTimestamp();
 
         await interaction.editReply({ embeds: [embed], components: [] });
@@ -277,14 +273,14 @@ export async function handleBlockAgentMenu(interaction) {
             const modelId = value.replace('blockagent_unblock_', '');
 
             await geminiModelService.unblockAgentModel(modelId);
-            results.push(`🟢 \`${modelId}\` — unblocked cho Agent`);
+            results.push(tr('messages.block_agent.text_unblocked_cho_agent', { modelId: modelId }));
         }
 
         const embed = new EmbedBuilder()
-            .setTitle('✅ Đã Unblock Model(s) cho Agent')
+            .setTitle(tr('commands.block_agent.settitle_da_unblock_model_s_cho_agent'))
             .setDescription(results.join('\n'))
             .setColor(0x51CF66)
-            .setFooter({ text: `${results.length} model đã được mở lại cho Agent` })
+            .setFooter({ text: tr('commands.block_agent.text_model_da_duoc_mo_lai_cho_agent', { length: results.length }) })
             .setTimestamp();
 
         await interaction.editReply({ embeds: [embed], components: [] });

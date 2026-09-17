@@ -1,3 +1,4 @@
+import { t as tr } from '../../services/i18nService.js';
 import fs from 'fs';
 import path from 'path';
 import transactionManager from './transaction-manager.js';
@@ -11,7 +12,7 @@ export class RollbackManager {
      * Thực hiện khôi phục toàn diện giao dịch
      */
     async rollback(transactionData, errorReason) {
-        console.warn(`[RollbackManager] ⚠️ Đang kích hoạt ROLLBACK cho giao dịch ${transactionData.transactionId}... Lý do: ${errorReason}`);
+        console.warn(tr('logs.rollback_manager.warn_rollbackmanager_dang_kich_hoat_rollback_cho_giao', { transactionId: transactionData.transactionId, errorReason: errorReason }));
         let restoredCount = 0;
         let removedCount = 0;
 
@@ -23,7 +24,7 @@ export class RollbackManager {
                     if (fs.existsSync(prodPath)) {
                         fs.rmSync(prodPath, { recursive: true, force: true });
                         removedCount++;
-                        console.log(`[RollbackManager] 🗑️ Đã xóa file mới tạo dở dang: ${relativePath}`);
+                        console.log(tr('logs.rollback_manager.log_rollbackmanager_da_xoa_file_moi_tao_do', { relativePath: relativePath }));
                     }
                 }
             }
@@ -41,14 +42,14 @@ export class RollbackManager {
                     if (fs.existsSync(item.backupFilePath)) {
                         fs.copyFileSync(item.backupFilePath, prodPath);
                         restoredCount++;
-                        console.log(`[RollbackManager] 🔄 Đã khôi phục file ban đầu: ${item.relativeTargetPath}`);
+                        console.log(tr('logs.rollback_manager.log_rollbackmanager_da_khoi_phuc_file_ban_dau', { relativeTargetPath: item.relativeTargetPath }));
                     }
                 }
             }
 
             // 3. Ghi log trạng thái rollback vào transaction audit
             transactionManager.recordRollback(transactionData, errorReason);
-            console.log(`[RollbackManager] ✅ Rollback hoàn tất thành công! Production đã quay về trạng thái ban đầu.`);
+            console.log(tr('logs.rollback_manager.log_rollbackmanager_rollback_hoan_tat_thanh_cong_production'));
 
             return {
                 success: true,
@@ -57,7 +58,7 @@ export class RollbackManager {
                 transactionId: transactionData.transactionId
             };
         } catch (rollbackErr) {
-            console.error(`[RollbackManager] ❌ LỖI NGHIÊM TRỌNG TRONG KHI ROLLBACK:`, rollbackErr);
+            console.error(tr('logs.rollback_manager.error_rollbackmanager_loi_nghiem_trong_trong_khi_rollback'), rollbackErr);
             transactionManager.recordRollback(transactionData, `Rollback failed: ${rollbackErr.message}`);
             throw rollbackErr;
         }

@@ -1,3 +1,4 @@
+import { t as tr } from '../../services/i18nService.js';
 import { SlashCommandBuilder, ChannelType } from 'discord.js'; // Nhớ import ChannelType
 import { poru } from '../../utils/LavalinkManager.js';
 import { applyAudioSettings } from '../../utils/AudioController.js';
@@ -8,15 +9,15 @@ import { getUserMusicSource, isFailed, isEmpty, isPlaylist, resolveWithProvider 
 export default {
     data: new SlashCommandBuilder()
         .setName('play')
-        .setDescription('Phát nhạc (Không cần bạn phải vào Voice)')
+        .setDescription(tr('commands.play.setdescription_phat_nhac_khong_can_ban_phai_vao'))
         .addStringOption(option =>
             option.setName('query')
-                .setDescription('Tên bài hát hoặc Link')
+                .setDescription(tr('commands.play.setdescription_ten_bai_hat_hoac_link'))
                 .setRequired(true)
         )
         .addBooleanOption(option =>
             option.setName('priority')
-                .setDescription('True = Chen ngang phát ngay lập tức')
+                .setDescription(tr('commands.play.setdescription_true_chen_ngang_phat_ngay_lap_tuc'))
                 .setRequired(false)
         ),
 
@@ -67,7 +68,7 @@ export default {
             });
             res = resolveResult.res;
         } catch (error) {
-            console.error('Lavalink Resolve Error:', error);
+            console.error(tr('logs.play.error_lavalink_resolve_error'), error);
             return interaction.editReply(t('music.errors.bad_gateway'));
         }
 
@@ -140,7 +141,7 @@ export default {
             { guildId: interaction.guild.id },
             { ...updateQuery, $set: { updatedAt: new Date() } },
             { upsert: true }
-        ).catch(e => console.error('Lỗi lưu Queue DB:', e));
+        ).catch(e => console.error(tr('logs.play.error_loi_luu_queue_db'), e));
 
         // 5. Kích hoạt phát nhạc
         if (isPriority) {

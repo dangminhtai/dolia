@@ -1,3 +1,4 @@
+import { t as tr } from '../../services/i18nService.js';
 import { SlashCommandBuilder, EmbedBuilder } from 'discord.js';
 import RadioSong from '../../models/RadioSong.js';
 import { t } from '../../services/i18nService.js';
@@ -5,8 +6,8 @@ import { t } from '../../services/i18nService.js';
 export default {
     data: new SlashCommandBuilder()
         .setName('radio-list247')
-        .setDescription('Xem danh sách nhạc trong kho Radio 24/7')
-        .addIntegerOption(o => o.setName('page').setDescription('Số trang muốn xem').setMinValue(1)),
+        .setDescription(tr('commands.radio_list247.setdescription_xem_danh_sach_nhac_trong_kho_radio'))
+        .addIntegerOption(o => o.setName('page').setDescription(tr('commands.radio_list247.setdescription_so_trang_muon_xem')).setMinValue(1)),
 
     async execute(interaction) {
         await interaction.deferReply();
@@ -38,7 +39,7 @@ export default {
         const startRank = (page - 1) * itemsPerPage + 1;
 
         const description = songs.map((song, index) => {
-            return `**${startRank + index}.** [${song.title}](${song.url}) - *${song.addedBy || 'Admin'}*`;
+            return tr('messages.music.radio_list_item', { rank: startRank + index, title: song.title, url: song.url, addedBy: song.addedBy || tr('messages.music.radio_added_by') });
         }).join('\n');
 
         // 4. Tạo Embed đẹp

@@ -1,3 +1,4 @@
+import { t as tr } from '../../services/i18nService.js';
 import fs from 'fs';
 import { Events } from 'discord.js';
 import GeminiManager from '../../class/GeminiManager.js';
@@ -43,7 +44,7 @@ export default (client) => {
             }
 
             if (!textToReply && filesToAttach.length === 0) {
-                textToReply = t('common.chat_empty_fallback') || 'Dolia đã ghi nhận yêu cầu của chủ nhân rồi nha! ✨💖';
+                textToReply = t('common.chat_empty_fallback');
             }
 
             const sendResponse = async (content, files = []) => {
@@ -68,8 +69,8 @@ export default (client) => {
                 await sendResponse(textToReply, filesToAttach);
             }
         } catch (error) {
-            console.error('Gemini Chat Error:', error);
-            const errMsg = t('common.chat_error') || 'Dolia đang gặp một chút trục trặc kết nối, bạn thử lại sau giây lát nha!';
+            console.error(tr('logs.messagecreate.error_gemini_chat_error'), error);
+            const errMsg = t('common.chat_error');
             await message.channel.send(errMsg).catch(() => {});
         } finally {
             clearInterval(typingInterval);

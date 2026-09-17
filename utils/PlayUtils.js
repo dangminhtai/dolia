@@ -1,3 +1,4 @@
+import { t as tr } from '../services/i18nService.js';
 import { poru } from './LavalinkManager.js';
 import { applyAudioSettings } from './AudioController.js';
 import GuildMusicQueue from '../models/GuildMusicQueue.js';
@@ -56,7 +57,7 @@ export async function executePlay(interaction, query, isPriority) {
         });
         res = resolveResult.res;
     } catch (error) {
-        console.error('Lavalink Resolve Error:', error);
+        console.error(tr('logs.playutils.error_lavalink_resolve_error'), error);
         return { success: false, message: t('music.errors.lavalink_error') };
     }
 
@@ -128,7 +129,7 @@ export async function executePlay(interaction, query, isPriority) {
         { guildId: interaction.guild.id },
         { ...updateQuery, $set: { updatedAt: new Date() } },
         { upsert: true }
-    ).catch(e => console.error('Lỗi lưu Queue DB:', e));
+    ).catch(e => console.error(tr('logs.playutils.error_loi_luu_queue_db'), e));
 
     // 5. Playback Control
     if (isPriority) {

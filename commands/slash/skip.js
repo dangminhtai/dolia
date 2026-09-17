@@ -1,3 +1,4 @@
+import { t as tr } from '../../services/i18nService.js';
 import { SlashCommandBuilder } from 'discord.js';
 import { poru } from '../../utils/LavalinkManager.js';
 import { t } from '../../services/i18nService.js';
@@ -5,7 +6,7 @@ import { t } from '../../services/i18nService.js';
 export default {
     data: new SlashCommandBuilder()
         .setName('skip')
-        .setDescription('Bỏ qua bài hiện tại (Lavalink)'),
+        .setDescription(tr('commands.skip.setdescription_bo_qua_bai_hien_tai_lavalink')),
 
     async execute(interaction) {
         const player = poru.players.get(interaction.guild.id);

@@ -1,3 +1,4 @@
+import { t as tr } from './i18nService.js';
 import fs from 'fs';
 import path from 'path';
 import { pathToFileURL } from 'url';
@@ -52,7 +53,7 @@ export class SelfDevService {
      */
     static async startSession({ prompt, featureName, user, channel, client, replyTarget = null, originalMessage = null }) {
         if (!this.isOwner(user.id)) {
-            const rejectMsg = t('self_dev.only_owner') || 'Chỉ có chủ nhân mới có thể yêu cầu mình tạo tính năng mới nha!';
+            const rejectMsg = t('self_dev.only_owner');
             if (replyTarget) await replyTarget.reply(rejectMsg);
             else await channel.send(rejectMsg);
             return;
@@ -65,11 +66,9 @@ export class SelfDevService {
         // Gửi Embed thông báo nhẹ nhàng ban đầu theo đúng phong cách Dolia (xưng mình - bạn)
         const statusEmbed = new EmbedBuilder()
             .setColor(0x5DADE2)
-            .setTitle('✨ Dolia đang chuẩn bị tính năng cho bạn nè... 🫧')
+            .setTitle(tr('messages.selfdevservice.settitle_dolia_dang_chuan_bi_tinh_nang_cho'))
             .setDescription(
-                `⏳ **Thời gian:** 0 giây...\n` +
-                `💭 **Trạng thái:** 💭 Dolia đang lên ý tưởng thật vui cho bạn nè...\n\n` +
-                `*(Bạn đợi mình một chút xíu nha, sắp xong rồi nè~ 💖)*`
+                tr('messages.selfdevservice.setdescription_thoi_gian_0_giay_trang_thai_dolia')
             )
             .setTimestamp();
 
@@ -82,7 +81,7 @@ export class SelfDevService {
             progressMsg = await channel.send({ embeds: [statusEmbed] }).catch(() => null);
         }
 
-        let currentStageDescription = '💭 Dolia đang lên ý tưởng trò chơi thật vui cho bạn nè...';
+        let currentStageDescription = tr('messages.selfdevservice.text_dolia_dang_len_y_tuong_tro_choi');
         let currentStage = 'init'; // Theo dõi stage hiện tại từ Antigravity SSE
 
         // Màu embed động theo stage của Antigravity Agent
@@ -105,11 +104,9 @@ export class SelfDevService {
 
             const liveEmbed = new EmbedBuilder()
                 .setColor(stageColors[currentStage] || 0x5DADE2)
-                .setTitle('✨ Dolia đang chuẩn bị trò chơi cho bạn nè... 🫧')
+                .setTitle(tr('messages.selfdevservice.settitle_dolia_dang_chuan_bi_tro_choi_cho'))
                 .setDescription(
-                    `⏳ **Thời gian:** ${elapsed} giây...\n` +
-                    `💭 **Trạng thái:** ${currentStageDescription}\n\n` +
-                    `*(Bạn đợi mình một chút xíu nha, sắp xong rồi nè~ 💖)*`
+                    tr('messages.selfdevservice.setdescription_thoi_gian_giay_trang_thai_ban_doi', { elapsed: elapsed, currentStageDescription: currentStageDescription })
                 )
                 .setTimestamp();
 
@@ -126,7 +123,7 @@ export class SelfDevService {
 
             // Ưu tiên 1: Gọi Antigravity Agent trên Google Cloud Sandbox với SSE Stream Real-time
             try {
-                Logger.info(`[SelfDev] 🧠 Đang gọi Antigravity Agent (Cloud Sandbox)...`);
+                Logger.info(tr('logs.selfdevservice.info_selfdev_dang_goi_antigravity_agent_cloud_sandbox'));
                 const antiResult = await AntigravityService.developFeature({
                     prompt,
                     featureName: safeSlug,
@@ -145,7 +142,7 @@ export class SelfDevService {
                     generatedData = antiResult.data;
                     usedModel = antiResult.usedModel;
                     commandName = generatedData.command_name || safeSlug;
-                    Logger.info(`[SelfDev] ✅ Antigravity Cloud sinh mã thành công cho /${commandName}`);
+                    Logger.info(tr('logs.selfdevservice.info_selfdev_antigravity_cloud_sinh_ma_thanh_cong', { commandName: commandName }));
 
                     // Ghi tạm vào Sandbox để kiểm thử trước khi nạp
                     for (const fileObj of generatedData.files) {
@@ -163,17 +160,17 @@ export class SelfDevService {
                     ];
                     const validationResults = await sandboxValidator.validateBatch(filesToValidate);
                     if (!validationResults.valid) {
-                        Logger.warn(`[SelfDev] ⚠️ Mã nguồn từ Antigravity Cloud có lỗi kiểm thử: ${validationResults.errors.join('; ')}. Chuyển sang chế độ tự sửa nội bộ...`);
+                        Logger.warn(tr('logs.selfdevservice.warn_selfdev_ma_nguon_tu_antigravity_cloud_co', { value: validationResults.errors.join('; ') }));
                         lastValidationErrors = validationResults.errors;
                         generatedData = null; // Đặt về null để vòng lặp tự sửa nội bộ tiếp quản sửa lỗi!
                         currentStage = 'fallback';
-                        currentStageDescription = '🔄 Chuyển sang chế độ tự phát triển nội bộ để sửa lỗi...';
+                        currentStageDescription = tr('messages.selfdevservice.text_chuyen_sang_che_do_tu_phat_trien');
                     }
                 }
             } catch (antiErr) {
-                Logger.warn(`[SelfDev] ⚠️ Antigravity Cloud gặp sự cố: ${antiErr.message}. Tự động chuyển sang chế độ dự phòng nội bộ...`);
+                Logger.warn(tr('logs.selfdevservice.warn_selfdev_antigravity_cloud_gap_su_co_tu', { message: antiErr.message }));
                 currentStage = 'fallback';
-                currentStageDescription = '🔄 Chuyển sang chế độ tự phát triển nội bộ...';
+                currentStageDescription = tr('messages.selfdevservice.text_chuyen_sang_che_do_tu_phat_trien_2');
             }
 
             // Ưu tiên 2: Fallback chế độ sinh mã nội bộ nếu Antigravity Cloud chưa trả về dữ liệu
@@ -186,9 +183,8 @@ export class SelfDevService {
                     if (attempt > 1) {
                         const fixEmbed = new EmbedBuilder()
                             .setColor(0xF39C12)
-                            .setTitle('✨ Ấy da, mình xin lỗi nhé! 🥺')
-                            .setDescription(`Có vẻ như mình gặp chút trục trặc nhỏ khi chuẩn bị lệnh **\`/${commandName}\`**.\n` +
-                                `Bạn đợi một xíu nha, mình đang tự chỉnh lại cho thật mượt mà ngay đây nè! 🫧✨`)
+                            .setTitle(tr('messages.selfdevservice.settitle_ay_da_minh_xin_loi_nhe'))
+                            .setDescription(tr('messages.selfdevservice.setdescription_co_ve_nhu_minh_gap_chut_truc', { commandName: commandName }))
                             .setTimestamp();
                         await progressMsg.edit({ embeds: [fixEmbed] }).catch(() => { });
                     }
@@ -221,7 +217,7 @@ export class SelfDevService {
                         break;
                     } else {
                         lastValidationErrors = validationResults.errors;
-                        Logger.warn(`[SelfDev] ⚠️ Kiểm thử Sandbox lượt ${attempt} thất bại: ${lastValidationErrors.join('; ')}`);
+                        Logger.warn(tr('logs.selfdevservice.warn_selfdev_kiem_thu_sandbox_luot_that_bai', { attempt: attempt, value: lastValidationErrors.join('; ') }));
                     }
                 }
 
@@ -264,10 +260,10 @@ export class SelfDevService {
                         cmd.isSandbox = true;
                         client.commands.set(cmd.data.name, cmd);
                         loadedCmd = cmd;
-                        Logger.info(`[SelfDev] Successfully hot-reloaded command from sandbox: /${cmd.data.name}`);
+                        Logger.info(tr('logs.selfdevservice.info_selfdev_successfully_hot_reloaded_command_from_sandbox', { name: cmd.data.name }));
                     }
                 } catch (loadErr) {
-                    Logger.warn(`[SelfDev] Warning on hot-reload: ${loadErr.message}`);
+                    Logger.warn(tr('logs.selfdevservice.warn_selfdev_warning_on_hot_reload', { message: loadErr.message }));
                     throw new Error(`Không thể nạp lệnh /${commandName} vào bộ nhớ bot: ${loadErr.message}`);
                 }
             } else {
@@ -284,15 +280,15 @@ export class SelfDevService {
                 try {
                     const loadResult = await loadCommands(null, client);
                     await deployCommands(loadResult, true);
-                    Logger.info(`[SelfDev] Successfully deployed slash commands to Discord REST API`);
+                    Logger.info(tr('logs.selfdevservice.info_selfdev_successfully_deployed_slash_commands_to_discord'));
                 } catch (deployErr) {
-                    Logger.warn(`[SelfDev] Warning on deploy commands: ${deployErr.message}`);
+                    Logger.warn(tr('logs.selfdevservice.warn_selfdev_warning_on_deploy_commands', { message: deployErr.message }));
                 }
             }
 
             // Bước 6: TỰ ĐỘNG KÍCH HOẠT VÀ HIỂN THỊ GIAO DIỆN TÍNH NĂNG/GAME TẠI CHỖ (Zero manual typing)
             if (loadedCmd && typeof loadedCmd.execute === 'function') {
-                Logger.info(`[SelfDev] 🚀 Tự động kích hoạt tính năng /${commandName} cho người dùng ngay tại chỗ...`);
+                Logger.info(tr('logs.selfdevservice.info_selfdev_tu_dong_kich_hoat_tinh_nang', { commandName: commandName }));
                 try {
                     const mentionedUser = originalMessage?.mentions?.users?.first() || null;
                     const adapter = {
@@ -340,21 +336,19 @@ export class SelfDevService {
                     };
 
                     await loadedCmd.execute(adapter);
-                    Logger.info(`[SelfDev] ✅ Đã tự động kích hoạt thành công tính năng /${commandName}!`);
+                    Logger.info(tr('logs.selfdevservice.info_selfdev_da_tu_dong_kich_hoat_thanh', { commandName: commandName }));
                     return; // Giao diện tính năng đã được render trực tiếp lên tin nhắn, hoàn tất quy trình!
                 } catch (execErr) {
-                    Logger.warn(`[SelfDev] Warning when auto-executing /${commandName}: ${execErr.message}`);
+                    Logger.warn(tr('logs.selfdevservice.warn_selfdev_warning_when_auto_executing', { commandName: commandName, message: execErr.message }));
                 }
             }
 
             // Fallback nếu lệnh không tự render qua adapter
             const fallbackEmbed = new EmbedBuilder()
                 .setColor(0x2ECC71)
-                .setTitle('🎉 Hoàn tất rồi nè!')
+                .setTitle(tr('messages.selfdevservice.settitle_hoan_tat_roi_ne'))
                 .setDescription(
-                    `Mình đã học xong tính năng mới **\`/${commandName}\`** cho bạn rồi đó!\n` +
-                    `Bây giờ bạn có thể thử ngay nha~ 💖✨\n\n` +
-                    `📝 **Mô tả:** ${generatedData.summary || prompt}`
+                    tr('messages.selfdevservice.setdescription_minh_da_hoc_xong_tinh_nang_moi', { commandName: commandName, value: generatedData.summary || prompt })
                 )
                 .setTimestamp();
 
@@ -369,7 +363,7 @@ export class SelfDevService {
                 clearInterval(progressInterval);
                 progressInterval = null;
             }
-            Logger.error(`[SelfDev] Error in session ${sessionId}:`, error);
+            Logger.error(tr('logs.selfdevservice.error_selfdev_error_in_session', { sessionId: sessionId }), error);
 
             // Chỉ dọn dẹp file của lệnh bị lỗi, tuyệt đối không xóa sạch sandbox
             try {
@@ -381,8 +375,8 @@ export class SelfDevService {
 
             const errorEmbed = new EmbedBuilder()
                 .setColor(0xE74C3C)
-                .setTitle('Ấy da, có chút trục trặc nhỏ rồi... 🥺')
-                .setDescription(`Trong lúc hoàn thiện lệnh **\`/${safeSlug}\`**, mình gặp chút khó khăn nên chưa xong được nè.\nBạn cho mình thử lại sau nha! 🫧`)
+                .setTitle(tr('messages.selfdevservice.settitle_ay_da_co_chut_truc_trac_nho'))
+                .setDescription(tr('messages.selfdevservice.setdescription_trong_luc_hoan_thien_lenh_minh_gap', { safeSlug: safeSlug }))
                 .setTimestamp();
 
             await progressMsg.edit({ embeds: [errorEmbed], components: [] }).catch(() => { });
@@ -407,7 +401,7 @@ export class SelfDevService {
         for (const modelId of candidates) {
             if (geminiModelService.isAgentBlocked(modelId)) continue;
             try {
-                Logger.info(`[SelfDev] 🧠 Đang gọi Gemini Coding Model (${modelId}) cho tính năng: "${suggestedName}"...`);
+                Logger.info(tr('logs.selfdevservice.info_selfdev_dang_goi_gemini_coding_model_cho', { modelId: modelId, suggestedName: suggestedName }));
 
                 const baseInstruction = loadAgentPrompt('AgentInstruction.md', {
                     '{{safeSlug}}': suggestedName
@@ -433,7 +427,7 @@ export class SelfDevService {
                     return response.text || '';
                 }, { timeoutMs: 60000 });
 
-                Logger.info(`[SelfDev] ✅ Gemini Coding Model (${modelId}) đã phản hồi (${outputText.length} ký tự)!`);
+                Logger.info(tr('logs.selfdevservice.info_selfdev_gemini_coding_model_da_phan_hoi', { modelId: modelId, length: outputText.length }));
                 geminiModelService.reportModelSuccess(modelId);
 
                 const parsedData = SelfDevService.safeJsonParse(outputText);
@@ -441,7 +435,7 @@ export class SelfDevService {
             } catch (modelErr) {
                 lastError = modelErr;
                 geminiModelService.reportModelFailure(modelId, modelErr.message);
-                Logger.warn(`[SelfDev] ⚠️ Model ${modelId} gặp sự cố: ${modelErr.message}. Tự động thử model tiếp theo...`);
+                Logger.warn(tr('logs.selfdevservice.warn_selfdev_model_gap_su_co_tu_dong', { modelId: modelId, message: modelErr.message }));
             }
         }
 
@@ -509,7 +503,7 @@ export class SelfDevService {
     static normalizeGeneratedData(parsedData, suggestedName) {
         const result = {
             command_name: parsedData.command_name || parsedData.name || suggestedName,
-            summary: parsedData.summary || parsedData.description || "Tính năng mới được lập trình bởi Gemini Coding Agent",
+            summary: parsedData.summary || parsedData.description || tr('messages.selfdevservice.text_tinh_nang_moi_duoc_lap_trinh_boi'),
             files: [],
             i18n: parsedData.i18n || null
         };
@@ -554,7 +548,7 @@ export class SelfDevService {
      */
     static async startDeleteSession({ prompt, featureName, user, channel, client, replyTarget = null }) {
         if (!this.isOwner(user.id)) {
-            const rejectMsg = t('self_dev.only_owner') || 'Chỉ có chủ nhân mới có thể yêu cầu mình gỡ bỏ tính năng nha!';
+            const rejectMsg = t('self_dev.only_owner');
             if (replyTarget) return replyTarget.reply({ content: rejectMsg, flags: MessageFlags.Ephemeral });
             return channel.send({ content: rejectMsg });
         }
@@ -598,10 +592,8 @@ export class SelfDevService {
         if (!fileExists) {
             const notFoundEmbed = new EmbedBuilder()
                 .setColor(0xE74C3C)
-                .setTitle('🔍 Không tìm thấy tính năng cần gỡ nè')
-                .setDescription(`Mình không tìm thấy tính năng nào tên là **\`${targetName || featureName || prompt}\`** trong danh sách tính năng được tạo hết trơn á.\n\n` +
-                    `📋 **Các tính năng hiện có:**\n` +
-                    (existingCommands.length > 0 ? existingCommands.map(c => `\`/${c}\``).join(', ') : '*Chưa có tính năng nào được tạo*'))
+                .setTitle(tr('messages.selfdevservice.settitle_khong_tim_thay_tinh_nang_can_go'))
+                .setDescription(tr('messages.selfdevservice.setdescription_minh_khong_tim_thay_tinh_nang_nao', { value: targetName || featureName || prompt, value2: (existingCommands.length > 0 ? existingCommands.map(c => `\`/${c}\``).join(', ') : tr('messages.selfdevservice.text_chua_co_tinh_nang_nao_duoc_tao')) }))
                 .setTimestamp();
 
             if (replyTarget && replyTarget.deferred) return replyTarget.editReply({ embeds: [notFoundEmbed] });
@@ -612,8 +604,8 @@ export class SelfDevService {
         // Thông báo đang tiến hành xóa
         const deletingEmbed = new EmbedBuilder()
             .setColor(0xE67E22)
-            .setTitle(`🗑️ Đang gỡ bỏ lệnh /${targetName}...`)
-            .setDescription(`Mình đang tiến hành gỡ bỏ lệnh **\`/${targetName}\`** theo yêu cầu của bạn nha! 🌊🫧`)
+            .setTitle(tr('messages.selfdevservice.settitle_dang_go_bo_lenh', { targetName: targetName }))
+            .setDescription(tr('messages.selfdevservice.setdescription_minh_dang_tien_hanh_go_bo_lenh', { targetName: targetName }))
             .setTimestamp();
 
         let progressMsg;
@@ -634,7 +626,7 @@ export class SelfDevService {
      */
     static async executeDeleteCommand({ targetName, user, confirmMsg, client }) {
         try {
-            Logger.info(`[SelfDev] 🗑️ Đang tiến hành xóa lệnh /${targetName} khỏi Sandbox...`);
+            Logger.info(tr('logs.selfdevservice.info_selfdev_dang_tien_hanh_xoa_lenh_khoi', { targetName: targetName }));
 
             const sandboxCmd = path.join(process.cwd(), 'sandbox', 'slash', `${targetName}.js`);
             const sandboxI18n = path.join(process.cwd(), 'sandbox', 'i18n', `${targetName}.json`);
@@ -659,15 +651,15 @@ export class SelfDevService {
             // Xóa khỏi client.commands trong RAM
             if (client?.commands) {
                 client.commands.delete(targetName);
-                Logger.info(`[SelfDev] Đã gỡ lệnh /${targetName} khỏi RAM của bot`);
+                Logger.info(tr('logs.selfdevservice.info_selfdev_da_go_lenh_khoi_ram_cua', { targetName: targetName }));
             }
             reloadI18n();
 
             // Cập nhật Embed thành công lên Discord (không tiết lộ đường dẫn nội bộ / file kỹ thuật)
             const successEmbed = new EmbedBuilder()
                 .setColor(0x2ECC71)
-                .setTitle('🗑️ Đã gỡ bỏ thành công!')
-                .setDescription(`Mình đã gỡ bỏ hoàn toàn lệnh **\`/${targetName}\`** theo yêu cầu của bạn rồi nha! Bạn yên tâm là mình vẫn lưu trữ lại phòng khi bạn muốn dùng lại sau nè~ 🫧✨`)
+                .setTitle(tr('messages.selfdevservice.settitle_da_go_bo_thanh_cong'))
+                .setDescription(tr('messages.selfdevservice.setdescription_minh_da_go_bo_hoan_toan_lenh', { targetName: targetName }))
                 .setTimestamp();
 
             await confirmMsg.edit({ embeds: [successEmbed], components: [] }).catch(() => { });
@@ -679,14 +671,14 @@ export class SelfDevService {
             // Deploy lại commands lên Discord API (forceDeploy: true)
             const loadResult = await loadCommands(null, client);
             await deployCommands(loadResult, true);
-            Logger.info(`[SelfDev] ✅ Đã đồng bộ lại danh sách lệnh lên Discord REST API`);
+            Logger.info(tr('logs.selfdevservice.info_selfdev_da_dong_bo_lai_danh_sach'));
 
         } catch (err) {
-            Logger.error(`[SelfDev] Lỗi khi xóa lệnh /${targetName}:`, err);
+            Logger.error(tr('logs.selfdevservice.error_selfdev_loi_khi_xoa_lenh', { targetName: targetName }), err);
             const errEmbed = new EmbedBuilder()
                 .setColor(0xE74C3C)
-                .setTitle('Ấy da, có chút trục trặc nhỏ rồi... 🥺')
-                .setDescription(`Mình chưa gỡ bỏ được lệnh này nè, bạn thử lại sau giúp mình nha! 🫧`)
+                .setTitle(tr('messages.selfdevservice.settitle_ay_da_co_chut_truc_trac_nho'))
+                .setDescription(tr('messages.selfdevservice.setdescription_minh_chua_go_bo_duoc_lenh_nay'))
                 .setTimestamp();
             await confirmMsg.edit({ embeds: [errEmbed], components: [] }).catch(() => { });
             // Tin nhắn ngắn hạn: Tự động xóa sau 8 giây
@@ -708,12 +700,12 @@ export class SelfDevService {
         const { client, guild, channel, user, message } = context;
         const candidates = await geminiModelService.getCandidateModels('flash', 'agent');
 
-        onProgress?.({ stage: 'thinking', text: '💭 Dolia đang phân tích yêu cầu và lên ý tưởng cho bạn nè...' });
+        onProgress?.({ stage: 'thinking', text: tr('messages.selfdevservice.text_dolia_dang_phan_tich_yeu_cau_va') });
 
         let agentSession = null;
         if (user?.id && channel?.id) {
             agentSession = await getAgentSession(user.id, channel.id);
-            Logger.info(`[SelfDev] 🔍 Kiểm tra Agent Session kênh #${channel?.name || channel?.id}: environmentId=${agentSession?.environmentId || 'null (Local Sandbox Workspace)'}, lastInteractionId=${agentSession?.lastInteractionId || 'null'}, lastScript=${agentSession?.lastScript?.name || 'none'}`);
+            Logger.info(tr('logs.selfdevservice.info_selfdev_kiem_tra_agent_session_kenh_environmentid', { value: channel?.name || channel?.id, value2: agentSession?.environmentId || 'null (Local Sandbox Workspace)', value3: agentSession?.lastInteractionId || 'null', value4: agentSession?.lastScript?.name || 'none' }));
         }
 
         const lastScript = agentSession?.lastScript;
@@ -736,8 +728,8 @@ export class SelfDevService {
         let promptContent = `Kiểm tra dữ liệu Discord theo [CHẾ ĐỘ 1: INSPECT SCRIPT]: ${prompt}`;
         const hasAttachedScript = prompt.includes('[Tệp đính kèm:');
         if (!hasAttachedScript && isModify && lastScript && lastScript.code) {
-            Logger.info(`[SelfDev] 🔄 Kích hoạt Chained Script Modification cho kênh #${channel?.name || channel?.id}: Kế thừa script trước đó (${lastScript.name || 'last_script.js'})...`);
-            onProgress?.({ stage: 'thinking', text: '🔄 Dolia đang xem lại tác phẩm trước đó để chỉnh sửa theo đúng ý bạn nè... 🫧' });
+            Logger.info(tr('logs.selfdevservice.info_selfdev_kich_hoat_chained_script_modification_cho', { value: channel?.name || channel?.id, value2: lastScript.name || 'last_script.js' }));
+            onProgress?.({ stage: 'thinking', text: tr('messages.selfdevservice.text_dolia_dang_xem_lai_tac_pham_truoc') });
             promptContent = `[CHẾ ĐỘ 1: MODIFY SCRIPT - KẾ THỪA MÃ NGUỒN CŨ TRONG WORKSPACE]:\nBạn đang tiếp tục phiên làm việc trong môi trường (workspace) của kênh này.\n\n[MÃ NGUỒN CŨ ĐÃ HOẠT ĐỘNG THÀNH CÔNG TRƯỚC ĐÓ]:\n\`\`\`javascript\n${lastScript.code}\n\`\`\`\n\n[YÊU CẦU SỬA ĐỔI TỪ NGƯỜI DÙNG]:\n"${prompt}"\n\n[NGUYÊN TẮC BẮT BUỘC]:\n1. Sửa trực tiếp trên mã nguồn cũ, kế thừa 100% bố cục, màu sắc, font chữ, animation timeline và các hiệu ứng đã có.\n2. CHỈ thay đổi hoặc loại bỏ đúng các chi tiết mà người dùng yêu cầu (ví dụ: chỉ giữ lại avatar của người dùng, bỏ avatar khác).\n3. Trả về mã nguồn hoàn chỉnh đã sửa, hàm run() luôn trả về trường 'reply' theo đúng phong cách Dolia.`;
         }
 
@@ -747,7 +739,7 @@ export class SelfDevService {
 
         // Ưu tiên 1: Gọi Antigravity Agent trên Google Cloud Sandbox (Interactions API)
         try {
-            Logger.info(`[SelfDev] 🧠 Đang gọi Antigravity Agent (Cloud Sandbox) sinh script cho kênh #${channel?.name || channel?.id}...`);
+            Logger.info(tr('logs.selfdevservice.info_selfdev_dang_goi_antigravity_agent_cloud_sandbox_2', { value: channel?.name || channel?.id }));
             const antiResult = await AntigravityService.developScript({
                 prompt,
                 context: { client, guild, channel, user, message },
@@ -756,7 +748,7 @@ export class SelfDevService {
                     if (progress && typeof progress === 'object') {
                         onProgress?.({
                             stage: progress.stage || 'coding',
-                            text: progress.text || '✍️ Dolia đang chuẩn bị mã nguồn trong Google Sandbox...'
+                            text: progress.text || tr('messages.selfdevservice.text_dolia_dang_chuan_bi_ma_nguon_trong')
                         });
                     } else if (typeof progress === 'string') {
                         onProgress?.({ stage: 'coding', text: progress });
@@ -766,11 +758,11 @@ export class SelfDevService {
 
             if (antiResult?.scriptCode) {
                 scriptCode = antiResult.scriptCode;
-                Logger.info(`[SelfDev] ✅ Antigravity Cloud sinh script thành công (environmentId: ${antiResult.environmentId || 'none'})`);
+                Logger.info(tr('logs.selfdevservice.info_selfdev_antigravity_cloud_sinh_script_thanh_cong', { value: antiResult.environmentId || 'none' }));
             }
         } catch (antiErr) {
-            Logger.warn(`[SelfDev] ⚠️ Antigravity Cloud gặp sự cố: ${antiErr.message}. Tự động chuyển sang chế độ sinh script dự phòng nội bộ...`);
-            onProgress?.({ stage: 'fallback', text: '🔄 Chuyển sang chế độ dự phòng nội bộ...' });
+            Logger.warn(tr('logs.selfdevservice.warn_selfdev_antigravity_cloud_gap_su_co_tu_2', { message: antiErr.message }));
+            onProgress?.({ stage: 'fallback', text: tr('messages.selfdevservice.text_chuyen_sang_che_do_du_phong_noi') });
         }
 
         // Ưu tiên 2: Fallback chế độ sinh mã nội bộ (generateContent) nếu Antigravity Cloud chưa sinh được code
@@ -778,8 +770,8 @@ export class SelfDevService {
             for (const modelId of candidates) {
                 if (geminiModelService.isAgentBlocked(modelId)) continue;
                 try {
-                    Logger.info(`[SelfDev] 🧠 Đang gọi model (${modelId}) sinh script kiểm tra ngầm cho: "${prompt}"...`);
-                    onProgress?.({ stage: 'coding', text: '✍️ Dolia đang tỉ mỉ chuẩn bị và phác thảo theo ý bạn nè... 🫧' });
+                    Logger.info(tr('logs.selfdevservice.info_selfdev_dang_goi_model_sinh_script_kiem', { modelId: modelId, prompt: prompt }));
+                    onProgress?.({ stage: 'coding', text: tr('messages.selfdevservice.text_dolia_dang_ti_mi_chuan_bi_va') });
                     const rawOutput = await ApiKeyManager.execute(modelId, async (apiKey) => {
                         const ai = ApiKeyManager.getClient(apiKey);
                         const response = await ai.models.generateContent({
@@ -869,17 +861,17 @@ export class SelfDevService {
                 } catch (modelErr) {
                     lastError = modelErr;
                     geminiModelService.reportModelFailure(modelId, modelErr.message, 5 * 60 * 1000);
-                    Logger.warn(`[SelfDev] ⚠️ Model ${modelId} gặp sự cố khi sinh script: ${modelErr.message}. Tự động chuyển model tiếp theo...`);
-                    onProgress?.({ stage: 'coding', text: '🔄 Dolia đang điều chỉnh lại một xíu cho thật hoàn hảo nha... ✨' });
+                    Logger.warn(tr('logs.selfdevservice.warn_selfdev_model_gap_su_co_khi_sinh', { modelId: modelId, message: modelErr.message }));
+                    onProgress?.({ stage: 'coding', text: tr('messages.selfdevservice.text_dolia_dang_dieu_chinh_lai_mot_xiu') });
                 }
             }
         }
 
         if (!scriptCode) {
-            Logger.error(`[SelfDev] ❌ Tất cả các model đều không thể sinh script kiểm tra ngầm. Lỗi cuối: ${lastError?.message}`);
+            Logger.error(tr('logs.selfdevservice.error_selfdev_tat_ca_cac_model_deu_khong', { message: lastError?.message }));
             return {
                 error: lastError?.message || 'Không thể tạo script',
-                reply: `⚠️ Dolia không thể tạo script phù hợp cho yêu cầu này: \`${lastError?.message || 'Lỗi không xác định'}\`. Bạn hãy thử lại với mô tả rõ ràng hơn nhé! ~ ✨🫧`
+                reply: tr('messages.selfdevservice.text_dolia_khong_the_tao_script_phu_hop', { value: lastError?.message || 'Lỗi không xác định' })
             };
         }
 
@@ -909,7 +901,7 @@ export class SelfDevService {
 
         try {
             // Tự động phát hiện và cài đặt an toàn các thư viện npm mới nếu script yêu cầu
-            onProgress?.({ stage: 'packages', text: '📦 Dolia đang chuẩn bị màu vẽ và tài nguyên cần thiết nè... 🎨' });
+            onProgress?.({ stage: 'packages', text: tr('messages.selfdevservice.text_dolia_dang_chuan_bi_mau_ve_va') });
             await PackageInstaller.ensureDependencies(scriptCode);
 
             // Ghi file vào sandbox/scripts/
@@ -933,8 +925,8 @@ export class SelfDevService {
                 throw new Error("Script không export default một hàm async!");
             }
 
-            Logger.info(`[SelfDev] 🚀 Bắt đầu thực thi script kiểm tra ngầm (${path.basename(scriptPath)})...`);
-            onProgress?.({ stage: 'executing', text: '🚀 Dolia đang hoàn thiện và kết xuất hình ảnh/video cho bạn nè... 🎬✨' });
+            Logger.info(tr('logs.selfdevservice.info_selfdev_bat_dau_thuc_thi_script_kiem', { value: path.basename(scriptPath) }));
+            onProgress?.({ stage: 'executing', text: tr('messages.selfdevservice.text_dolia_dang_hoan_thien_va_ket_xuat') });
 
             // Bọc channel để phát hiện nếu script tự gọi channel.send() tránh gửi đúp 2 tin nhắn trùng lặp
             let channelSendCalled = false;
@@ -975,8 +967,8 @@ export class SelfDevService {
                 }
             }
 
-            Logger.info(`[SelfDev] ✅ Script kiểm tra ngầm trong sandbox trả về:`, dataResult);
-            onProgress?.({ stage: 'completed', text: '✨ Đã hoàn thành xuất sắc! Đang đóng gói gửi đến bạn ngay đây... 🎉' });
+            Logger.info(tr('logs.selfdevservice.info_selfdev_script_kiem_tra_ngam_trong_sandbox'), dataResult);
+            onProgress?.({ stage: 'completed', text: tr('messages.selfdevservice.text_da_hoan_thanh_xuat_sac_dang_dong') });
 
             // Cập nhật lastScript vào Agent Session của Channel trong MongoDB để phục vụ Modify ở lượt sau
             if (user?.id && channel?.id && scriptCode) {
@@ -988,17 +980,17 @@ export class SelfDevService {
                         prompt: prompt
                     }
                 }).catch(err => {
-                    Logger.warn('[SelfDev] ⚠️ Không thể lưu lastScript vào agentSession:', err.message);
+                    Logger.warn(tr('logs.selfdevservice.warn_selfdev_khong_the_luu_lastscript_vao_agentsession'), err.message);
                 });
             }
 
             return dataResult;
 
         } catch (scriptErr) {
-            Logger.warn(`[SelfDev] ⚠️ Lỗi trong quá trình chạy script ngầm:`, scriptErr.message);
+            Logger.warn(tr('logs.selfdevservice.warn_selfdev_loi_trong_qua_trinh_chay_script'), scriptErr.message);
             return {
                 error: scriptErr.message,
-                reply: `⚠️ Dolia đã gặp sự cố khi thực thi tác vụ: \`${scriptErr.message}\`. Bạn hãy báo lại hoặc yêu cầu mình điều chỉnh nhé! ~ ✨🫧🐬`
+                reply: tr('messages.selfdevservice.text_dolia_da_gap_su_co_khi_thuc')
             };
         } finally {
             // Tự động sao lưu file script sang sandbox/backup/*.bak trước khi dọn dẹp sandbox/scripts/
@@ -1012,9 +1004,9 @@ export class SelfDevService {
                     const backupPath = path.join(backupDir, `${baseName}.bak`);
                     fs.copyFileSync(scriptPath, backupPath);
                     fs.unlinkSync(scriptPath);
-                    Logger.info(`[SelfDev] 💾 Đã lưu bản sao lưu script vào: sandbox/backup/${baseName}.bak`);
+                    Logger.info(tr('logs.selfdevservice.info_selfdev_da_luu_ban_sao_luu_script', { baseName: baseName }));
                 } catch (bakErr) {
-                    Logger.warn(`[SelfDev] ⚠️ Lỗi khi sao lưu script vào sandbox/backup:`, bakErr.message);
+                    Logger.warn(tr('logs.selfdevservice.warn_selfdev_loi_khi_sao_luu_script_vao'), bakErr.message);
                     try { fs.unlinkSync(scriptPath); } catch (_) { }
                 }
             }
@@ -1038,7 +1030,7 @@ export class SelfDevService {
                     botMembers: bots,
                     channelName: channel?.name || 'unknown',
                     channelMembersCount: channelMembersCount,
-                    summary: `Server ${guild.name} có tổng cộng ${total} thành viên (${humans} người, ${bots} bot). Kênh #${channel?.name} có ${channelMembersCount} người có quyền xem.`
+                    summary: tr('messages.selfdevservice.text_server_co_tong_cong_thanh_vien_nguoi', { name: guild.name, total: total, humans: humans, bots: bots, name5: channel?.name, channelMembersCount: channelMembersCount })
                 };
             } catch (_) { }
         }

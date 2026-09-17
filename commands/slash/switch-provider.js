@@ -1,3 +1,4 @@
+import { t as tr } from '../../services/i18nService.js';
 
 import { SlashCommandBuilder } from 'discord.js';
 import User from '../../models/User.js';
@@ -7,16 +8,16 @@ import { PROVIDER_NAMES } from '../../utils/lavalinkHelper.js';
 export default {
     data: new SlashCommandBuilder()
         .setName('switch-provider')
-        .setDescription('Chuyển đổi nguồn phát nhạc (YouTube, SoundCloud, Spotify, v.v.)')
+        .setDescription(tr('commands.switch_provider.setdescription_chuyen_doi_nguon_phat_nhac_youtube_soundcloud'))
         .addStringOption(option =>
             option.setName('source')
-                .setDescription('Chọn nguồn nhạc muốn dùng')
+                .setDescription(tr('commands.switch_provider.setdescription_chon_nguon_nhac_muon_dung'))
                 .setRequired(true)
                 .addChoices(
-                    { name: 'YouTube (Mặc định)', value: 'ytsearch' },
-                    { name: 'YouTube Music (Khuyên dùng)', value: 'ytmsearch' },
-                    { name: 'SoundCloud (Remix / EDM)', value: 'scsearch' },
-                    { name: 'Spotify', value: 'spsearch' }
+                    { name: tr('commands.switch_provider.name_youtube_mac_dinh'), value: 'ytsearch' },
+                    { name: tr('commands.switch_provider.name_youtube_music_khuyen_dung'), value: 'ytmsearch' },
+                    { name: tr('commands.switch_provider.name_soundcloud_remix_edm'), value: 'scsearch' },
+                    { name: tr('commands.switch_provider.name_spotify'), value: 'spsearch' }
                 )
         ),
 
@@ -37,7 +38,7 @@ export default {
             await interaction.editReply(t('music.switch_provider.success', { provider: providerName }));
 
         } catch (error) {
-            console.error('Error switching provider:', error);
+            console.error(tr('logs.switch_provider.error_error_switching_provider'), error);
             await interaction.editReply(t('music.switch_provider.error'));
         }
     },

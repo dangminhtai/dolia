@@ -1,3 +1,4 @@
+import { t as tr } from '../services/i18nService.js';
 import APIKey from '../models/APIKeys.js';
 
 /**
@@ -53,7 +54,7 @@ class AntigravityKeyManager {
                 });
             }
         } catch (error) {
-            console.warn('⚠️ [AntigravityKeyManager] Could not query API Keys from Database:', error.message);
+            console.warn(tr('logs.antigravitykeymanager.warn_antigravitykeymanager_could_not_query_api_keys_from'), error.message);
         }
 
         const prevExhausted = new Set(this.pool.filter(p => p.exhausted).map(p => p.key));
@@ -65,12 +66,12 @@ class AntigravityKeyManager {
         });
 
         if (this.pool.length === 0) {
-            console.warn('⚠️ [AntigravityKeyManager] No active API Keys found.');
+            console.warn(tr('logs.antigravitykeymanager.warn_antigravitykeymanager_no_active_api_keys_found'));
             return;
         }
 
         this.isInitialized = true;
-        console.log(`✅ [AntigravityKeyManager] Loaded ${this.pool.length} API Keys for Antigravity Agent.`);
+        console.log(tr('logs.antigravitykeymanager.log_antigravitykeymanager_loaded_api_keys_for_antigravity_agent', { length: this.pool.length }));
     }
 
     isSuspended(key, now = Date.now()) {
@@ -87,7 +88,7 @@ class AntigravityKeyManager {
         const until = Date.now() + durationMs;
         this.suspensionCache.set(key, until);
         const shortKey = key.slice(-4);
-        console.log(`⏳ [AntigravityKeyManager] Suspended key ...${shortKey} for ${durationMs / 1000}s (${reason})`);
+        console.log(tr('logs.antigravitykeymanager.log_antigravitykeymanager_suspended_key_for_s', { shortKey: shortKey, value: durationMs / 1000, reason: reason }));
     }
 
     async getNextKey() {
@@ -129,7 +130,7 @@ class AntigravityKeyManager {
 
         const waitMs = Math.max(0, minUntil - now);
         if (waitMs > 0 && waitMs <= 10000) {
-            console.log(`⏳ [AntigravityKeyManager] All keys suspended. Waiting ${waitMs}ms...`);
+            console.log(tr('logs.antigravitykeymanager.log_antigravitykeymanager_all_keys_suspended_waiting_ms', { waitMs: waitMs }));
             await new Promise(r => setTimeout(r, waitMs));
             return chosenKey;
         }
@@ -169,7 +170,7 @@ class AntigravityKeyManager {
                 lastError = error;
 
                 if (error.isTimeout) {
-                    console.warn(`⏱️ [AntigravityKeyManager] Key ...${shortKey} timed out sau ${timeoutMs}ms. Cooldown 30s.`);
+                    console.warn(tr('logs.antigravitykeymanager.warn_antigravitykeymanager_key_timed_out_sau_ms_cooldown', { shortKey: shortKey, timeoutMs: timeoutMs }));
                     this.suspendKey(key, 30000, 'TIMEOUT');
                 } else {
                     const msg = error.message || '';
@@ -185,7 +186,7 @@ class AntigravityKeyManager {
 
                 attempt++;
                 if (attempt < maxRetries) {
-                    console.log(`🔄 [AntigravityKeyManager] Retrying with next key... (${attempt}/${maxRetries})`);
+                    console.log(tr('logs.antigravitykeymanager.log_antigravitykeymanager_retrying_with_next_key', { attempt: attempt, maxRetries: maxRetries }));
                     await new Promise(r => setTimeout(r, 200));
                 }
             }

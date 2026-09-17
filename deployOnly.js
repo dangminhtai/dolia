@@ -1,3 +1,4 @@
+import { t as tr } from './services/i18nService.js';
 /**
  * Deploy lệnh slash lên Discord (không chạy bot) cho Dolia:
  * 
@@ -24,7 +25,7 @@ async function main() {
     const mongoUri = process.env.MONGO_URI;
 
     if (!token || !clientId) {
-        console.error('❌ Cần DISCORD_TOKEN và CLIENT_ID trong .env.');
+        console.error(tr('logs.deployonly.error_can_discord_token_va_client_id_trong'));
         process.exit(1);
     }
 
@@ -32,9 +33,9 @@ async function main() {
         try {
             await mongoose.connect(mongoUri);
             const dbName = mongoose.connection.db.databaseName;
-            console.log('📂 Kết nối DB kiểm tra lệnh:', dbName, '| collection: commands');
+            console.log(tr('logs.deployonly.log_ket_noi_db_kiem_tra_lenh'), dbName, tr('logs.deployonly.log_collection_commands'));
         } catch (dbErr) {
-            console.warn('⚠️ Không thể kết nối MongoDB để so sánh lệnh, tiếp tục deploy trực tiếp:', dbErr.message);
+            console.warn(tr('logs.deployonly.warn_khong_the_ket_noi_mongodb_de_so'), dbErr.message);
         }
     }
 
@@ -50,9 +51,9 @@ async function main() {
             await rest.put(Routes.applicationGuildCommands(clientId, guildId), {
                 body: loadResult.commands,
             });
-            console.log(`✅ Guild (${guildId}): đã deploy ${loadResult.commands.length} lệnh.`);
+            console.log(tr('logs.deployonly.log_guild_da_deploy_lenh', { guildId: guildId, length: loadResult.commands.length }));
         } catch (e) {
-            console.error('❌ Lỗi deploy guild:', e.message);
+            console.error(tr('logs.deployonly.error_loi_deploy_guild'), e.message);
         }
     }
 
@@ -62,7 +63,7 @@ async function main() {
 }
 
 main().catch((e) => {
-    console.error('❌', e.message);
+    console.error(tr('logs.deployonly.error_error'), e.message);
     process.exit(1);
 });
 

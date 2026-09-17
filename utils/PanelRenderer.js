@@ -1,3 +1,4 @@
+import { t as tr } from '../services/i18nService.js';
 import { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder } from 'discord.js';
 import { poru } from './LavalinkManager.js';
 import MusicSetting from '../models/MusicSetting.js';
@@ -6,10 +7,10 @@ import UserPlaylist from '../models/UserPlaylist.js';
 import { t } from '../services/i18nService.js';
 
 function createProgressBar(current, total, size = 15) {
-    if (!total || total === 0) return '🔴 LIVE STREAM';
+    if (!total || total === 0) return tr('messages.panelrenderer.text_live_stream');
     const progress = Math.round((size * current) / total);
     const emptyProgress = size - progress;
-    return '▬'.repeat(progress) + '🔘' + '▬'.repeat(emptyProgress);
+    return tr('messages.panelrenderer.progress_empty').repeat(progress) + tr('messages.panelrenderer.progress_position') + tr('messages.panelrenderer.progress_empty').repeat(emptyProgress);
 }
 
 function formatTime(ms) {
@@ -29,11 +30,11 @@ export async function renderMusicPanel(guildId, state, userIdForPlaylist = null)
         if (player && currentTrack) {
             embed.setColor('#0099ff')
                 .setTitle(t('panel.home.title_playing'))
-                .setDescription(`**[${currentTrack?.info?.title || 'Unknown Title'}](${currentTrack?.info?.uri || '#'})**`)
-                .setThumbnail(currentTrack?.info?.artworkUrl || currentTrack?.info?.image || 'https://i.imgur.com/7R8Zq0D.png')
+                .setDescription(tr('messages.panelrenderer.setdescription_setdescription', { value: currentTrack?.info?.title || tr('messages.panelrenderer.text_unknown_title'), value2: currentTrack?.info?.uri || '#' }))
+                .setThumbnail(currentTrack?.info?.artworkUrl || currentTrack?.info?.image || tr('messages.music.default_artwork'))
                 .addFields(
-                    { name: t('panel.home.field_artist'), value: currentTrack?.info?.author || 'Unknown Artist', inline: true },
-                    { name: t('panel.home.field_requester'), value: currentTrack?.info?.requester?.tag || 'System', inline: true },
+                    { name: t('panel.home.field_artist'), value: currentTrack?.info?.author || tr('messages.panelrenderer.text_unknown_artist'), inline: true },
+                    { name: t('panel.home.field_requester'), value: currentTrack?.info?.requester?.tag || tr('messages.panelrenderer.text_system'), inline: true },
                     {
                         name: t('panel.home.field_time', { current: formatTime(player.position), total: formatTime(currentTrack?.info?.length || 0) }),
                         value: createProgressBar(player.position, currentTrack?.info?.length || 0),
@@ -51,11 +52,11 @@ export async function renderMusicPanel(guildId, state, userIdForPlaylist = null)
                 );
 
             const rowControls = new ActionRowBuilder().addComponents(
-                new ButtonBuilder().setCustomId('music_btn_pause').setEmoji(player.isPaused ? '▶️' : '⏸️').setStyle(player.isPaused ? ButtonStyle.Success : ButtonStyle.Secondary),
-                new ButtonBuilder().setCustomId('music_btn_skip').setEmoji('⏭️').setStyle(ButtonStyle.Secondary),
-                new ButtonBuilder().setCustomId('music_btn_loop').setEmoji(player.loop === 'NONE' ? '🔁' : '🔂').setStyle(player.loop === 'NONE' ? ButtonStyle.Secondary : ButtonStyle.Success),
-                new ButtonBuilder().setCustomId('music_btn_shuffle').setEmoji('🔀').setStyle(ButtonStyle.Secondary),
-                new ButtonBuilder().setCustomId('music_btn_stop').setEmoji('⏹️').setStyle(ButtonStyle.Danger)
+                new ButtonBuilder().setCustomId('music_btn_pause').setEmoji(player.isPaused ? tr('messages.panelrenderer.emoji_resume') : tr('messages.panelrenderer.emoji_pause')).setStyle(player.isPaused ? ButtonStyle.Success : ButtonStyle.Secondary),
+                new ButtonBuilder().setCustomId('music_btn_skip').setEmoji(tr('messages.panelrenderer.emoji_skip')).setStyle(ButtonStyle.Secondary),
+                new ButtonBuilder().setCustomId('music_btn_loop').setEmoji(player.loop === 'NONE' ? tr('messages.panelrenderer.emoji_loop_off') : tr('messages.panelrenderer.emoji_loop_on')).setStyle(player.loop === 'NONE' ? ButtonStyle.Secondary : ButtonStyle.Success),
+                new ButtonBuilder().setCustomId('music_btn_shuffle').setEmoji(tr('messages.panelrenderer.emoji_shuffle')).setStyle(ButtonStyle.Secondary),
+                new ButtonBuilder().setCustomId('music_btn_stop').setEmoji(tr('messages.panelrenderer.emoji_stop')).setStyle(ButtonStyle.Danger)
             );
             components.push(rowControls);
         } else {
@@ -74,18 +75,18 @@ export async function renderMusicPanel(guildId, state, userIdForPlaylist = null)
             .setTitle(t('panel.settings.title'))
             .setDescription(t('panel.settings.description'))
             .addFields(
-                { name: '🔊 Volume', value: `${setting.volume}%`, inline: true },
-                { name: '⏩ Speed', value: `${setting.speed.toFixed(1)}x`, inline: true },
-                { name: '🗣️ Pitch', value: `${setting.pitch?.toFixed(1) || '1.0'}x`, inline: true },
-                { name: '🐿️ Nightcore', value: setting.nightcore ? t('panel.settings.nightcore_on') : t('panel.settings.nightcore_off'), inline: true },
-                { name: '🥁 Bassboost', value: setting.bassboost ? t('panel.settings.bassboost_on') : t('panel.settings.bassboost_off'), inline: true }
+                { name: tr('messages.panelrenderer.name_volume'), value: `${setting.volume}%`, inline: true },
+                { name: tr('messages.panelrenderer.name_speed'), value: `${setting.speed.toFixed(1)}x`, inline: true },
+                { name: tr('messages.panelrenderer.name_pitch'), value: `${setting.pitch?.toFixed(1) || '1.0'}x`, inline: true },
+                { name: tr('messages.panelrenderer.name_nightcore'), value: setting.nightcore ? t('panel.settings.nightcore_on') : t('panel.settings.nightcore_off'), inline: true },
+                { name: tr('messages.panelrenderer.name_bassboost'), value: setting.bassboost ? t('panel.settings.bassboost_on') : t('panel.settings.bassboost_off'), inline: true }
             );
 
         // Hàng 1: Volume
         const rowVol = new ActionRowBuilder().addComponents(
-            new ButtonBuilder().setCustomId('music_set_vol_down').setLabel(t('panel.buttons.vol_down')).setStyle(ButtonStyle.Secondary).setEmoji('🔉'),
-            new ButtonBuilder().setCustomId('music_set_vol_up').setLabel(t('panel.buttons.vol_up')).setStyle(ButtonStyle.Secondary).setEmoji('🔊'),
-            new ButtonBuilder().setCustomId('music_set_reset').setLabel(t('panel.buttons.reset_all')).setStyle(ButtonStyle.Danger).setEmoji('🧹')
+            new ButtonBuilder().setCustomId('music_set_vol_down').setLabel(t('panel.buttons.vol_down')).setStyle(ButtonStyle.Secondary).setEmoji(tr('messages.panelrenderer.emoji_volume_down')),
+            new ButtonBuilder().setCustomId('music_set_vol_up').setLabel(t('panel.buttons.vol_up')).setStyle(ButtonStyle.Secondary).setEmoji(tr('messages.panelrenderer.emoji_volume_up')),
+            new ButtonBuilder().setCustomId('music_set_reset').setLabel(t('panel.buttons.reset_all')).setStyle(ButtonStyle.Danger).setEmoji(tr('messages.panelrenderer.emoji_reset'))
         );
 
         // Hàng 2: Speed (giống lệnh)
@@ -97,8 +98,8 @@ export async function renderMusicPanel(guildId, state, userIdForPlaylist = null)
 
         // Hàng 3: Effect (giống lệnh)
         const rowEffect = new ActionRowBuilder().addComponents(
-            new ButtonBuilder().setCustomId('music_set_nightcore').setLabel(t('panel.buttons.nightcore')).setStyle(setting.nightcore ? ButtonStyle.Success : ButtonStyle.Secondary).setEmoji('🐿️'),
-            new ButtonBuilder().setCustomId('music_set_bass').setLabel(t('panel.buttons.bassboost')).setStyle(setting.bassboost ? ButtonStyle.Success : ButtonStyle.Secondary).setEmoji('🥁')
+            new ButtonBuilder().setCustomId('music_set_nightcore').setLabel(t('panel.buttons.nightcore')).setStyle(setting.nightcore ? ButtonStyle.Success : ButtonStyle.Secondary).setEmoji(tr('messages.panelrenderer.emoji_nightcore')),
+            new ButtonBuilder().setCustomId('music_set_bass').setLabel(t('panel.buttons.bassboost')).setStyle(setting.bassboost ? ButtonStyle.Success : ButtonStyle.Secondary).setEmoji(tr('messages.panelrenderer.emoji_bassboost'))
         );
 
         components.push(rowVol, rowSpeed, rowEffect);
@@ -119,18 +120,18 @@ export async function renderMusicPanel(guildId, state, userIdForPlaylist = null)
             .limit(itemsPerPage);
 
         const listString = songs.length > 0
-            ? songs.map((s, i) => `**${(page - 1) * itemsPerPage + i + 1}.** [${s.title}](${s.url})`).join('\n')
+            ? songs.map((s, i) => tr('messages.panelrenderer.radio_item', { rank: (page - 1) * itemsPerPage + i + 1, title: s.title, url: s.url })).join('\n')
             : t('panel.radio.empty_list');
 
         embed.setColor('#00ff00')
             .setTitle(t('panel.radio.title', { total: totalSongs }))
-            .setDescription(`**Trạng thái 24/7:** ${player?.isAutoplay ? t('panel.radio.status_running') : t('panel.radio.status_stopped')}\n\n${listString}`)
+            .setDescription(tr('messages.panelrenderer.setdescription_trang_thai_24_7', { value: player?.isAutoplay ? t('panel.radio.status_running') : t('panel.radio.status_stopped'), listString: listString }))
             .setFooter({ text: t('panel.radio.footer_page', { page, totalPages }) });
 
         const rowRadioControls = new ActionRowBuilder().addComponents(
-            new ButtonBuilder().setCustomId('music_radio_prev').setEmoji('⬅️').setStyle(ButtonStyle.Secondary).setDisabled(page === 1),
+            new ButtonBuilder().setCustomId('music_radio_prev').setEmoji(tr('messages.panelrenderer.emoji_previous')).setStyle(ButtonStyle.Secondary).setDisabled(page === 1),
             new ButtonBuilder().setCustomId('music_radio_toggle').setLabel(player?.isAutoplay ? t('panel.radio.toggle_on') : t('panel.radio.toggle_off')).setStyle(player?.isAutoplay ? ButtonStyle.Danger : ButtonStyle.Success),
-            new ButtonBuilder().setCustomId('music_radio_next').setEmoji('➡️').setStyle(ButtonStyle.Secondary).setDisabled(page === totalPages)
+            new ButtonBuilder().setCustomId('music_radio_next').setEmoji(tr('messages.panelrenderer.emoji_next')).setStyle(ButtonStyle.Secondary).setDisabled(page === totalPages)
         );
 
         const rowRadioManage = new ActionRowBuilder().addComponents(
@@ -157,7 +158,7 @@ export async function renderMusicPanel(guildId, state, userIdForPlaylist = null)
             );
             components.push(rowCreate);
         } else {
-            const options = userPlaylists.map(pl => ({ label: pl.name, value: pl._id.toString(), description: `${pl.tracks.length} bài hát` }));
+            const options = userPlaylists.map(pl => ({ label: pl.name, value: pl._id.toString(), description: tr('messages.panelrenderer.description_bai_hat', { length: pl.tracks.length }) }));
             const rowSelect = new ActionRowBuilder().addComponents(
                 new StringSelectMenuBuilder().setCustomId('music_pl_select').setPlaceholder(t('panel.playlist.select_placeholder')).addOptions(options)
             );
@@ -166,7 +167,7 @@ export async function renderMusicPanel(guildId, state, userIdForPlaylist = null)
             if (selectedPlaylistId) {
                 const selectedPl = userPlaylists.find(pl => pl._id.toString() === selectedPlaylistId);
                 if (selectedPl) {
-                    const trackList = selectedPl.tracks.slice(0, 5).map((t, i) => `${i + 1}. ${t.title}`).join('\n');
+                    const trackList = selectedPl.tracks.slice(0, 5).map((t, i) => tr('messages.panelrenderer.playlist_item', { rank: i + 1, title: t.title })).join('\n');
                     embed.setDescription(t('panel.playlist.selected_info', { name: selectedPl.name, trackList, remaining: selectedPl.tracks.length - 5 }));
 
                     const rowPlActions = new ActionRowBuilder().addComponents(
@@ -199,41 +200,41 @@ export async function renderMusicPanel(guildId, state, userIdForPlaylist = null)
         const queueSlice = queue.slice((page - 1) * itemsPerPage, page * itemsPerPage);
 
         const listString = queueSlice.length > 0
-            ? queueSlice.map((t, i) => `**${(page - 1) * itemsPerPage + i + 1}.** [${t.info.title.substring(0, 50)}](${t.info.uri}) \`[${formatTime(t.info.length)}]\` - <@${t.info.requester?.id || 'System'}>`).join('\n')
+            ? queueSlice.map((t, i) => tr('messages.panelrenderer.queue_item', { rank: (page - 1) * itemsPerPage + i + 1, title: t.info.title.substring(0, 50), url: t.info.uri, duration: formatTime(t.info.length), requester: t.info.requester?.id ? `<@${t.info.requester.id}>` : tr('messages.panelrenderer.text_system') })).join('\n')
             : t('panel.queue.empty');
 
         const nowPlaying = currentTrack
             ? t('panel.queue.now_playing', {
-                title: currentTrack.info?.title || 'Unknown Title',
+                title: currentTrack.info?.title || tr('messages.panelrenderer.text_unknown_title'),
                 uri: currentTrack.info?.uri || '#'
             })
             : t('panel.queue.not_playing');
 
         embed.setColor('#FFA500')
             .setTitle(t('panel.queue.title', { count: queue.length }))
-            .setDescription(`${nowPlaying}\n\n${t('panel.queue.next_header')}\n${listString}`)
+            .setDescription(tr('messages.panelrenderer.queue_body', { nowPlaying, header: t('panel.queue.next_header'), list: listString }))
             .setFooter({ text: t('panel.queue.footer', { page, totalPages, totalTime: formatTime(queue.reduce((acc, t) => acc + t.info.length, 0)) }) });
 
         const rowQueue = new ActionRowBuilder().addComponents(
-            new ButtonBuilder().setCustomId('music_queue_prev').setEmoji('⬅️').setStyle(ButtonStyle.Secondary).setDisabled(page === 1),
-            new ButtonBuilder().setCustomId('music_queue_next').setEmoji('➡️').setStyle(ButtonStyle.Secondary).setDisabled(page === totalPages),
-            new ButtonBuilder().setCustomId('music_queue_shuffle').setLabel(t('panel.buttons.queue_shuffle')).setStyle(ButtonStyle.Secondary).setEmoji('🔀').setDisabled(queue.length < 2),
-            new ButtonBuilder().setCustomId('music_queue_clear').setLabel(t('panel.buttons.queue_clear')).setStyle(ButtonStyle.Danger).setEmoji('💥').setDisabled(queue.length === 0)
+            new ButtonBuilder().setCustomId('music_queue_prev').setEmoji(tr('messages.panelrenderer.emoji_previous')).setStyle(ButtonStyle.Secondary).setDisabled(page === 1),
+            new ButtonBuilder().setCustomId('music_queue_next').setEmoji(tr('messages.panelrenderer.emoji_next')).setStyle(ButtonStyle.Secondary).setDisabled(page === totalPages),
+            new ButtonBuilder().setCustomId('music_queue_shuffle').setLabel(t('panel.buttons.queue_shuffle')).setStyle(ButtonStyle.Secondary).setEmoji(tr('messages.panelrenderer.emoji_shuffle')).setDisabled(queue.length < 2),
+            new ButtonBuilder().setCustomId('music_queue_clear').setLabel(t('panel.buttons.queue_clear')).setStyle(ButtonStyle.Danger).setEmoji(tr('messages.panelrenderer.emoji_clear')).setDisabled(queue.length === 0)
         );
         const rowQueue2 = new ActionRowBuilder().addComponents(
-            new ButtonBuilder().setCustomId('music_queue_add_priority').setLabel(t('panel.buttons.queue_add_priority')).setStyle(ButtonStyle.Primary).setEmoji('🚀'),
-            new ButtonBuilder().setCustomId('music_nav_settings').setLabel(t('panel.buttons.nav_settings')).setEmoji('🎛️').setStyle(currentTab === 'settings' ? ButtonStyle.Primary : ButtonStyle.Secondary).setDisabled(currentTab === 'settings')
+            new ButtonBuilder().setCustomId('music_queue_add_priority').setLabel(t('panel.buttons.queue_add_priority')).setStyle(ButtonStyle.Primary).setEmoji(tr('messages.panelrenderer.emoji_priority')),
+            new ButtonBuilder().setCustomId('music_nav_settings').setLabel(t('panel.buttons.nav_settings')).setEmoji(tr('messages.panelrenderer.emoji_settings')).setStyle(currentTab === 'settings' ? ButtonStyle.Primary : ButtonStyle.Secondary).setDisabled(currentTab === 'settings')
         );
         components.push(rowQueue, rowQueue2);
     }
 
     // ==================== NAV ====================
     const rowNav = new ActionRowBuilder().addComponents(
-        new ButtonBuilder().setCustomId('music_nav_home').setLabel(t('panel.buttons.nav_home')).setEmoji('🏠').setStyle(currentTab === 'home' ? ButtonStyle.Primary : ButtonStyle.Secondary).setDisabled(currentTab === 'home'),
-        new ButtonBuilder().setCustomId('music_nav_queue').setLabel(t('panel.buttons.nav_queue')).setEmoji('📜').setStyle(currentTab === 'queue' ? ButtonStyle.Primary : ButtonStyle.Secondary).setDisabled(currentTab === 'queue'),
-        new ButtonBuilder().setCustomId('music_nav_radio').setLabel(t('panel.buttons.nav_radio')).setEmoji('📻').setStyle(currentTab === 'radio' ? ButtonStyle.Primary : ButtonStyle.Secondary).setDisabled(currentTab === 'radio'),
-        new ButtonBuilder().setCustomId('music_nav_playlist').setLabel(t('panel.buttons.nav_playlist')).setEmoji('💾').setStyle(currentTab === 'playlist' ? ButtonStyle.Primary : ButtonStyle.Secondary).setDisabled(currentTab === 'playlist'),
-        new ButtonBuilder().setCustomId('music_nav_close').setLabel(t('panel.buttons.nav_close')).setEmoji('🗑️').setStyle(ButtonStyle.Danger)
+        new ButtonBuilder().setCustomId('music_nav_home').setLabel(t('panel.buttons.nav_home')).setEmoji(tr('messages.panelrenderer.emoji_home')).setStyle(currentTab === 'home' ? ButtonStyle.Primary : ButtonStyle.Secondary).setDisabled(currentTab === 'home'),
+        new ButtonBuilder().setCustomId('music_nav_queue').setLabel(t('panel.buttons.nav_queue')).setEmoji(tr('messages.panelrenderer.emoji_queue')).setStyle(currentTab === 'queue' ? ButtonStyle.Primary : ButtonStyle.Secondary).setDisabled(currentTab === 'queue'),
+        new ButtonBuilder().setCustomId('music_nav_radio').setLabel(t('panel.buttons.nav_radio')).setEmoji(tr('messages.panelrenderer.emoji_radio')).setStyle(currentTab === 'radio' ? ButtonStyle.Primary : ButtonStyle.Secondary).setDisabled(currentTab === 'radio'),
+        new ButtonBuilder().setCustomId('music_nav_playlist').setLabel(t('panel.buttons.nav_playlist')).setEmoji(tr('messages.panelrenderer.emoji_playlist')).setStyle(currentTab === 'playlist' ? ButtonStyle.Primary : ButtonStyle.Secondary).setDisabled(currentTab === 'playlist'),
+        new ButtonBuilder().setCustomId('music_nav_close').setLabel(t('panel.buttons.nav_close')).setEmoji(tr('messages.panelrenderer.emoji_close')).setStyle(ButtonStyle.Danger)
     );
     components.push(rowNav);
 

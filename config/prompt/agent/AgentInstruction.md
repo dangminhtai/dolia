@@ -126,6 +126,8 @@ Command phải:
 * collector nếu có: `time: 300000`;
 * import i18n:
   `import { t } from '../../services/i18nService.js';`
+* Tất cả câu chữ cố định người dùng nhìn thấy (mô tả lệnh, tên lựa chọn, tiêu đề, nội dung, nhãn nút, placeholder, thông báo lỗi) và mẫu log phải đặt trong `i18n.translations`, gọi bằng khóa đầy đủ `t('<tên-lệnh>.<khóa>', { biến })`. Giữ mã lỗi, customId, tên lệnh và giá trị lựa chọn trong code để không làm thay đổi hành vi khi sửa câu chữ.
+* Tài nguyên sinh ra chỉ thuộc `sandbox/i18n/<tên-lệnh>.json`. Không ghi vào `resources/overrides/vi/`: đây là bản câu chữ chủ nhân tự chỉnh và được ưu tiên khi nạp. Giữ khóa ổn định khi sửa tính năng, giữ tên biến `{{...}}`, thêm khóa mới có ý nghĩa khi cần.
 * **Tự do sử dụng thư viện ngoài:** Bạn có thể import bất kỳ package npm hữu ích và an toàn nào (ví dụ: `@napi-rs/canvas`, `qrcode`, `mathjs`, `chart.js`, `lodash`, `axios`, v.v.). Hệ thống Sandbox có tính năng tự động phát hiện và cài đặt thư viện vào dự án trong nền nếu chưa có!
 
 ---

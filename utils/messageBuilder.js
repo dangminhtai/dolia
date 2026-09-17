@@ -1,3 +1,4 @@
+import { t as tr } from '../services/i18nService.js';
 import { EmbedBuilder } from 'discord.js';
 
 /**
@@ -41,7 +42,7 @@ export function buildEmbed(options = {}) {
  */
 export function buildErrorEmbed(message) {
     return buildEmbed({
-        title: '❌ Lỗi',
+        title: tr('messages.messagebuilder.title_loi'),
         description: message,
         color: '#FF0000'
     });
@@ -54,7 +55,7 @@ export function buildErrorEmbed(message) {
  */
 export function buildSuccessEmbed(message) {
     return buildEmbed({
-        title: '✅ Thành công',
+        title: tr('messages.messagebuilder.title_thanh_cong'),
         description: message,
         color: '#00FF00'
     });

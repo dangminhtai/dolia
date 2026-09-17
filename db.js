@@ -1,3 +1,4 @@
+import { t as tr } from './services/i18nService.js';
 //db.js
 import mongoose from "mongoose";
 
@@ -9,9 +10,9 @@ async function connectDB() {
             serverSelectionTimeoutMS: 5000, 
             socketTimeoutMS: 45000,
         });
-        console.log('Đã kết nối với Database');
+        console.log(tr('logs.db.log_da_ket_noi_voi_database'));
     } catch (err) {
-        console.error('Lỗi kết nối với Database', err);
+        console.error(tr('logs.db.error_loi_ket_noi_voi_database'), err);
     }
 }
 

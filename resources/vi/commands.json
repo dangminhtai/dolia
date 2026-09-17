@@ -1,0 +1,118 @@
+{
+  "block_agent": {
+    "setdescription_quan_ly_block_unblock_model_ai_cho": "Quản lý block/unblock model AI cho Agent pipeline (Chỉ Chủ nhân)",
+    "setdescription_hanh_dong_muon_thuc_hien": "Hành động muốn thực hiện",
+    "name_block_model_s": "🚫 Block model(s)",
+    "name_unblock_model_s": "✅ Unblock model(s)",
+    "name_xem_trang_thai": "📊 Xem trạng thái",
+    "setdescription_thoi_gian_block_mac_dinh_24h": "Thời gian block (mặc định: 24h)",
+    "name_1_gio": "1 giờ",
+    "name_6_gio": "6 giờ",
+    "name_24_gio_mac_dinh": "24 giờ (Mặc định)",
+    "name_7_ngay": "7 ngày",
+    "name_vinh_vien": "Vĩnh viễn",
+    "content_chi_co_chu_nhan_moi_duoc_quan": "🔒 Chỉ có chủ nhân mới được quản lý block model!",
+    "setdescription_luu_y_trang_thai_block_o_day": "{{value}}\n\n💡 *Lưu ý: Trạng thái block ở đây CHỈ áp dụng cho Antigravity & SelfDev Agent. Chat bình thường của Dolia KHÔNG bị block.*",
+    "settitle_trang_thai_model_agent_antigravity_selfdev": "📊 Trạng thái Model Agent (Antigravity & SelfDev)",
+    "text_model_dang_bi_block_cho_agent": "{{length}} model | {{blockedCount}} đang bị block cho Agent",
+    "content_tat_ca_model_deu_dang_bi_block": "⚠️ Tất cả model đều đang bị block cho Agent rồi! Dùng `unblock` để mở lại.",
+    "text_flash": "⚡Flash",
+    "text_lite": "💡Lite",
+    "description_v": "{{typeLabel}} | v{{version}}",
+    "setplaceholder_chon_model_de_block_agent": "🚫 Chọn model để block Agent ({{value}})",
+    "setdescription_chon_mot_hoac_nhieu_model_de_block": "Chọn một hoặc nhiều model để block trong **{{value}}**.\n\n• **Ảnh hưởng:** Antigravity Cloud Sandbox & SelfDev Pipeline sẽ bỏ qua các model này.\n• **Chat thường:** Chat với Dolia **hoàn toàn KHÔNG bị ảnh hưởng** và vẫn dùng bình thường!",
+    "settitle_block_model_cho_agent_antigravity_selfdev": "🚫 Block Model cho Agent (Antigravity & SelfDev)",
+    "content_khong_co_model_nao_dang_bi_block": "✅ Không có model nào đang bị block cho Agent! Mọi thứ hoạt động bình thường.",
+    "description_con_hm": "🔒 Còn {{hours}}h{{minutes}}m | {{value}}",
+    "emoji_emoji": "🔴",
+    "setplaceholder_chon_model_de_unblock_cho_agent": "✅ Chọn model để unblock cho Agent",
+    "setdescription_chon_mot_hoac_nhieu_model_de_go": "Chọn một hoặc nhiều model để gỡ block cho Agent.\nModel được unblock sẽ ngay lập tức có thể được Antigravity/SelfDev sử dụng lại.",
+    "settitle_unblock_model_cho_agent": "✅ Unblock Model cho Agent",
+    "content_ban_khong_co_quyen_thuc_hien_thao": "🔒 Bạn không có quyền thực hiện thao tác này!",
+    "setdescription_chat_thong_thuong_cua_dolia_van_hoat": "{{value}}\n\n💡 *Chat thông thường của Dolia vẫn hoạt động bình thường, không bị ảnh hưởng.*",
+    "settitle_da_block_model_s_cho_agent": "🚫 Đã Block Model(s) cho Agent",
+    "text_model_da_bi_block_cho_agent": "{{length}} model đã bị block cho Agent",
+    "settitle_da_unblock_model_s_cho_agent": "✅ Đã Unblock Model(s) cho Agent",
+    "text_model_da_duoc_mo_lai_cho_agent": "{{length}} model đã được mở lại cho Agent",
+    "1h_1_gio": "1 giờ",
+    "6h_6_gio": "6 giờ",
+    "24h_24_gio": "24 giờ",
+    "7d_7_ngay": "7 ngày",
+    "permanent_vinh_vien": "Vĩnh viễn",
+    "status_blocked": "🔴",
+    "status_available": "🟢",
+    "type_flash_icon": "⚡",
+    "type_lite_icon": "💡"
+  },
+  "lyrics": {
+    "setdescription_tim_kiem_loi_bai_hat_bang_dolia": "Tìm kiếm lời bài hát bằng Dolia AI"
+  },
+  "music_pannel": {
+    "setdescription_mo_bang_dieu_khien_am_nhac": "Mở bảng điều khiển âm nhạc"
+  },
+  "music_settings": {
+    "setdescription_cai_dat_am_thanh_phat_trong_kenh": "Cài đặt âm thanh phát trong kênh",
+    "name_volume": "🔊 Volume",
+    "name_speed": "⏩ Speed",
+    "name_pitch": "🗣️ Pitch",
+    "name_nightcore": "🐿️ Nightcore",
+    "name_bassboost": "🥁 Bassboost",
+    "setemoji_setemoji": "🔉",
+    "setemoji_setemoji_2": "🔊",
+    "setlabel_speed_0_1": "Speed -0.1",
+    "setlabel_speed_0_1_2": "Speed +0.1",
+    "setemoji_setemoji_3": "🐿️",
+    "setemoji_setemoji_4": "🥁",
+    "setemoji_setemoji_5": "🧹"
+  },
+  "nowplaying": {
+    "setdescription_xem_bai_hat_dang_phat": "Xem bài hát đang phát",
+    "setdescription_setdescription": "[**{{title}}**]({{uri}})",
+    "progress_position": "🔘",
+    "progress_empty": "▬"
+  },
+  "play_247": {
+    "setdescription_bat_che_do_radio_phat_nhac_ngau": "Bật chế độ Radio phát nhạc ngẫu nhiên 24/7"
+  },
+  "play": {
+    "setdescription_phat_nhac_khong_can_ban_phai_vao": "Phát nhạc (Không cần bạn phải vào Voice)",
+    "setdescription_ten_bai_hat_hoac_link": "Tên bài hát hoặc Link",
+    "setdescription_true_chen_ngang_phat_ngay_lap_tuc": "True = Chen ngang phát ngay lập tức"
+  },
+  "radio_add247": {
+    "setdescription_them_bai_hat_vao_kho_nhac_24": "Thêm bài hát vào kho nhạc 24/7",
+    "setdescription_link_bai_hat_hoac_ten": "Link bài hát hoặc tên"
+  },
+  "radio_list247": {
+    "setdescription_xem_danh_sach_nhac_trong_kho_radio": "Xem danh sách nhạc trong kho Radio 24/7",
+    "setdescription_so_trang_muon_xem": "Số trang muốn xem"
+  },
+  "radio_remove247": {
+    "setdescription_xoa_bai_hat_khoi_kho_nhac_radio": "Xóa bài hát khỏi kho nhạc Radio 24/7",
+    "setdescription_so_thu_tu_bai_hat_xem_trong": "Số thứ tự bài hát (Xem trong /radio-list247)"
+  },
+  "self_dev": {
+    "setdescription_yeu_cau_dolia_tu_lap_trinh_tinh": "Yêu cầu Dolia tự lập trình tính năng/lệnh mới (Chỉ dành cho Chủ nhân)",
+    "setdescription_mo_ta_tinh_nang_tro_choi_hoac": "Mô tả tính năng, trò chơi hoặc lệnh bạn muốn Dolia tự lập trình",
+    "setdescription_ten_lenh_goi_y_viet_thuong_khong": "Tên lệnh gợi ý (viết thường không dấu, ví dụ: dice, coinflip, userinfo)"
+  },
+  "skip": {
+    "setdescription_bo_qua_bai_hien_tai_lavalink": "Bỏ qua bài hiện tại (Lavalink)"
+  },
+  "stop": {
+    "setdescription_dung_nhac_va_tat_che_do_24": "Dừng nhạc và tắt chế độ 24/7"
+  },
+  "switch_provider": {
+    "setdescription_chuyen_doi_nguon_phat_nhac_youtube_soundcloud": "Chuyển đổi nguồn phát nhạc (YouTube, SoundCloud, Spotify, v.v.)",
+    "setdescription_chon_nguon_nhac_muon_dung": "Chọn nguồn nhạc muốn dùng",
+    "name_youtube_mac_dinh": "YouTube (Mặc định)",
+    "name_youtube_music_khuyen_dung": "YouTube Music (Khuyên dùng)",
+    "name_soundcloud_remix_edm": "SoundCloud (Remix / EDM)",
+    "name_spotify": "Spotify"
+  },
+  "tictactoe": {
+    "setdescription_choi_tic_tac_toe_cung_nhau": "Chơi Tic-Tac-Toe cùng nhau",
+    "setdescription_chon_ban_de_choi_cung": "Chọn bạn để chơi cùng",
+    "empty_cell_label": "​"
+  }
+}

@@ -1,3 +1,4 @@
+import { t as tr } from '../services/i18nService.js';
 import ApiKeyManager from "./apiKeyManager.js";
 import Logger from "./Logger.js";
 import geminiModelService from "../services/geminiModelService.js";
@@ -5,8 +6,8 @@ import geminiModelService from "../services/geminiModelService.js";
 class GeminiLyrics {
     constructor() {
         this.logger = {
-            info: (msg) => Logger.info(`[GeminiLyrics] ${msg}`),
-            error: (msg) => Logger.error(`[GeminiLyrics] ${msg}`)
+            info: (msg) => Logger.info(tr('logs.geminilyrics.info_geminilyrics', { msg: msg })),
+            error: (msg) => Logger.error(tr('logs.geminilyrics.error_geminilyrics', { msg: msg }))
         };
     }
 
@@ -66,7 +67,7 @@ class GeminiLyrics {
             } catch (err) {
                 lastError = err;
                 geminiModelService.reportModelFailure(modelId, err.message, 2 * 60 * 1000);
-                this.logger.error(`Model ${modelId} thất bại khi tìm lyrics: ${err.message}. Đang thử model tiếp theo...`);
+                this.logger.error(tr('logs.geminilyrics.error_model_that_bai_khi_tim_lyrics_dang', { modelId: modelId, message: err.message }));
             }
         }
 

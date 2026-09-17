@@ -1,3 +1,4 @@
+import { t as tr } from '../../services/i18nService.js';
 import { SlashCommandBuilder } from 'discord.js';
 import { poru } from '../../utils/LavalinkManager.js';
 import RadioSong from '../../models/RadioSong.js';
@@ -7,7 +8,7 @@ import { t } from '../../services/i18nService.js';
 export default {
     data: new SlashCommandBuilder()
         .setName('play-247')
-        .setDescription('Bật chế độ Radio phát nhạc ngẫu nhiên 24/7'),
+        .setDescription(tr('commands.play_247.setdescription_bat_che_do_radio_phat_nhac_ngau')),
 
     async execute(interaction) {
         const member = interaction.member;

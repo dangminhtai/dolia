@@ -1,3 +1,4 @@
+import { t as tr } from '../services/i18nService.js';
 import fs from 'fs';
 import path from 'path';
 import Logger from '../class/Logger.js';
@@ -54,11 +55,11 @@ export class SkillHelper {
                             });
                         }
                     } catch (readErr) {
-                        Logger.warn(`[SkillHelper] ⚠️ Lỗi đọc file skill (${matchedFile}): ${readErr.message}`);
+                        Logger.warn(tr('logs.skillhelper.warn_skillhelper_loi_doc_file_skill', { matchedFile: matchedFile, message: readErr.message }));
                     }
                 }
             } catch (scanErr) {
-                Logger.warn(`[SkillHelper] ⚠️ Lỗi quét thư mục skill (${rootDir}): ${scanErr.message}`);
+                Logger.warn(tr('logs.skillhelper.warn_skillhelper_loi_quet_thu_muc_skill', { rootDir: rootDir, message: scanErr.message }));
             }
         }
 

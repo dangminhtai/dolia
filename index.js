@@ -1,3 +1,4 @@
+import { t as tr } from './services/i18nService.js';
 import dotenv from 'dotenv'
 dotenv.config()
 import { Client, GatewayIntentBits, Partials, Collection } from 'discord.js'
@@ -67,7 +68,7 @@ app.get('/', (req, res) => {
 });
 
 app.listen(PORT, () => {
-    console.log(`Express server listening on port ${PORT}`);
+    console.log(tr('logs.index.log_express_server_listening_on_port', { PORT: PORT }));
 });
 
 async function main() {
@@ -76,10 +77,10 @@ async function main() {
         // 1. Connect DB (Non-blocking or Soft-fail)
         try {
             await connectDB();
-            geminiModelService.init().catch(err => console.error('⚠️ Gemini Model sync failed:', err.message));
+            geminiModelService.init().catch(err => console.error(tr('logs.index.error_gemini_model_sync_failed'), err.message));
         } catch (dbErr) {
-            console.error('⚠️ Database connection failed:', dbErr.message);
-            console.log('Bot will continue startup without Database...');
+            console.error(tr('logs.index.error_database_connection_failed'), dbErr.message);
+            console.log(tr('logs.index.log_bot_will_continue_startup_without_database'));
         }
 
 
@@ -90,24 +91,24 @@ async function main() {
             const loadResult = await loadCommands(commandsPath, client);
             await deployCommands(loadResult);
         } catch (cmdErr) {
-            console.error('⚠️ Command loading/deployment failed:', cmdErr.message);
+            console.error(tr('logs.index.error_command_loading_deployment_failed'), cmdErr.message);
         }
 
         // 3. Login
         await client.login(process.env.DISCORD_TOKEN);
 
     } catch (err) {
-        Logger.error(`❌ Fatal Error during startup: ${err}`);
+        Logger.error(tr('logs.index.error_fatal_error_during_startup', { err: err }));
     }
 }
 // --- GLOBAL ERROR HANDLERS to prevent crash ---
 process.on('unhandledRejection', (reason, promise) => {
-    Logger.error('❌ Unhandled Rejection at:', promise, 'reason:', reason);
+    Logger.error(tr('logs.index.error_unhandled_rejection_at'), promise, tr('logs.index.error_reason'), reason);
     // Không exit process, chỉ log lỗi để bot vẫn chạy
 });
 
 process.on('uncaughtException', (err) => {
-    Logger.error('❌ Uncaught Exception:', err);
+    Logger.error(tr('logs.index.error_uncaught_exception'), err);
     // Không exit process
 });
 

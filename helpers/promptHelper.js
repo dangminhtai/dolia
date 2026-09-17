@@ -1,3 +1,4 @@
+import { t as tr } from '../services/i18nService.js';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -13,7 +14,7 @@ export function loadSystemPrompt(replacements) {
     try {
         // 2. Chỉ đọc file nếu chưa có trong Cache
         if (!cachedRawPrompt) {
-            Logger.info('[PromptHelper] Reading prompt files from disk...'); // Log để biết khi nào nó đọc file
+            Logger.info(tr('logs.prompthelper.info_prompthelper_reading_prompt_files_from_disk')); // Log để biết khi nào nó đọc file
 
             const promptDir = path.join(__dirname, '../config/prompt');
             // CHÚ Ý: Đảm bảo tên file ở đây khớp 100% với tên file trên Linux
@@ -26,7 +27,7 @@ export function loadSystemPrompt(replacements) {
                 if (fs.existsSync(filePath)) {
                     combinedContent += fs.readFileSync(filePath, 'utf-8') + "\n\n---\n\n"; // Thêm dấu phân cách cho AI dễ hiểu
                 } else {
-                    Logger.warn(`[PromptHelper] ⚠️ File missing: ${filePath}`);
+                    Logger.warn(tr('logs.prompthelper.warn_prompthelper_file_missing', { filePath: filePath }));
                 }
             }
             cachedRawPrompt = combinedContent;
@@ -55,7 +56,7 @@ Bạn là Dolia, một trợ lý ảo dễ thương, năng động trên Discord
   3. Nếu muốn mở bảng điều khiển -> gọi tool 'show_music_panel'.
   4. Luôn kiểm tra tool phù hợp trước khi trả lời.
         `;
-        Logger.error(`[PromptHelper] 🔥 Error: ${error.message}`);
+        Logger.error(tr('logs.prompthelper.error_prompthelper_error', { message: error.message }));
         return promptFallback;
     }
 }
@@ -63,7 +64,7 @@ Bạn là Dolia, một trợ lý ảo dễ thương, năng động trên Discord
 // Hàm phụ để Force Reload (dùng khi ông sửa file md mà không muốn tắt bot)
 export function clearPromptCache() {
     cachedRawPrompt = null;
-    Logger.info('[PromptHelper] Cache cleared.');
+    Logger.info(tr('logs.prompthelper.info_prompthelper_cache_cleared'));
 }
 
 /**
@@ -75,7 +76,7 @@ export function loadAgentPrompt(fileName, replacements = {}) {
     try {
         const filePath = path.join(__dirname, '../config/prompt/agent', fileName);
         if (!fs.existsSync(filePath)) {
-            Logger.warn(`[PromptHelper] ⚠️ Agent prompt file missing: ${filePath}`);
+            Logger.warn(tr('logs.prompthelper.warn_prompthelper_agent_prompt_file_missing', { filePath: filePath }));
             return '';
         }
 
@@ -93,7 +94,7 @@ export function loadAgentPrompt(fileName, replacements = {}) {
         }
         return content;
     } catch (error) {
-        Logger.error(`[PromptHelper] 🔥 Error loading agent prompt (${fileName}): ${error.message}`);
+        Logger.error(tr('logs.prompthelper.error_prompthelper_error_loading_agent_prompt', { fileName: fileName, message: error.message }));
         return '';
     }
 }

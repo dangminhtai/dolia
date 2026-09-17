@@ -1,3 +1,4 @@
+import { t as tr } from '../../services/i18nService.js';
 import {
     SlashCommandBuilder,
     EmbedBuilder,
@@ -13,7 +14,7 @@ import { t } from '../../services/i18nService.js';
 export default {
     data: new SlashCommandBuilder()
         .setName('music-settings')
-        .setDescription('Cài đặt âm thanh phát trong kênh'),
+        .setDescription(tr('commands.music_settings.setdescription_cai_dat_am_thanh_phat_trong_kenh')),
 
     async execute(interaction) {
         const player = poru.players.get(interaction.guild.id);
@@ -29,32 +30,32 @@ export default {
                 .setTitle(t('music.settings.title'))
                 .setDescription(t('music.settings.description'))
                 .addFields(
-                    { name: '🔊 Volume', value: `${s.volume}%`, inline: true },
-                    { name: '⏩ Speed', value: `${s.speed.toFixed(1)}x`, inline: true },
-                    { name: '🗣️ Pitch', value: `${s.pitch.toFixed(1)}x`, inline: true },
-                    { name: '🐿️ Nightcore', value: s.nightcore ? t('panel.settings.nightcore_on') : t('panel.settings.nightcore_off'), inline: true },
-                    { name: '🥁 Bassboost', value: s.bassboost ? t('panel.settings.bassboost_on') : t('panel.settings.bassboost_off'), inline: true },
+                    { name: tr('commands.music_settings.name_volume'), value: `${s.volume}%`, inline: true },
+                    { name: tr('commands.music_settings.name_speed'), value: `${s.speed.toFixed(1)}x`, inline: true },
+                    { name: tr('commands.music_settings.name_pitch'), value: `${s.pitch.toFixed(1)}x`, inline: true },
+                    { name: tr('commands.music_settings.name_nightcore'), value: s.nightcore ? t('panel.settings.nightcore_on') : t('panel.settings.nightcore_off'), inline: true },
+                    { name: tr('commands.music_settings.name_bassboost'), value: s.bassboost ? t('panel.settings.bassboost_on') : t('panel.settings.bassboost_off'), inline: true },
                 )
                 .setFooter({ text: t('music.settings.footer') });
 
             // Hàng 1: Volume
             const rowVol = new ActionRowBuilder().addComponents(
-                new ButtonBuilder().setCustomId('vol_down').setLabel(t('panel.buttons.vol_down')).setStyle(ButtonStyle.Secondary).setEmoji('🔉'),
-                new ButtonBuilder().setCustomId('vol_up').setLabel(t('panel.buttons.vol_up')).setStyle(ButtonStyle.Secondary).setEmoji('🔊')
+                new ButtonBuilder().setCustomId('vol_down').setLabel(t('panel.buttons.vol_down')).setStyle(ButtonStyle.Secondary).setEmoji(tr('commands.music_settings.setemoji_setemoji')),
+                new ButtonBuilder().setCustomId('vol_up').setLabel(t('panel.buttons.vol_up')).setStyle(ButtonStyle.Secondary).setEmoji(tr('commands.music_settings.setemoji_setemoji_2'))
             );
 
             // Hàng 2: Speed (Tốc độ)
             const rowSpeed = new ActionRowBuilder().addComponents(
-                new ButtonBuilder().setCustomId('speed_down').setLabel('Speed -0.1').setStyle(ButtonStyle.Primary),
+                new ButtonBuilder().setCustomId('speed_down').setLabel(tr('commands.music_settings.setlabel_speed_0_1')).setStyle(ButtonStyle.Primary),
                 new ButtonBuilder().setCustomId('speed_reset').setLabel(t('panel.buttons.speed_reset')).setStyle(ButtonStyle.Success),
-                new ButtonBuilder().setCustomId('speed_up').setLabel('Speed +0.1').setStyle(ButtonStyle.Primary)
+                new ButtonBuilder().setCustomId('speed_up').setLabel(tr('commands.music_settings.setlabel_speed_0_1_2')).setStyle(ButtonStyle.Primary)
             );
 
             // Hàng 3: Hiệu ứng đặc biệt
             const rowEffect = new ActionRowBuilder().addComponents(
-                new ButtonBuilder().setCustomId('toggle_nc').setLabel(t('panel.buttons.nightcore')).setStyle(s.nightcore ? ButtonStyle.Success : ButtonStyle.Secondary).setEmoji('🐿️'),
-                new ButtonBuilder().setCustomId('toggle_bass').setLabel(t('panel.buttons.bassboost')).setStyle(s.bassboost ? ButtonStyle.Success : ButtonStyle.Secondary).setEmoji('🥁'),
-                new ButtonBuilder().setCustomId('reset_all').setLabel(t('panel.buttons.reset_all')).setStyle(ButtonStyle.Danger).setEmoji('🧹')
+                new ButtonBuilder().setCustomId('toggle_nc').setLabel(t('panel.buttons.nightcore')).setStyle(s.nightcore ? ButtonStyle.Success : ButtonStyle.Secondary).setEmoji(tr('commands.music_settings.setemoji_setemoji_3')),
+                new ButtonBuilder().setCustomId('toggle_bass').setLabel(t('panel.buttons.bassboost')).setStyle(s.bassboost ? ButtonStyle.Success : ButtonStyle.Secondary).setEmoji(tr('commands.music_settings.setemoji_setemoji_4')),
+                new ButtonBuilder().setCustomId('reset_all').setLabel(t('panel.buttons.reset_all')).setStyle(ButtonStyle.Danger).setEmoji(tr('commands.music_settings.setemoji_setemoji_5'))
             );
 
             return { embeds: [embed], components: [rowVol, rowSpeed, rowEffect] };

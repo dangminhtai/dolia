@@ -1,3 +1,4 @@
+import { t as tr } from '../services/i18nService.js';
 import {
     joinVoiceChannel,
     createAudioPlayer,
@@ -56,7 +57,7 @@ function join(voiceChannel) {
     player.on('stateChange', (oldState, newState) => {
         if (newState.status === AudioPlayerStatus.Idle && oldState.status === AudioPlayerStatus.Playing) {
             playNext(guildId).catch((err) => {
-                console.error('[musicPlayer] playNext error:', err);
+                console.error(tr('logs.musicplayer.error_musicplayer_playnext_error'), err);
                 const s = guildStates.get(guildId);
                 if (s && s.queue.length === 0) leave(guildId);
             });
@@ -92,7 +93,7 @@ function addTrack(guildId, item) {
         state.player.state.status === AudioPlayerStatus.Idle ||
         state.player.state.status === AudioPlayerStatus.Buffering;
     if (wasIdle) {
-        playNext(guildId).catch((err) => console.error('[musicPlayer] addTrack playNext:', err));
+        playNext(guildId).catch((err) => console.error(tr('logs.musicplayer.error_musicplayer_addtrack_playnext'), err));
         return true;
     }
     return false;
@@ -114,11 +115,11 @@ async function playNext(guildId) {
     try {
         _onTrackDone(guildId);
     } catch (e) {
-        console.error('[musicPlayer] onTrackDone:', e);
+        console.error(tr('logs.musicplayer.error_musicplayer_ontrackdone'), e);
     }
 
     try {
-        console.log('[musicPlayer] Streaming:', item.url);
+        console.log(tr('logs.musicplayer.log_musicplayer_streaming'), item.url);
 
         // --- FIX LỖI Ở ĐÂY ---
         // Sử dụng ytdl-core thay vì play-dl
@@ -137,7 +138,7 @@ async function playNext(guildId) {
         // ---------------------
 
     } catch (err) {
-        console.error('[musicPlayer] stream error:', err);
+        console.error(tr('logs.musicplayer.error_musicplayer_stream_error'), err);
         state.currentTrack = null;
         // Nếu lỗi bài này thì thử bài tiếp theo luôn
         return playNext(guildId);

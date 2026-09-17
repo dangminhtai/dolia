@@ -1,0 +1,3289 @@
+{
+  "commands.block_agent.setdescription_quan_ly_block_unblock_model_ai_cho": {
+    "source": "commands/slash/block-agent.js",
+    "parameters": [],
+    "maxLength": 100
+  },
+  "commands.block_agent.setdescription_hanh_dong_muon_thuc_hien": {
+    "source": "commands/slash/block-agent.js",
+    "parameters": [],
+    "maxLength": 100
+  },
+  "commands.block_agent.name_block_model_s": {
+    "source": "commands/slash/block-agent.js",
+    "parameters": []
+  },
+  "commands.block_agent.name_unblock_model_s": {
+    "source": "commands/slash/block-agent.js",
+    "parameters": []
+  },
+  "commands.block_agent.name_xem_trang_thai": {
+    "source": "commands/slash/block-agent.js",
+    "parameters": []
+  },
+  "commands.block_agent.setdescription_thoi_gian_block_mac_dinh_24h": {
+    "source": "commands/slash/block-agent.js",
+    "parameters": [],
+    "maxLength": 100
+  },
+  "commands.block_agent.name_1_gio": {
+    "source": "commands/slash/block-agent.js",
+    "parameters": []
+  },
+  "commands.block_agent.name_6_gio": {
+    "source": "commands/slash/block-agent.js",
+    "parameters": []
+  },
+  "commands.block_agent.name_24_gio_mac_dinh": {
+    "source": "commands/slash/block-agent.js",
+    "parameters": []
+  },
+  "commands.block_agent.name_7_ngay": {
+    "source": "commands/slash/block-agent.js",
+    "parameters": []
+  },
+  "commands.block_agent.name_vinh_vien": {
+    "source": "commands/slash/block-agent.js",
+    "parameters": []
+  },
+  "commands.block_agent.content_chi_co_chu_nhan_moi_duoc_quan": {
+    "source": "commands/slash/block-agent.js",
+    "parameters": []
+  },
+  "commands.block_agent.setdescription_luu_y_trang_thai_block_o_day": {
+    "source": "commands/slash/block-agent.js",
+    "parameters": [
+      "value"
+    ],
+    "maxLength": 4096
+  },
+  "commands.block_agent.settitle_trang_thai_model_agent_antigravity_selfdev": {
+    "source": "commands/slash/block-agent.js",
+    "parameters": [],
+    "maxLength": 256
+  },
+  "commands.block_agent.text_model_dang_bi_block_cho_agent": {
+    "source": "commands/slash/block-agent.js",
+    "parameters": [
+      "length",
+      "blockedCount"
+    ]
+  },
+  "commands.block_agent.content_tat_ca_model_deu_dang_bi_block": {
+    "source": "commands/slash/block-agent.js",
+    "parameters": []
+  },
+  "commands.block_agent.text_flash": {
+    "source": "commands/slash/block-agent.js",
+    "parameters": []
+  },
+  "commands.block_agent.text_lite": {
+    "source": "commands/slash/block-agent.js",
+    "parameters": []
+  },
+  "commands.block_agent.description_v": {
+    "source": "commands/slash/block-agent.js",
+    "parameters": [
+      "typeLabel",
+      "version"
+    ]
+  },
+  "commands.block_agent.setplaceholder_chon_model_de_block_agent": {
+    "source": "commands/slash/block-agent.js",
+    "parameters": [
+      "value"
+    ],
+    "maxLength": 150
+  },
+  "commands.block_agent.setdescription_chon_mot_hoac_nhieu_model_de_block": {
+    "source": "commands/slash/block-agent.js",
+    "parameters": [
+      "value"
+    ],
+    "maxLength": 4096
+  },
+  "commands.block_agent.settitle_block_model_cho_agent_antigravity_selfdev": {
+    "source": "commands/slash/block-agent.js",
+    "parameters": [],
+    "maxLength": 256
+  },
+  "commands.block_agent.content_khong_co_model_nao_dang_bi_block": {
+    "source": "commands/slash/block-agent.js",
+    "parameters": []
+  },
+  "commands.block_agent.description_con_hm": {
+    "source": "commands/slash/block-agent.js",
+    "parameters": [
+      "hours",
+      "minutes",
+      "value"
+    ]
+  },
+  "commands.block_agent.emoji_emoji": {
+    "source": "commands/slash/block-agent.js",
+    "parameters": []
+  },
+  "commands.block_agent.setplaceholder_chon_model_de_unblock_cho_agent": {
+    "source": "commands/slash/block-agent.js",
+    "parameters": [],
+    "maxLength": 150
+  },
+  "commands.block_agent.setdescription_chon_mot_hoac_nhieu_model_de_go": {
+    "source": "commands/slash/block-agent.js",
+    "parameters": [],
+    "maxLength": 4096
+  },
+  "commands.block_agent.settitle_unblock_model_cho_agent": {
+    "source": "commands/slash/block-agent.js",
+    "parameters": [],
+    "maxLength": 256
+  },
+  "commands.block_agent.content_ban_khong_co_quyen_thuc_hien_thao": {
+    "source": "commands/slash/block-agent.js",
+    "parameters": []
+  },
+  "commands.block_agent.setdescription_chat_thong_thuong_cua_dolia_van_hoat": {
+    "source": "commands/slash/block-agent.js",
+    "parameters": [
+      "value"
+    ],
+    "maxLength": 4096
+  },
+  "commands.block_agent.settitle_da_block_model_s_cho_agent": {
+    "source": "commands/slash/block-agent.js",
+    "parameters": [],
+    "maxLength": 256
+  },
+  "commands.block_agent.text_model_da_bi_block_cho_agent": {
+    "source": "commands/slash/block-agent.js",
+    "parameters": [
+      "length"
+    ]
+  },
+  "commands.block_agent.settitle_da_unblock_model_s_cho_agent": {
+    "source": "commands/slash/block-agent.js",
+    "parameters": [],
+    "maxLength": 256
+  },
+  "commands.block_agent.text_model_da_duoc_mo_lai_cho_agent": {
+    "source": "commands/slash/block-agent.js",
+    "parameters": [
+      "length"
+    ]
+  },
+  "commands.block_agent.1h_1_gio": {
+    "source": "commands/slash/block-agent.js",
+    "parameters": []
+  },
+  "commands.block_agent.6h_6_gio": {
+    "source": "commands/slash/block-agent.js",
+    "parameters": []
+  },
+  "commands.block_agent.24h_24_gio": {
+    "source": "commands/slash/block-agent.js",
+    "parameters": []
+  },
+  "commands.block_agent.7d_7_ngay": {
+    "source": "commands/slash/block-agent.js",
+    "parameters": []
+  },
+  "commands.block_agent.permanent_vinh_vien": {
+    "source": "commands/slash/block-agent.js",
+    "parameters": []
+  },
+  "commands.block_agent.status_blocked": {
+    "source": "commands/slash/block-agent.js",
+    "parameters": []
+  },
+  "commands.block_agent.status_available": {
+    "source": "commands/slash/block-agent.js",
+    "parameters": []
+  },
+  "commands.block_agent.type_flash_icon": {
+    "source": "commands/slash/block-agent.js",
+    "parameters": []
+  },
+  "commands.block_agent.type_lite_icon": {
+    "source": "commands/slash/block-agent.js",
+    "parameters": []
+  },
+  "commands.lyrics.setdescription_tim_kiem_loi_bai_hat_bang_dolia": {
+    "source": "commands/slash/lyrics.js",
+    "parameters": [],
+    "maxLength": 100
+  },
+  "commands.music_pannel.setdescription_mo_bang_dieu_khien_am_nhac": {
+    "source": "commands/slash/music-pannel.js",
+    "parameters": [],
+    "maxLength": 100
+  },
+  "commands.music_settings.setdescription_cai_dat_am_thanh_phat_trong_kenh": {
+    "source": "commands/slash/music-settings.js",
+    "parameters": [],
+    "maxLength": 100
+  },
+  "commands.music_settings.name_volume": {
+    "source": "commands/slash/music-settings.js",
+    "parameters": []
+  },
+  "commands.music_settings.name_speed": {
+    "source": "commands/slash/music-settings.js",
+    "parameters": []
+  },
+  "commands.music_settings.name_pitch": {
+    "source": "commands/slash/music-settings.js",
+    "parameters": []
+  },
+  "commands.music_settings.name_nightcore": {
+    "source": "commands/slash/music-settings.js",
+    "parameters": []
+  },
+  "commands.music_settings.name_bassboost": {
+    "source": "commands/slash/music-settings.js",
+    "parameters": []
+  },
+  "commands.music_settings.setemoji_setemoji": {
+    "source": "commands/slash/music-settings.js",
+    "parameters": []
+  },
+  "commands.music_settings.setemoji_setemoji_2": {
+    "source": "commands/slash/music-settings.js",
+    "parameters": []
+  },
+  "commands.music_settings.setlabel_speed_0_1": {
+    "source": "commands/slash/music-settings.js",
+    "parameters": [],
+    "maxLength": 80
+  },
+  "commands.music_settings.setlabel_speed_0_1_2": {
+    "source": "commands/slash/music-settings.js",
+    "parameters": [],
+    "maxLength": 80
+  },
+  "commands.music_settings.setemoji_setemoji_3": {
+    "source": "commands/slash/music-settings.js",
+    "parameters": []
+  },
+  "commands.music_settings.setemoji_setemoji_4": {
+    "source": "commands/slash/music-settings.js",
+    "parameters": []
+  },
+  "commands.music_settings.setemoji_setemoji_5": {
+    "source": "commands/slash/music-settings.js",
+    "parameters": []
+  },
+  "commands.nowplaying.setdescription_xem_bai_hat_dang_phat": {
+    "source": "commands/slash/nowplaying.js",
+    "parameters": [],
+    "maxLength": 100
+  },
+  "commands.nowplaying.setdescription_setdescription": {
+    "source": "commands/slash/nowplaying.js",
+    "parameters": [
+      "title",
+      "uri"
+    ],
+    "maxLength": 4096
+  },
+  "commands.nowplaying.progress_position": {
+    "source": "commands/slash/nowplaying.js",
+    "parameters": []
+  },
+  "commands.nowplaying.progress_empty": {
+    "source": "commands/slash/nowplaying.js",
+    "parameters": []
+  },
+  "commands.play_247.setdescription_bat_che_do_radio_phat_nhac_ngau": {
+    "source": "commands/slash/play-247.js",
+    "parameters": [],
+    "maxLength": 100
+  },
+  "commands.play.setdescription_phat_nhac_khong_can_ban_phai_vao": {
+    "source": "commands/slash/play.js",
+    "parameters": [],
+    "maxLength": 100
+  },
+  "commands.play.setdescription_ten_bai_hat_hoac_link": {
+    "source": "commands/slash/play.js",
+    "parameters": [],
+    "maxLength": 100
+  },
+  "commands.play.setdescription_true_chen_ngang_phat_ngay_lap_tuc": {
+    "source": "commands/slash/play.js",
+    "parameters": [],
+    "maxLength": 100
+  },
+  "commands.radio_add247.setdescription_them_bai_hat_vao_kho_nhac_24": {
+    "source": "commands/slash/radio-add247.js",
+    "parameters": [],
+    "maxLength": 100
+  },
+  "commands.radio_add247.setdescription_link_bai_hat_hoac_ten": {
+    "source": "commands/slash/radio-add247.js",
+    "parameters": [],
+    "maxLength": 100
+  },
+  "commands.radio_list247.setdescription_xem_danh_sach_nhac_trong_kho_radio": {
+    "source": "commands/slash/radio-list247.js",
+    "parameters": [],
+    "maxLength": 100
+  },
+  "commands.radio_list247.setdescription_so_trang_muon_xem": {
+    "source": "commands/slash/radio-list247.js",
+    "parameters": [],
+    "maxLength": 100
+  },
+  "commands.radio_remove247.setdescription_xoa_bai_hat_khoi_kho_nhac_radio": {
+    "source": "commands/slash/radio-remove247.js",
+    "parameters": [],
+    "maxLength": 100
+  },
+  "commands.radio_remove247.setdescription_so_thu_tu_bai_hat_xem_trong": {
+    "source": "commands/slash/radio-remove247.js",
+    "parameters": [],
+    "maxLength": 100
+  },
+  "commands.self_dev.setdescription_yeu_cau_dolia_tu_lap_trinh_tinh": {
+    "source": "commands/slash/self_dev.js",
+    "parameters": [],
+    "maxLength": 100
+  },
+  "commands.self_dev.setdescription_mo_ta_tinh_nang_tro_choi_hoac": {
+    "source": "commands/slash/self_dev.js",
+    "parameters": [],
+    "maxLength": 100
+  },
+  "commands.self_dev.setdescription_ten_lenh_goi_y_viet_thuong_khong": {
+    "source": "commands/slash/self_dev.js",
+    "parameters": [],
+    "maxLength": 100
+  },
+  "commands.skip.setdescription_bo_qua_bai_hien_tai_lavalink": {
+    "source": "commands/slash/skip.js",
+    "parameters": [],
+    "maxLength": 100
+  },
+  "commands.stop.setdescription_dung_nhac_va_tat_che_do_24": {
+    "source": "commands/slash/stop.js",
+    "parameters": [],
+    "maxLength": 100
+  },
+  "commands.switch_provider.setdescription_chuyen_doi_nguon_phat_nhac_youtube_soundcloud": {
+    "source": "commands/slash/switch-provider.js",
+    "parameters": [],
+    "maxLength": 100
+  },
+  "commands.switch_provider.setdescription_chon_nguon_nhac_muon_dung": {
+    "source": "commands/slash/switch-provider.js",
+    "parameters": [],
+    "maxLength": 100
+  },
+  "commands.switch_provider.name_youtube_mac_dinh": {
+    "source": "commands/slash/switch-provider.js",
+    "parameters": []
+  },
+  "commands.switch_provider.name_youtube_music_khuyen_dung": {
+    "source": "commands/slash/switch-provider.js",
+    "parameters": []
+  },
+  "commands.switch_provider.name_soundcloud_remix_edm": {
+    "source": "commands/slash/switch-provider.js",
+    "parameters": []
+  },
+  "commands.switch_provider.name_spotify": {
+    "source": "commands/slash/switch-provider.js",
+    "parameters": []
+  },
+  "commands.tictactoe.setdescription_choi_tic_tac_toe_cung_nhau": {
+    "source": "commands/slash/tictactoe.js",
+    "parameters": [],
+    "maxLength": 100
+  },
+  "commands.tictactoe.setdescription_chon_ban_de_choi_cung": {
+    "source": "commands/slash/tictactoe.js",
+    "parameters": [],
+    "maxLength": 100
+  },
+  "commands.tictactoe.empty_cell_label": {
+    "source": "commands/slash/tictactoe.js",
+    "parameters": []
+  },
+  "common.dm_not_supported": {
+    "source": "events/client/messageCreate.js",
+    "parameters": []
+  },
+  "common.chat_error": {
+    "source": "events/client/messageCreate.js",
+    "parameters": []
+  },
+  "common.command_not_found": {
+    "source": "events/client/interactionCreate.js",
+    "parameters": []
+  },
+  "common.command_error": {
+    "source": "events/client/interactionCreate.js",
+    "parameters": []
+  },
+  "common.not_your_menu": {
+    "source": "commands/slash/music-settings.js",
+    "parameters": []
+  },
+  "common.server_running": {
+    "source": "index.js",
+    "parameters": []
+  },
+  "common.guild_only": {
+    "source": "commands/slash/music-pannel.js",
+    "parameters": []
+  },
+  "common.self_dev.only_owner": {
+    "source": "resources/vi/common.json",
+    "parameters": []
+  },
+  "common.self_dev.in_progress": {
+    "source": "resources/vi/common.json",
+    "parameters": []
+  },
+  "common.self_dev.review_title": {
+    "source": "resources/vi/common.json",
+    "parameters": []
+  },
+  "common.self_dev.applied_success": {
+    "source": "resources/vi/common.json",
+    "parameters": []
+  },
+  "common.self_dev.cancelled": {
+    "source": "resources/vi/common.json",
+    "parameters": []
+  },
+  "common.rps.command_description": {
+    "source": "resources/vi/common.json",
+    "parameters": []
+  },
+  "common.rps.choose_prompt": {
+    "source": "resources/vi/common.json",
+    "parameters": []
+  },
+  "common.rps.win_title": {
+    "source": "resources/vi/common.json",
+    "parameters": []
+  },
+  "common.rps.lose_title": {
+    "source": "resources/vi/common.json",
+    "parameters": []
+  },
+  "common.rps.draw_title": {
+    "source": "resources/vi/common.json",
+    "parameters": []
+  },
+  "common.rps.timeout_desc": {
+    "source": "resources/vi/common.json",
+    "parameters": []
+  },
+  "common.rps.title": {
+    "source": "resources/vi/common.json",
+    "parameters": []
+  },
+  "common.rps.rock": {
+    "source": "resources/vi/common.json",
+    "parameters": []
+  },
+  "common.rps.paper": {
+    "source": "resources/vi/common.json",
+    "parameters": []
+  },
+  "common.rps.scissors": {
+    "source": "resources/vi/common.json",
+    "parameters": []
+  },
+  "common.rps.play_again": {
+    "source": "resources/vi/common.json",
+    "parameters": []
+  },
+  "common.rps.win": {
+    "source": "resources/vi/common.json",
+    "parameters": []
+  },
+  "common.rps.lose": {
+    "source": "resources/vi/common.json",
+    "parameters": []
+  },
+  "common.rps.draw": {
+    "source": "resources/vi/common.json",
+    "parameters": []
+  },
+  "common.rps.result_desc": {
+    "source": "resources/vi/common.json",
+    "parameters": [
+      "userEmoji",
+      "userLabel",
+      "botEmoji",
+      "botLabel",
+      "result"
+    ]
+  },
+  "common.rps.timeout": {
+    "source": "resources/vi/common.json",
+    "parameters": []
+  },
+  "common.rps.only_author": {
+    "source": "resources/vi/common.json",
+    "parameters": []
+  },
+  "common.chat_empty_fallback": {
+    "source": "events/client/messageCreate.js",
+    "parameters": []
+  },
+  "errors.no_permission": {
+    "source": "resources/vi/errors.json",
+    "parameters": []
+  },
+  "errors.database_error": {
+    "source": "resources/vi/errors.json",
+    "parameters": []
+  },
+  "errors.generic_error": {
+    "source": "resources/vi/errors.json",
+    "parameters": []
+  },
+  "errors.invalid_number": {
+    "source": "resources/vi/errors.json",
+    "parameters": []
+  },
+  "games.tictactoe.waiting": {
+    "source": "commands/slash/tictactoe.js",
+    "parameters": [
+      "player1"
+    ]
+  },
+  "games.tictactoe.turn": {
+    "source": "commands/slash/tictactoe.js",
+    "parameters": [
+      "player1",
+      "player2",
+      "current",
+      "symbol"
+    ]
+  },
+  "games.tictactoe.winner": {
+    "source": "commands/slash/tictactoe.js",
+    "parameters": [
+      "winner",
+      "symbol",
+      "selfComment"
+    ]
+  },
+  "games.tictactoe.self_comment": {
+    "source": "commands/slash/tictactoe.js",
+    "parameters": []
+  },
+  "games.tictactoe.draw": {
+    "source": "commands/slash/tictactoe.js",
+    "parameters": []
+  },
+  "games.tictactoe.game_over": {
+    "source": "commands/slash/tictactoe.js",
+    "parameters": []
+  },
+  "games.tictactoe.room_full": {
+    "source": "commands/slash/tictactoe.js",
+    "parameters": []
+  },
+  "games.tictactoe.not_your_turn": {
+    "source": "commands/slash/tictactoe.js",
+    "parameters": []
+  },
+  "games.tictactoe.timeout": {
+    "source": "commands/slash/tictactoe.js",
+    "parameters": []
+  },
+  "games.tictactoe.error": {
+    "source": "commands/slash/tictactoe.js",
+    "parameters": []
+  },
+  "games.tictactoe.join_button": {
+    "source": "commands/slash/tictactoe.js",
+    "parameters": [],
+    "maxLength": 80
+  },
+  "general.lyrics.modal_title": {
+    "source": "commands/slash/lyrics.js",
+    "parameters": [],
+    "maxLength": 256
+  },
+  "general.lyrics.input_label": {
+    "source": "commands/slash/lyrics.js",
+    "parameters": [],
+    "maxLength": 80
+  },
+  "general.lyrics.input_placeholder": {
+    "source": "commands/slash/lyrics.js",
+    "parameters": [],
+    "maxLength": 150
+  },
+  "general.lyrics.not_found": {
+    "source": "events/client/interactionCreate.js",
+    "parameters": [
+      "query"
+    ]
+  },
+  "general.lyrics.error": {
+    "source": "events/client/interactionCreate.js",
+    "parameters": []
+  },
+  "general.lyrics.full_lyrics_hint": {
+    "source": "events/client/interactionCreate.js",
+    "parameters": []
+  },
+  "general.lyrics.full_lyrics_header": {
+    "source": "events/client/interactionCreate.js",
+    "parameters": [
+      "title"
+    ]
+  },
+  "general.lyrics.footer": {
+    "source": "events/client/interactionCreate.js",
+    "parameters": []
+  },
+  "general.lyrics.year_field": {
+    "source": "events/client/interactionCreate.js",
+    "parameters": []
+  },
+  "general.lyrics.link_field": {
+    "source": "events/client/interactionCreate.js",
+    "parameters": []
+  },
+  "general.lyrics.link_text": {
+    "source": "events/client/interactionCreate.js",
+    "parameters": []
+  },
+  "logs.play.error_lavalink_resolve_error": {
+    "source": "commands/slash/play.js",
+    "parameters": []
+  },
+  "logs.play.error_loi_luu_queue_db": {
+    "source": "commands/slash/play.js",
+    "parameters": []
+  },
+  "logs.switch_provider.error_error_switching_provider": {
+    "source": "commands/slash/switch-provider.js",
+    "parameters": []
+  },
+  "logs.tictactoe.error_tictactoe": {
+    "source": "commands/slash/tictactoe.js",
+    "parameters": []
+  },
+  "logs.interactioncreate.error_error_resolving_playlist_track": {
+    "source": "events/client/interactionCreate.js",
+    "parameters": []
+  },
+  "logs.interactioncreate.error_music_panel_error": {
+    "source": "events/client/interactionCreate.js",
+    "parameters": []
+  },
+  "logs.interactioncreate.error_lyrics_modal_error": {
+    "source": "events/client/interactionCreate.js",
+    "parameters": []
+  },
+  "logs.interactioncreate.error_block_agent_menu_error": {
+    "source": "events/client/interactionCreate.js",
+    "parameters": []
+  },
+  "logs.interactioncreate.error_command_execution_error": {
+    "source": "events/client/interactionCreate.js",
+    "parameters": []
+  },
+  "logs.messagecreate.error_gemini_chat_error": {
+    "source": "events/client/messageCreate.js",
+    "parameters": []
+  },
+  "logs.onready.log_bot_da_dang_nhap_duoi_ten": {
+    "source": "events/client/onReady.js",
+    "parameters": [
+      "tag"
+    ]
+  },
+  "logs.devfunctions.info_devfunctions_dang_thuc_thi_lenh_cho_user": {
+    "source": "utils/devFunctions.js",
+    "parameters": [
+      "name",
+      "id",
+      "username"
+    ]
+  },
+  "logs.devfunctions.error_devfunctions_loi_khi_chay_lenh": {
+    "source": "utils/devFunctions.js",
+    "parameters": [
+      "name"
+    ]
+  },
+  "logs.devfunctions.info_devfunctions_agent_code_tool_invoked_by_user": {
+    "source": "utils/devFunctions.js",
+    "parameters": [
+      "id",
+      "username",
+      "action",
+      "prompt",
+      "feature_name"
+    ]
+  },
+  "logs.devfunctions.info_devfunctions_yeu_cau_khoi_chay_tinh_nang": {
+    "source": "utils/devFunctions.js",
+    "parameters": [
+      "targetCmd"
+    ]
+  },
+  "logs.devfunctions.info_devfunctions_chay_script_ngam_trong_sandbox_action": {
+    "source": "utils/devFunctions.js",
+    "parameters": [
+      "lowerAction",
+      "prompt"
+    ]
+  },
+  "logs.devfunctions.warn_devfunctions_khong_the_gui_tin_nhan_tien": {
+    "source": "utils/devFunctions.js",
+    "parameters": []
+  },
+  "logs.devfunctions.error_devfunctions_loi_chay_dynamic_script": {
+    "source": "utils/devFunctions.js",
+    "parameters": []
+  },
+  "logs.devfunctions.error_devfunctions_error_starting_delete_session": {
+    "source": "utils/devFunctions.js",
+    "parameters": []
+  },
+  "logs.devfunctions.error_devfunctions_error_starting_self_dev_session": {
+    "source": "utils/devFunctions.js",
+    "parameters": []
+  },
+  "logs.devfunctions.info_devfunctions_dang_tim_kiem_google_cho": {
+    "source": "utils/devFunctions.js",
+    "parameters": [
+      "query"
+    ]
+  },
+  "logs.devfunctions.warn_devfunctions_model_gap_su_co_khi_web": {
+    "source": "utils/devFunctions.js",
+    "parameters": [
+      "modelId",
+      "message"
+    ]
+  },
+  "logs.devfunctions.info_devfunctions_da_tim_kiem_thanh_cong_cho": {
+    "source": "utils/devFunctions.js",
+    "parameters": [
+      "query",
+      "length"
+    ]
+  },
+  "logs.devfunctions.error_devfunctions_loi_khi_tim_kiem_google_cho": {
+    "source": "utils/devFunctions.js",
+    "parameters": [
+      "query"
+    ]
+  },
+  "logs.lavalinkhelper.error_loi_khi_doc_musicprovider_cua_user": {
+    "source": "utils/lavalinkHelper.js",
+    "parameters": []
+  },
+  "logs.lavalinkhelper.info_music_tim_kiem_user_provider": {
+    "source": "utils/lavalinkHelper.js",
+    "parameters": [
+      "query",
+      "userTag",
+      "providerName",
+      "value"
+    ]
+  },
+  "logs.lavalinkhelper.warn_music_that_bai_loadtype_nguon": {
+    "source": "utils/lavalinkHelper.js",
+    "parameters": [
+      "loadType",
+      "providerName"
+    ]
+  },
+  "logs.lavalinkhelper.warn_music_rong_khong_tim_thay_bai_nao": {
+    "source": "utils/lavalinkHelper.js",
+    "parameters": [
+      "providerName",
+      "query"
+    ]
+  },
+  "logs.lavalinkhelper.success_music_thanh_cong_tim_thay_bai_bai": {
+    "source": "utils/lavalinkHelper.js",
+    "parameters": [
+      "loadType",
+      "trackCount",
+      "firstTitle",
+      "sourceName"
+    ]
+  },
+  "logs.lavalinkmanager.error_khong_tim_thay_channel": {
+    "source": "utils/LavalinkManager.js",
+    "parameters": [
+      "channelId"
+    ]
+  },
+  "logs.lavalinkmanager.error_loi_lay_nhac_random": {
+    "source": "utils/LavalinkManager.js",
+    "parameters": []
+  },
+  "logs.lavalinkmanager.warn_lavalink_poru_packetupdate_handled_error": {
+    "source": "utils/LavalinkManager.js",
+    "parameters": [
+      "message"
+    ]
+  },
+  "logs.lavalinkmanager.log_lavalink_node_da_ket_noi": {
+    "source": "utils/LavalinkManager.js",
+    "parameters": [
+      "name"
+    ]
+  },
+  "logs.lavalinkmanager.log_lavalink_mat_ket_noi_node": {
+    "source": "utils/LavalinkManager.js",
+    "parameters": [
+      "name"
+    ]
+  },
+  "logs.lavalinkmanager.log_lavalink_node_loi": {
+    "source": "utils/LavalinkManager.js",
+    "parameters": [
+      "name",
+      "message"
+    ]
+  },
+  "logs.lavalinkmanager.info_music_bat_dau_phat_kenh_provider_goc": {
+    "source": "utils/LavalinkManager.js",
+    "parameters": [
+      "title",
+      "timeString",
+      "author",
+      "sourceName"
+    ]
+  },
+  "logs.lavalinkmanager.error_khong_gui_duoc_tin_nhan_trackstart": {
+    "source": "utils/LavalinkManager.js",
+    "parameters": []
+  },
+  "logs.lavalinkmanager.error_loi_log_nhac": {
+    "source": "utils/LavalinkManager.js",
+    "parameters": []
+  },
+  "logs.lavalinkmanager.error_track_loi": {
+    "source": "utils/LavalinkManager.js",
+    "parameters": [
+      "title"
+    ]
+  },
+  "logs.lavalinkmanager.warn_track_bi_ket_qua_ms_dang_auto": {
+    "source": "utils/LavalinkManager.js",
+    "parameters": [
+      "title",
+      "threshold"
+    ]
+  },
+  "logs.lavalinkmanager.error_loi_khi_co_stop_track_bi_ket": {
+    "source": "utils/LavalinkManager.js",
+    "parameters": []
+  },
+  "logs.lavalinkmanager.log_bai_radio_bi_loi_dang_thu_bai": {
+    "source": "utils/LavalinkManager.js",
+    "parameters": []
+  },
+  "logs.messagehelper.error_failed_to_delete_temp_file": {
+    "source": "utils/messageHelper.js",
+    "parameters": []
+  },
+  "logs.musicfunctions.error_poru_create_connection_error": {
+    "source": "utils/musicFunctions.js",
+    "parameters": []
+  },
+  "logs.musicfunctions.warn_music_resolve_error_attempt": {
+    "source": "utils/musicFunctions.js",
+    "parameters": [
+      "value",
+      "maxResolveRetries",
+      "message"
+    ]
+  },
+  "logs.musicfunctions.error_loi_luu_queue_db": {
+    "source": "utils/musicFunctions.js",
+    "parameters": []
+  },
+  "logs.musicplayer.error_musicplayer_playnext_error": {
+    "source": "utils/musicPlayer.js",
+    "parameters": []
+  },
+  "logs.musicplayer.error_musicplayer_addtrack_playnext": {
+    "source": "utils/musicPlayer.js",
+    "parameters": []
+  },
+  "logs.musicplayer.error_musicplayer_ontrackdone": {
+    "source": "utils/musicPlayer.js",
+    "parameters": []
+  },
+  "logs.musicplayer.log_musicplayer_streaming": {
+    "source": "utils/musicPlayer.js",
+    "parameters": []
+  },
+  "logs.musicplayer.error_musicplayer_stream_error": {
+    "source": "utils/musicPlayer.js",
+    "parameters": []
+  },
+  "logs.playutils.error_lavalink_resolve_error": {
+    "source": "utils/PlayUtils.js",
+    "parameters": []
+  },
+  "logs.playutils.error_loi_luu_queue_db": {
+    "source": "utils/PlayUtils.js",
+    "parameters": []
+  },
+  "logs.antigravityservice.info_antigravity_khoi_chay_antigravity_agent_cloud_sandbox": {
+    "source": "services/antigravityService.js",
+    "parameters": [
+      "mode",
+      "activeModel"
+    ]
+  },
+  "logs.antigravityservice.info_antigravity_nap_session_kenh_environmentid_previousinteractionid": {
+    "source": "services/antigravityService.js",
+    "parameters": [
+      "value",
+      "value2",
+      "value3"
+    ]
+  },
+  "logs.antigravityservice.info_antigravity_da_nhung_skills_vao_environment_sources": {
+    "source": "services/antigravityService.js",
+    "parameters": [
+      "length",
+      "value"
+    ]
+  },
+  "logs.antigravityservice.info_antigravity_tai_su_dung_warm_sandbox_container": {
+    "source": "services/antigravityService.js",
+    "parameters": [
+      "environmentId",
+      "value"
+    ]
+  },
+  "logs.antigravityservice.info_antigravity_google_cloud_interaction_created_environmentid_interactionid": {
+    "source": "services/antigravityService.js",
+    "parameters": [
+      "value",
+      "value2"
+    ]
+  },
+  "logs.antigravityservice.info_antigravity_google_cloud_interaction_completed_environmentid_interactionid": {
+    "source": "services/antigravityService.js",
+    "parameters": [
+      "value",
+      "value2"
+    ]
+  },
+  "logs.antigravityservice.error_antigravity_interaction_failed": {
+    "source": "services/antigravityService.js",
+    "parameters": [
+      "value"
+    ]
+  },
+  "logs.antigravityservice.info_antigravity_antigravity_cloud_stream_hoan_tat": {
+    "source": "services/antigravityService.js",
+    "parameters": []
+  },
+  "logs.commanddeploymentservice.info_deploy_auto_command_deploy_bi_tat_boi": {
+    "source": "services/commandDeploymentService.js",
+    "parameters": []
+  },
+  "logs.commanddeploymentservice.warn_deploy_bo_qua_deploy_lenh_vi_thieu": {
+    "source": "services/commandDeploymentService.js",
+    "parameters": []
+  },
+  "logs.commanddeploymentservice.warn_deploy_khong_co_lenh_nao_duoc_tim": {
+    "source": "services/commandDeploymentService.js",
+    "parameters": []
+  },
+  "logs.commanddeploymentservice.info_deploy_slash_commands_khong_thay_doi_lenh": {
+    "source": "services/commandDeploymentService.js",
+    "parameters": [
+      "length"
+    ]
+  },
+  "logs.commanddeploymentservice.info_deploy_bat_buoc_deploy_lenh_forcedeploy_true": {
+    "source": "services/commandDeploymentService.js",
+    "parameters": []
+  },
+  "logs.commanddeploymentservice.info_deploy_da_deploy_thanh_cong_slash_command": {
+    "source": "services/commandDeploymentService.js",
+    "parameters": [
+      "length"
+    ]
+  },
+  "logs.geminimodelservice.warn_geminimodelservice_failed_to_auto_clear_expired_block": {
+    "source": "services/geminiModelService.js",
+    "parameters": [
+      "message"
+    ]
+  },
+  "logs.geminimodelservice.warn_geminimodelservice_failed_to_auto_clear_expired_agent": {
+    "source": "services/geminiModelService.js",
+    "parameters": [
+      "message"
+    ]
+  },
+  "logs.geminimodelservice.warn_geminimodelservice_failed_to_sync_block_cache": {
+    "source": "services/geminiModelService.js",
+    "parameters": [
+      "message"
+    ]
+  },
+  "logs.geminimodelservice.warn_geminimodelservice_failed_to_persist_agent_block": {
+    "source": "services/geminiModelService.js",
+    "parameters": [
+      "message"
+    ]
+  },
+  "logs.geminimodelservice.warn_geminimodelservice_agent_only_blocked_for_s": {
+    "source": "services/geminiModelService.js",
+    "parameters": [
+      "modelId",
+      "value",
+      "reason"
+    ]
+  },
+  "logs.geminimodelservice.warn_geminimodelservice_failed_to_clear_agent_block": {
+    "source": "services/geminiModelService.js",
+    "parameters": [
+      "message"
+    ]
+  },
+  "logs.geminimodelservice.info_geminimodelservice_agent_only_unblocked": {
+    "source": "services/geminiModelService.js",
+    "parameters": [
+      "modelId"
+    ]
+  },
+  "logs.geminimodelservice.warn_geminimodelservice_failed_to_persist_model_block": {
+    "source": "services/geminiModelService.js",
+    "parameters": [
+      "message"
+    ]
+  },
+  "logs.geminimodelservice.warn_geminimodelservice_blocked_for_s_in_mongodb": {
+    "source": "services/geminiModelService.js",
+    "parameters": [
+      "modelId",
+      "value",
+      "reason"
+    ]
+  },
+  "logs.geminimodelservice.warn_geminimodelservice_failed_to_clear_model_block": {
+    "source": "services/geminiModelService.js",
+    "parameters": [
+      "message"
+    ]
+  },
+  "logs.geminimodelservice.error_geminimodelservice_loi_truy_van_candidate_models": {
+    "source": "services/geminiModelService.js",
+    "parameters": [
+      "message"
+    ]
+  },
+  "logs.geminimodelservice.info_geminimodelservice_dang_quet_danh_sach_model_tu": {
+    "source": "services/geminiModelService.js",
+    "parameters": []
+  },
+  "logs.geminimodelservice.info_geminimodelservice_da_luu_model_hop_le_vao": {
+    "source": "services/geminiModelService.js",
+    "parameters": [
+      "length",
+      "value"
+    ]
+  },
+  "logs.geminimodelservice.warn_geminimodelservice_khong_tim_thay_model_nao_khop": {
+    "source": "services/geminiModelService.js",
+    "parameters": []
+  },
+  "logs.geminimodelservice.error_geminimodelservice_loi_khi_dong_bo_danh_sach": {
+    "source": "services/geminiModelService.js",
+    "parameters": [
+      "message"
+    ]
+  },
+  "logs.geminimodelservice.warn_geminimodelservice_boot_recovery_chat_model_s_dang": {
+    "source": "services/geminiModelService.js",
+    "parameters": [
+      "chatBlockedCount",
+      "blockedList"
+    ]
+  },
+  "logs.geminimodelservice.warn_geminimodelservice_boot_recovery_agent_only_model_s": {
+    "source": "services/geminiModelService.js",
+    "parameters": [
+      "agentBlockedCount",
+      "blockedList"
+    ]
+  },
+  "logs.geminimodelservice.error_geminimodelservice_dinh_ky_dong_bo_that_bai": {
+    "source": "services/geminiModelService.js",
+    "parameters": [
+      "message"
+    ]
+  },
+  "logs.selfdevservice.info_selfdev_dang_goi_antigravity_agent_cloud_sandbox": {
+    "source": "services/selfDevService.js",
+    "parameters": []
+  },
+  "logs.selfdevservice.info_selfdev_antigravity_cloud_sinh_ma_thanh_cong": {
+    "source": "services/selfDevService.js",
+    "parameters": [
+      "commandName"
+    ]
+  },
+  "logs.selfdevservice.warn_selfdev_ma_nguon_tu_antigravity_cloud_co": {
+    "source": "services/selfDevService.js",
+    "parameters": [
+      "value"
+    ]
+  },
+  "logs.selfdevservice.warn_selfdev_antigravity_cloud_gap_su_co_tu": {
+    "source": "services/selfDevService.js",
+    "parameters": [
+      "message"
+    ]
+  },
+  "logs.selfdevservice.warn_selfdev_kiem_thu_sandbox_luot_that_bai": {
+    "source": "services/selfDevService.js",
+    "parameters": [
+      "attempt",
+      "value"
+    ]
+  },
+  "logs.selfdevservice.info_selfdev_successfully_hot_reloaded_command_from_sandbox": {
+    "source": "services/selfDevService.js",
+    "parameters": [
+      "name"
+    ]
+  },
+  "logs.selfdevservice.warn_selfdev_warning_on_hot_reload": {
+    "source": "services/selfDevService.js",
+    "parameters": [
+      "message"
+    ]
+  },
+  "logs.selfdevservice.info_selfdev_successfully_deployed_slash_commands_to_discord": {
+    "source": "services/selfDevService.js",
+    "parameters": []
+  },
+  "logs.selfdevservice.warn_selfdev_warning_on_deploy_commands": {
+    "source": "services/selfDevService.js",
+    "parameters": [
+      "message"
+    ]
+  },
+  "logs.selfdevservice.info_selfdev_tu_dong_kich_hoat_tinh_nang": {
+    "source": "services/selfDevService.js",
+    "parameters": [
+      "commandName"
+    ]
+  },
+  "logs.selfdevservice.info_selfdev_da_tu_dong_kich_hoat_thanh": {
+    "source": "services/selfDevService.js",
+    "parameters": [
+      "commandName"
+    ]
+  },
+  "logs.selfdevservice.warn_selfdev_warning_when_auto_executing": {
+    "source": "services/selfDevService.js",
+    "parameters": [
+      "commandName",
+      "message"
+    ]
+  },
+  "logs.selfdevservice.error_selfdev_error_in_session": {
+    "source": "services/selfDevService.js",
+    "parameters": [
+      "sessionId"
+    ]
+  },
+  "logs.selfdevservice.info_selfdev_dang_goi_gemini_coding_model_cho": {
+    "source": "services/selfDevService.js",
+    "parameters": [
+      "modelId",
+      "suggestedName"
+    ]
+  },
+  "logs.selfdevservice.info_selfdev_gemini_coding_model_da_phan_hoi": {
+    "source": "services/selfDevService.js",
+    "parameters": [
+      "modelId",
+      "length"
+    ]
+  },
+  "logs.selfdevservice.warn_selfdev_model_gap_su_co_tu_dong": {
+    "source": "services/selfDevService.js",
+    "parameters": [
+      "modelId",
+      "message"
+    ]
+  },
+  "logs.selfdevservice.info_selfdev_dang_tien_hanh_xoa_lenh_khoi": {
+    "source": "services/selfDevService.js",
+    "parameters": [
+      "targetName"
+    ]
+  },
+  "logs.selfdevservice.info_selfdev_da_go_lenh_khoi_ram_cua": {
+    "source": "services/selfDevService.js",
+    "parameters": [
+      "targetName"
+    ]
+  },
+  "logs.selfdevservice.info_selfdev_da_dong_bo_lai_danh_sach": {
+    "source": "services/selfDevService.js",
+    "parameters": []
+  },
+  "logs.selfdevservice.error_selfdev_loi_khi_xoa_lenh": {
+    "source": "services/selfDevService.js",
+    "parameters": [
+      "targetName"
+    ]
+  },
+  "logs.selfdevservice.info_selfdev_kiem_tra_agent_session_kenh_environmentid": {
+    "source": "services/selfDevService.js",
+    "parameters": [
+      "value",
+      "value2",
+      "value3",
+      "value4"
+    ]
+  },
+  "logs.selfdevservice.info_selfdev_kich_hoat_chained_script_modification_cho": {
+    "source": "services/selfDevService.js",
+    "parameters": [
+      "value",
+      "value2"
+    ]
+  },
+  "logs.selfdevservice.info_selfdev_dang_goi_antigravity_agent_cloud_sandbox_2": {
+    "source": "services/selfDevService.js",
+    "parameters": [
+      "value"
+    ]
+  },
+  "logs.selfdevservice.info_selfdev_antigravity_cloud_sinh_script_thanh_cong": {
+    "source": "services/selfDevService.js",
+    "parameters": [
+      "value"
+    ]
+  },
+  "logs.selfdevservice.warn_selfdev_antigravity_cloud_gap_su_co_tu_2": {
+    "source": "services/selfDevService.js",
+    "parameters": [
+      "message"
+    ]
+  },
+  "logs.selfdevservice.info_selfdev_dang_goi_model_sinh_script_kiem": {
+    "source": "services/selfDevService.js",
+    "parameters": [
+      "modelId",
+      "prompt"
+    ]
+  },
+  "logs.selfdevservice.warn_selfdev_model_gap_su_co_khi_sinh": {
+    "source": "services/selfDevService.js",
+    "parameters": [
+      "modelId",
+      "message"
+    ]
+  },
+  "logs.selfdevservice.error_selfdev_tat_ca_cac_model_deu_khong": {
+    "source": "services/selfDevService.js",
+    "parameters": [
+      "message"
+    ]
+  },
+  "logs.selfdevservice.info_selfdev_bat_dau_thuc_thi_script_kiem": {
+    "source": "services/selfDevService.js",
+    "parameters": [
+      "value"
+    ]
+  },
+  "logs.selfdevservice.info_selfdev_script_kiem_tra_ngam_trong_sandbox": {
+    "source": "services/selfDevService.js",
+    "parameters": []
+  },
+  "logs.selfdevservice.warn_selfdev_khong_the_luu_lastscript_vao_agentsession": {
+    "source": "services/selfDevService.js",
+    "parameters": []
+  },
+  "logs.selfdevservice.warn_selfdev_loi_trong_qua_trinh_chay_script": {
+    "source": "services/selfDevService.js",
+    "parameters": []
+  },
+  "logs.selfdevservice.info_selfdev_da_luu_ban_sao_luu_script": {
+    "source": "services/selfDevService.js",
+    "parameters": [
+      "baseName"
+    ]
+  },
+  "logs.selfdevservice.warn_selfdev_loi_khi_sao_luu_script_vao": {
+    "source": "services/selfDevService.js",
+    "parameters": []
+  },
+  "logs.antigravitykeymanager.warn_antigravitykeymanager_could_not_query_api_keys_from": {
+    "source": "class/antigravityKeyManager.js",
+    "parameters": []
+  },
+  "logs.antigravitykeymanager.warn_antigravitykeymanager_no_active_api_keys_found": {
+    "source": "class/antigravityKeyManager.js",
+    "parameters": []
+  },
+  "logs.antigravitykeymanager.log_antigravitykeymanager_loaded_api_keys_for_antigravity_agent": {
+    "source": "class/antigravityKeyManager.js",
+    "parameters": [
+      "length"
+    ]
+  },
+  "logs.antigravitykeymanager.log_antigravitykeymanager_suspended_key_for_s": {
+    "source": "class/antigravityKeyManager.js",
+    "parameters": [
+      "shortKey",
+      "value",
+      "reason"
+    ]
+  },
+  "logs.antigravitykeymanager.log_antigravitykeymanager_all_keys_suspended_waiting_ms": {
+    "source": "class/antigravityKeyManager.js",
+    "parameters": [
+      "waitMs"
+    ]
+  },
+  "logs.antigravitykeymanager.warn_antigravitykeymanager_key_timed_out_sau_ms_cooldown": {
+    "source": "class/antigravityKeyManager.js",
+    "parameters": [
+      "shortKey",
+      "timeoutMs"
+    ]
+  },
+  "logs.antigravitykeymanager.log_antigravitykeymanager_retrying_with_next_key": {
+    "source": "class/antigravityKeyManager.js",
+    "parameters": [
+      "attempt",
+      "maxRetries"
+    ]
+  },
+  "logs.apikeymanager.warn_could_not_query_api_keys_from_database": {
+    "source": "class/apiKeyManager.js",
+    "parameters": []
+  },
+  "logs.apikeymanager.warn_no_active_api_keys_found_in_environment": {
+    "source": "class/apiKeyManager.js",
+    "parameters": []
+  },
+  "logs.apikeymanager.log_loaded_api_keys_available_from_env_db": {
+    "source": "class/apiKeyManager.js",
+    "parameters": [
+      "length",
+      "size"
+    ]
+  },
+  "logs.apikeymanager.warn_apikeymanager_background_apistatus_save_error": {
+    "source": "class/apiKeyManager.js",
+    "parameters": [
+      "message"
+    ]
+  },
+  "logs.apikeymanager.warn_suspended_key_for_s_on": {
+    "source": "class/apiKeyManager.js",
+    "parameters": [
+      "value",
+      "value2",
+      "modelId",
+      "reason"
+    ]
+  },
+  "logs.apikeymanager.error_key_marked_as_leaked_invalid_and_disabled": {
+    "source": "class/apiKeyManager.js",
+    "parameters": [
+      "value"
+    ]
+  },
+  "logs.apikeymanager.error_failed_to_mark_key_leaked": {
+    "source": "class/apiKeyManager.js",
+    "parameters": []
+  },
+  "logs.apikeymanager.error_failed_to_update_key_usage_stats": {
+    "source": "class/apiKeyManager.js",
+    "parameters": []
+  },
+  "logs.apikeymanager.warn_key_timed_out_sau_ms_tren_chuyen": {
+    "source": "class/apiKeyManager.js",
+    "parameters": [
+      "value",
+      "timeoutMs",
+      "modelId"
+    ]
+  },
+  "logs.apikeymanager.error_code_syntax_bug_non_retryable": {
+    "source": "class/apiKeyManager.js",
+    "parameters": [
+      "message"
+    ]
+  },
+  "logs.apikeymanager.error_application_logic_parsing_error_not_google_api": {
+    "source": "class/apiKeyManager.js",
+    "parameters": [
+      "message"
+    ]
+  },
+  "logs.apikeymanager.error_bad_request_non_retryable": {
+    "source": "class/apiKeyManager.js",
+    "parameters": [
+      "errorMessage"
+    ]
+  },
+  "logs.apikeymanager.warn_generic_error": {
+    "source": "class/apiKeyManager.js",
+    "parameters": [
+      "statusCodeText",
+      "errorMessage"
+    ]
+  },
+  "logs.apikeymanager.log_rotating_key_in_100ms": {
+    "source": "class/apiKeyManager.js",
+    "parameters": [
+      "attempt",
+      "maxRetries"
+    ]
+  },
+  "logs.geminilyrics.info_geminilyrics": {
+    "source": "class/GeminiLyrics.js",
+    "parameters": [
+      "msg"
+    ]
+  },
+  "logs.geminilyrics.error_geminilyrics": {
+    "source": "class/GeminiLyrics.js",
+    "parameters": [
+      "msg"
+    ]
+  },
+  "logs.geminilyrics.error_model_that_bai_khi_tim_lyrics_dang": {
+    "source": "class/GeminiLyrics.js",
+    "parameters": [
+      "modelId",
+      "message"
+    ]
+  },
+  "logs.geminimanager.info_gemini": {
+    "source": "class/GeminiManager.js",
+    "parameters": [
+      "msg"
+    ]
+  },
+  "logs.geminimanager.warn_gemini": {
+    "source": "class/GeminiManager.js",
+    "parameters": [
+      "msg"
+    ]
+  },
+  "logs.geminimanager.error_gemini": {
+    "source": "class/GeminiManager.js",
+    "parameters": [
+      "msg"
+    ]
+  },
+  "logs.geminimanager.error_khong_the_doc_file_dinh_kem": {
+    "source": "class/GeminiManager.js",
+    "parameters": []
+  },
+  "logs.geminimanager.error_error_fetching_musiclog": {
+    "source": "class/GeminiManager.js",
+    "parameters": []
+  },
+  "logs.geminimanager.error_error_executing": {
+    "source": "class/GeminiManager.js",
+    "parameters": [
+      "name"
+    ]
+  },
+  "logs.geminimanager.info_function_calls_detected": {
+    "source": "class/GeminiManager.js",
+    "parameters": [
+      "callNames"
+    ]
+  },
+  "logs.geminimanager.info_geminimanager_toi_uu_2_request_tra_ve": {
+    "source": "class/GeminiManager.js",
+    "parameters": []
+  },
+  "logs.geminimanager.warn_model_gap_su_co_dang_thu_model": {
+    "source": "class/GeminiManager.js",
+    "parameters": [
+      "modelId",
+      "message"
+    ]
+  },
+  "logs.chathelper.error_error_getting_chat_session": {
+    "source": "helpers/chatHelper.js",
+    "parameters": []
+  },
+  "logs.chathelper.warn_found_dangling_functioncall_at_end_of_history": {
+    "source": "helpers/chatHelper.js",
+    "parameters": []
+  },
+  "logs.chathelper.error_error_in_gethistory_fixed": {
+    "source": "helpers/chatHelper.js",
+    "parameters": []
+  },
+  "logs.chathelper.error_failed_to_save_interaction": {
+    "source": "helpers/chatHelper.js",
+    "parameters": []
+  },
+  "logs.chathelper.error_error_getting_agent_session": {
+    "source": "helpers/chatHelper.js",
+    "parameters": []
+  },
+  "logs.chathelper.info_agentsession_da_luu_session_kenh_environmentid_lastinteractionid": {
+    "source": "helpers/chatHelper.js",
+    "parameters": [
+      "channelId",
+      "value",
+      "value3",
+      "value4"
+    ]
+  },
+  "logs.chathelper.error_agentsession_loi_cap_nhat_agent_session": {
+    "source": "helpers/chatHelper.js",
+    "parameters": []
+  },
+  "logs.prompthelper.info_prompthelper_reading_prompt_files_from_disk": {
+    "source": "helpers/promptHelper.js",
+    "parameters": []
+  },
+  "logs.prompthelper.warn_prompthelper_file_missing": {
+    "source": "helpers/promptHelper.js",
+    "parameters": [
+      "filePath"
+    ]
+  },
+  "logs.prompthelper.error_prompthelper_error": {
+    "source": "helpers/promptHelper.js",
+    "parameters": [
+      "message"
+    ]
+  },
+  "logs.prompthelper.info_prompthelper_cache_cleared": {
+    "source": "helpers/promptHelper.js",
+    "parameters": []
+  },
+  "logs.prompthelper.warn_prompthelper_agent_prompt_file_missing": {
+    "source": "helpers/promptHelper.js",
+    "parameters": [
+      "filePath"
+    ]
+  },
+  "logs.prompthelper.error_prompthelper_error_loading_agent_prompt": {
+    "source": "helpers/promptHelper.js",
+    "parameters": [
+      "fileName",
+      "message"
+    ]
+  },
+  "logs.skillhelper.warn_skillhelper_loi_doc_file_skill": {
+    "source": "helpers/skillHelper.js",
+    "parameters": [
+      "matchedFile",
+      "message"
+    ]
+  },
+  "logs.skillhelper.warn_skillhelper_loi_quet_thu_muc_skill": {
+    "source": "helpers/skillHelper.js",
+    "parameters": [
+      "rootDir",
+      "message"
+    ]
+  },
+  "logs.apply_engine.log_applyengine_bat_dau_quy_trinh_apply_cho": {
+    "source": "core/sandbox/apply-engine.js",
+    "parameters": []
+  },
+  "logs.apply_engine.log_applyengine_khoi_tao_giao_dich": {
+    "source": "core/sandbox/apply-engine.js",
+    "parameters": [
+      "transactionId"
+    ]
+  },
+  "logs.apply_engine.log_applyengine_da_ap_dung": {
+    "source": "core/sandbox/apply-engine.js",
+    "parameters": [
+      "value",
+      "targetRelative"
+    ]
+  },
+  "logs.apply_engine.log_applyengine_da_xoa_delete": {
+    "source": "core/sandbox/apply-engine.js",
+    "parameters": [
+      "targetRelative"
+    ]
+  },
+  "logs.apply_engine.log_applyengine_giao_dich_da_commit_thanh_cong": {
+    "source": "core/sandbox/apply-engine.js",
+    "parameters": [
+      "transactionId"
+    ]
+  },
+  "logs.apply_engine.error_applyengine_loi_trong_qua_trinh_apply": {
+    "source": "core/sandbox/apply-engine.js",
+    "parameters": [
+      "message"
+    ]
+  },
+  "logs.package_installer.warn_packageinstaller_ten_package_khong_hop_le_hoac": {
+    "source": "core/sandbox/package-installer.js",
+    "parameters": [
+      "pkgName"
+    ]
+  },
+  "logs.package_installer.warn_packageinstaller_package_nam_trong_danh_sach_bao": {
+    "source": "core/sandbox/package-installer.js",
+    "parameters": [
+      "cleanName"
+    ]
+  },
+  "logs.package_installer.info_packageinstaller_phat_hien_thu_vien_moi_dang": {
+    "source": "core/sandbox/package-installer.js",
+    "parameters": [
+      "cleanName"
+    ]
+  },
+  "logs.package_installer.info_packageinstaller_da_cai_dat_thanh_cong_du": {
+    "source": "core/sandbox/package-installer.js",
+    "parameters": [
+      "cleanName"
+    ]
+  },
+  "logs.package_installer.error_packageinstaller_cai_dat_thu_vien_that_bai": {
+    "source": "core/sandbox/package-installer.js",
+    "parameters": [
+      "cleanName",
+      "message"
+    ]
+  },
+  "logs.rollback_manager.warn_rollbackmanager_dang_kich_hoat_rollback_cho_giao": {
+    "source": "core/sandbox/rollback-manager.js",
+    "parameters": [
+      "transactionId",
+      "errorReason"
+    ]
+  },
+  "logs.rollback_manager.log_rollbackmanager_da_xoa_file_moi_tao_do": {
+    "source": "core/sandbox/rollback-manager.js",
+    "parameters": [
+      "relativePath"
+    ]
+  },
+  "logs.rollback_manager.log_rollbackmanager_da_khoi_phuc_file_ban_dau": {
+    "source": "core/sandbox/rollback-manager.js",
+    "parameters": [
+      "relativeTargetPath"
+    ]
+  },
+  "logs.rollback_manager.log_rollbackmanager_rollback_hoan_tat_thanh_cong_production": {
+    "source": "core/sandbox/rollback-manager.js",
+    "parameters": []
+  },
+  "logs.rollback_manager.error_rollbackmanager_loi_nghiem_trong_trong_khi_rollback": {
+    "source": "core/sandbox/rollback-manager.js",
+    "parameters": []
+  },
+  "logs.sandbox_manager.warn_sandboxmanager_warning_on_cleansandbox": {
+    "source": "core/sandbox/sandbox-manager.js",
+    "parameters": [
+      "message"
+    ]
+  },
+  "logs.transaction_manager.error_transactionmanager_failed_to_save_result_json": {
+    "source": "core/sandbox/transaction-manager.js",
+    "parameters": []
+  },
+  "logs.index.log_express_server_listening_on_port": {
+    "source": "index.js",
+    "parameters": [
+      "PORT"
+    ]
+  },
+  "logs.index.error_gemini_model_sync_failed": {
+    "source": "index.js",
+    "parameters": []
+  },
+  "logs.index.error_database_connection_failed": {
+    "source": "index.js",
+    "parameters": []
+  },
+  "logs.index.log_bot_will_continue_startup_without_database": {
+    "source": "index.js",
+    "parameters": []
+  },
+  "logs.index.error_command_loading_deployment_failed": {
+    "source": "index.js",
+    "parameters": []
+  },
+  "logs.index.error_fatal_error_during_startup": {
+    "source": "index.js",
+    "parameters": [
+      "err"
+    ]
+  },
+  "logs.index.error_unhandled_rejection_at": {
+    "source": "index.js",
+    "parameters": []
+  },
+  "logs.index.error_reason": {
+    "source": "index.js",
+    "parameters": []
+  },
+  "logs.index.error_uncaught_exception": {
+    "source": "index.js",
+    "parameters": []
+  },
+  "logs.db.log_da_ket_noi_voi_database": {
+    "source": "db.js",
+    "parameters": []
+  },
+  "logs.db.error_loi_ket_noi_voi_database": {
+    "source": "db.js",
+    "parameters": []
+  },
+  "logs.deploycommands.error_loi_nap_lenh_tu": {
+    "source": "deployCommands.js",
+    "parameters": [
+      "name"
+    ]
+  },
+  "logs.deploycommands.warn_deploy_khong_co_lenh_nao_duoc_tim": {
+    "source": "deployCommands.js",
+    "parameters": []
+  },
+  "logs.deploycommands.warn_deploy_trung_ten_command_chi_lay_phien": {
+    "source": "deployCommands.js",
+    "parameters": [
+      "name"
+    ]
+  },
+  "logs.deployonly.error_can_discord_token_va_client_id_trong": {
+    "source": "deployOnly.js",
+    "parameters": []
+  },
+  "logs.deployonly.log_ket_noi_db_kiem_tra_lenh": {
+    "source": "deployOnly.js",
+    "parameters": []
+  },
+  "logs.deployonly.log_collection_commands": {
+    "source": "deployOnly.js",
+    "parameters": []
+  },
+  "logs.deployonly.warn_khong_the_ket_noi_mongodb_de_so": {
+    "source": "deployOnly.js",
+    "parameters": []
+  },
+  "logs.deployonly.log_guild_da_deploy_lenh": {
+    "source": "deployOnly.js",
+    "parameters": [
+      "guildId",
+      "length"
+    ]
+  },
+  "logs.deployonly.error_loi_deploy_guild": {
+    "source": "deployOnly.js",
+    "parameters": []
+  },
+  "logs.deployonly.error_error": {
+    "source": "deployOnly.js",
+    "parameters": []
+  },
+  "logs.logger.timestamp": {
+    "source": "class/Logger.js",
+    "parameters": [
+      "time"
+    ]
+  },
+  "logs.logger.line": {
+    "source": "class/Logger.js",
+    "parameters": [
+      "timestamp",
+      "level",
+      "message"
+    ]
+  },
+  "logs.logger.info": {
+    "source": "resources/vi/logs.json",
+    "parameters": []
+  },
+  "logs.logger.warn": {
+    "source": "resources/vi/logs.json",
+    "parameters": []
+  },
+  "logs.logger.error": {
+    "source": "resources/vi/logs.json",
+    "parameters": []
+  },
+  "logs.logger.success": {
+    "source": "resources/vi/logs.json",
+    "parameters": []
+  },
+  "logs.logger.debug": {
+    "source": "resources/vi/logs.json",
+    "parameters": []
+  },
+  "logs.logger.client": {
+    "source": "resources/vi/logs.json",
+    "parameters": []
+  },
+  "logs.logger.system": {
+    "source": "resources/vi/logs.json",
+    "parameters": []
+  },
+  "messages.interactioncreate.settitle_settitle": {
+    "source": "events/client/interactionCreate.js",
+    "parameters": [
+      "song_title"
+    ],
+    "maxLength": 256
+  },
+  "messages.interactioncreate.setdescription_setdescription": {
+    "source": "events/client/interactionCreate.js",
+    "parameters": [
+      "value",
+      "value2"
+    ],
+    "maxLength": 4096
+  },
+  "messages.interactioncreate.content_loi_khi_xu_ly_block_unblock_model": {
+    "source": "events/client/interactionCreate.js",
+    "parameters": []
+  },
+  "messages.interactioncreate.content_lenh_da_duoc_tu_dong_ap_dung": {
+    "source": "events/client/interactionCreate.js",
+    "parameters": []
+  },
+  "messages.interactioncreate.content_van_choi_nay_co_ve_da_het": {
+    "source": "events/client/interactionCreate.js",
+    "parameters": []
+  },
+  "messages.devfunctions.text_dolia_dang_len_kich_ban_va_chuan": {
+    "source": "utils/devFunctions.js",
+    "parameters": []
+  },
+  "messages.devfunctions.setdescription_thoi_gian_giay_trang_thai_ban_doi": {
+    "source": "utils/devFunctions.js",
+    "parameters": [
+      "elapsed",
+      "desc"
+    ],
+    "maxLength": 4096
+  },
+  "messages.devfunctions.settitle_dolia_dang_thuc_hien_yeu_cau_cua": {
+    "source": "utils/devFunctions.js",
+    "parameters": [],
+    "maxLength": 256
+  },
+  "messages.devfunctions.text_da_hoan_thanh_xuat_sac_dang_dong": {
+    "source": "utils/devFunctions.js",
+    "parameters": []
+  },
+  "messages.devfunctions.text_danh_sach_lenh_chua_san_sang": {
+    "source": "utils/devFunctions.js",
+    "parameters": []
+  },
+  "messages.devfunctions.text_khong_tim_thay_tro_choi_hoac_lenh": {
+    "source": "utils/devFunctions.js",
+    "parameters": [
+      "cmdName"
+    ]
+  },
+  "messages.devfunctions.text_tro_choi_da_duoc_khoi_chay_thanh": {
+    "source": "utils/devFunctions.js",
+    "parameters": [
+      "name"
+    ]
+  },
+  "messages.devfunctions.text_tinh_nang_nay_chi_danh_rieng_cho": {
+    "source": "utils/devFunctions.js",
+    "parameters": []
+  },
+  "messages.devfunctions.text_minh_da_nhan_yeu_cau_go_bo": {
+    "source": "utils/devFunctions.js",
+    "parameters": []
+  },
+  "messages.devfunctions.text_minh_da_nhan_yeu_cau_cua_ban": {
+    "source": "utils/devFunctions.js",
+    "parameters": [
+      "prompt"
+    ]
+  },
+  "messages.devfunctions.text_vui_long_cung_cap_tu_khoa_tim": {
+    "source": "utils/devFunctions.js",
+    "parameters": []
+  },
+  "messages.devfunctions.text_khong_co_model_nao_thuc_hien_duoc": {
+    "source": "utils/devFunctions.js",
+    "parameters": []
+  },
+  "messages.devfunctions.text_khong_the_tim_kiem_tren_google_luc": {
+    "source": "utils/devFunctions.js",
+    "parameters": [
+      "message"
+    ]
+  },
+  "messages.devfunctions.text_hay_thu_lai_sau_giay_lat_hoac": {
+    "source": "utils/devFunctions.js",
+    "parameters": []
+  },
+  "messages.messagebuilder.title_loi": {
+    "source": "utils/messageBuilder.js",
+    "parameters": []
+  },
+  "messages.messagebuilder.title_thanh_cong": {
+    "source": "utils/messageBuilder.js",
+    "parameters": []
+  },
+  "messages.panelrenderer.text_live_stream": {
+    "source": "utils/PanelRenderer.js",
+    "parameters": []
+  },
+  "messages.panelrenderer.setdescription_setdescription": {
+    "source": "utils/PanelRenderer.js",
+    "parameters": [
+      "value",
+      "value2"
+    ],
+    "maxLength": 4096
+  },
+  "messages.panelrenderer.name_volume": {
+    "source": "utils/PanelRenderer.js",
+    "parameters": []
+  },
+  "messages.panelrenderer.name_speed": {
+    "source": "utils/PanelRenderer.js",
+    "parameters": []
+  },
+  "messages.panelrenderer.name_pitch": {
+    "source": "utils/PanelRenderer.js",
+    "parameters": []
+  },
+  "messages.panelrenderer.name_nightcore": {
+    "source": "utils/PanelRenderer.js",
+    "parameters": []
+  },
+  "messages.panelrenderer.name_bassboost": {
+    "source": "utils/PanelRenderer.js",
+    "parameters": []
+  },
+  "messages.panelrenderer.setdescription_trang_thai_24_7": {
+    "source": "utils/PanelRenderer.js",
+    "parameters": [
+      "value",
+      "listString"
+    ],
+    "maxLength": 4096
+  },
+  "messages.panelrenderer.description_bai_hat": {
+    "source": "utils/PanelRenderer.js",
+    "parameters": [
+      "length"
+    ]
+  },
+  "messages.panelrenderer.text_unknown_title": {
+    "source": "utils/PanelRenderer.js",
+    "parameters": []
+  },
+  "messages.panelrenderer.text_unknown_artist": {
+    "source": "utils/PanelRenderer.js",
+    "parameters": []
+  },
+  "messages.panelrenderer.text_system": {
+    "source": "utils/PanelRenderer.js",
+    "parameters": []
+  },
+  "messages.panelrenderer.radio_item": {
+    "source": "utils/PanelRenderer.js",
+    "parameters": [
+      "rank",
+      "title",
+      "url"
+    ]
+  },
+  "messages.panelrenderer.playlist_item": {
+    "source": "utils/PanelRenderer.js",
+    "parameters": [
+      "rank",
+      "title"
+    ]
+  },
+  "messages.panelrenderer.queue_item": {
+    "source": "utils/PanelRenderer.js",
+    "parameters": [
+      "rank",
+      "title",
+      "url",
+      "duration",
+      "requester"
+    ]
+  },
+  "messages.panelrenderer.queue_body": {
+    "source": "utils/PanelRenderer.js",
+    "parameters": [
+      "nowPlaying",
+      "header",
+      "list"
+    ],
+    "maxLength": 4096
+  },
+  "messages.panelrenderer.progress_empty": {
+    "source": "utils/PanelRenderer.js",
+    "parameters": []
+  },
+  "messages.panelrenderer.progress_position": {
+    "source": "utils/PanelRenderer.js",
+    "parameters": []
+  },
+  "messages.panelrenderer.emoji_resume": {
+    "source": "utils/PanelRenderer.js",
+    "parameters": []
+  },
+  "messages.panelrenderer.emoji_pause": {
+    "source": "utils/PanelRenderer.js",
+    "parameters": []
+  },
+  "messages.panelrenderer.emoji_loop_off": {
+    "source": "utils/PanelRenderer.js",
+    "parameters": []
+  },
+  "messages.panelrenderer.emoji_loop_on": {
+    "source": "utils/PanelRenderer.js",
+    "parameters": []
+  },
+  "messages.panelrenderer.emoji_skip": {
+    "source": "utils/PanelRenderer.js",
+    "parameters": []
+  },
+  "messages.panelrenderer.emoji_shuffle": {
+    "source": "utils/PanelRenderer.js",
+    "parameters": []
+  },
+  "messages.panelrenderer.emoji_stop": {
+    "source": "utils/PanelRenderer.js",
+    "parameters": []
+  },
+  "messages.panelrenderer.emoji_volume_down": {
+    "source": "utils/PanelRenderer.js",
+    "parameters": []
+  },
+  "messages.panelrenderer.emoji_volume_up": {
+    "source": "utils/PanelRenderer.js",
+    "parameters": []
+  },
+  "messages.panelrenderer.emoji_reset": {
+    "source": "utils/PanelRenderer.js",
+    "parameters": []
+  },
+  "messages.panelrenderer.emoji_nightcore": {
+    "source": "utils/PanelRenderer.js",
+    "parameters": []
+  },
+  "messages.panelrenderer.emoji_bassboost": {
+    "source": "utils/PanelRenderer.js",
+    "parameters": []
+  },
+  "messages.panelrenderer.emoji_previous": {
+    "source": "utils/PanelRenderer.js",
+    "parameters": []
+  },
+  "messages.panelrenderer.emoji_next": {
+    "source": "utils/PanelRenderer.js",
+    "parameters": []
+  },
+  "messages.panelrenderer.emoji_clear": {
+    "source": "utils/PanelRenderer.js",
+    "parameters": []
+  },
+  "messages.panelrenderer.emoji_priority": {
+    "source": "utils/PanelRenderer.js",
+    "parameters": []
+  },
+  "messages.panelrenderer.emoji_settings": {
+    "source": "utils/PanelRenderer.js",
+    "parameters": []
+  },
+  "messages.panelrenderer.emoji_home": {
+    "source": "utils/PanelRenderer.js",
+    "parameters": []
+  },
+  "messages.panelrenderer.emoji_queue": {
+    "source": "utils/PanelRenderer.js",
+    "parameters": []
+  },
+  "messages.panelrenderer.emoji_radio": {
+    "source": "utils/PanelRenderer.js",
+    "parameters": []
+  },
+  "messages.panelrenderer.emoji_playlist": {
+    "source": "utils/PanelRenderer.js",
+    "parameters": []
+  },
+  "messages.panelrenderer.emoji_close": {
+    "source": "utils/PanelRenderer.js",
+    "parameters": []
+  },
+  "messages.antigravityservice.text_dolia_da_ket_noi_khong_gian_dam": {
+    "source": "services/antigravityService.js",
+    "parameters": []
+  },
+  "messages.antigravityservice.text_dolia_dang_phan_tich_va_thiet_ke": {
+    "source": "services/antigravityService.js",
+    "parameters": []
+  },
+  "messages.antigravityservice.text_dolia_dang_viet_ma_lenh_va_kiem": {
+    "source": "services/antigravityService.js",
+    "parameters": []
+  },
+  "messages.antigravityservice.text_dolia_dang_tren_dam_may": {
+    "source": "services/antigravityService.js",
+    "parameters": [
+      "toolLabel"
+    ]
+  },
+  "messages.antigravityservice.text_gan_xong_roi_ne_minh_dang_dong": {
+    "source": "services/antigravityService.js",
+    "parameters": []
+  },
+  "messages.antigravityservice.text_dolia_dang_xu_ly_buoc": {
+    "source": "services/antigravityService.js",
+    "parameters": [
+      "value"
+    ]
+  },
+  "messages.antigravityservice.text_ma_lenh_da_kiem_thu_xong_tren": {
+    "source": "services/antigravityService.js",
+    "parameters": []
+  },
+  "messages.antigravityservice.text_antigravity_cloud_da_hoan_tat": {
+    "source": "services/antigravityService.js",
+    "parameters": []
+  },
+  "messages.antigravityservice.text_dam_may_gap_su_co": {
+    "source": "services/antigravityService.js",
+    "parameters": []
+  },
+  "messages.antigravityservice.text_luu_file": {
+    "source": "services/antigravityService.js",
+    "parameters": []
+  },
+  "messages.antigravityservice.text_tim_kiem_google": {
+    "source": "services/antigravityService.js",
+    "parameters": []
+  },
+  "messages.antigravityservice.text_doc_tai_lieu": {
+    "source": "services/antigravityService.js",
+    "parameters": []
+  },
+  "messages.antigravityservice.text_goi_cong_cu": {
+    "source": "services/antigravityService.js",
+    "parameters": []
+  },
+  "messages.selfdevservice.setdescription_thoi_gian_0_giay_trang_thai_dolia": {
+    "source": "services/selfDevService.js",
+    "parameters": [],
+    "maxLength": 4096
+  },
+  "messages.selfdevservice.settitle_dolia_dang_chuan_bi_tinh_nang_cho": {
+    "source": "services/selfDevService.js",
+    "parameters": [],
+    "maxLength": 256
+  },
+  "messages.selfdevservice.text_dolia_dang_len_y_tuong_tro_choi": {
+    "source": "services/selfDevService.js",
+    "parameters": []
+  },
+  "messages.selfdevservice.setdescription_thoi_gian_giay_trang_thai_ban_doi": {
+    "source": "services/selfDevService.js",
+    "parameters": [
+      "elapsed",
+      "currentStageDescription"
+    ],
+    "maxLength": 4096
+  },
+  "messages.selfdevservice.settitle_dolia_dang_chuan_bi_tro_choi_cho": {
+    "source": "services/selfDevService.js",
+    "parameters": [],
+    "maxLength": 256
+  },
+  "messages.selfdevservice.text_chuyen_sang_che_do_tu_phat_trien": {
+    "source": "services/selfDevService.js",
+    "parameters": []
+  },
+  "messages.selfdevservice.text_chuyen_sang_che_do_tu_phat_trien_2": {
+    "source": "services/selfDevService.js",
+    "parameters": []
+  },
+  "messages.selfdevservice.setdescription_co_ve_nhu_minh_gap_chut_truc": {
+    "source": "services/selfDevService.js",
+    "parameters": [
+      "commandName"
+    ],
+    "maxLength": 4096
+  },
+  "messages.selfdevservice.settitle_ay_da_minh_xin_loi_nhe": {
+    "source": "services/selfDevService.js",
+    "parameters": [],
+    "maxLength": 256
+  },
+  "messages.selfdevservice.setdescription_minh_da_hoc_xong_tinh_nang_moi": {
+    "source": "services/selfDevService.js",
+    "parameters": [
+      "commandName",
+      "value"
+    ],
+    "maxLength": 4096
+  },
+  "messages.selfdevservice.settitle_hoan_tat_roi_ne": {
+    "source": "services/selfDevService.js",
+    "parameters": [],
+    "maxLength": 256
+  },
+  "messages.selfdevservice.setdescription_trong_luc_hoan_thien_lenh_minh_gap": {
+    "source": "services/selfDevService.js",
+    "parameters": [
+      "safeSlug"
+    ],
+    "maxLength": 4096
+  },
+  "messages.selfdevservice.settitle_ay_da_co_chut_truc_trac_nho": {
+    "source": "services/selfDevService.js",
+    "parameters": [],
+    "maxLength": 256
+  },
+  "messages.selfdevservice.setdescription_minh_khong_tim_thay_tinh_nang_nao": {
+    "source": "services/selfDevService.js",
+    "parameters": [
+      "value",
+      "value2"
+    ],
+    "maxLength": 4096
+  },
+  "messages.selfdevservice.settitle_khong_tim_thay_tinh_nang_can_go": {
+    "source": "services/selfDevService.js",
+    "parameters": [],
+    "maxLength": 256
+  },
+  "messages.selfdevservice.setdescription_minh_dang_tien_hanh_go_bo_lenh": {
+    "source": "services/selfDevService.js",
+    "parameters": [
+      "targetName"
+    ],
+    "maxLength": 4096
+  },
+  "messages.selfdevservice.settitle_dang_go_bo_lenh": {
+    "source": "services/selfDevService.js",
+    "parameters": [
+      "targetName"
+    ],
+    "maxLength": 256
+  },
+  "messages.selfdevservice.setdescription_minh_da_go_bo_hoan_toan_lenh": {
+    "source": "services/selfDevService.js",
+    "parameters": [
+      "targetName"
+    ],
+    "maxLength": 4096
+  },
+  "messages.selfdevservice.settitle_da_go_bo_thanh_cong": {
+    "source": "services/selfDevService.js",
+    "parameters": [],
+    "maxLength": 256
+  },
+  "messages.selfdevservice.setdescription_minh_chua_go_bo_duoc_lenh_nay": {
+    "source": "services/selfDevService.js",
+    "parameters": [],
+    "maxLength": 4096
+  },
+  "messages.selfdevservice.text_dolia_dang_phan_tich_yeu_cau_va": {
+    "source": "services/selfDevService.js",
+    "parameters": []
+  },
+  "messages.selfdevservice.text_dolia_dang_xem_lai_tac_pham_truoc": {
+    "source": "services/selfDevService.js",
+    "parameters": []
+  },
+  "messages.selfdevservice.text_chuyen_sang_che_do_du_phong_noi": {
+    "source": "services/selfDevService.js",
+    "parameters": []
+  },
+  "messages.selfdevservice.text_dolia_dang_ti_mi_chuan_bi_va": {
+    "source": "services/selfDevService.js",
+    "parameters": []
+  },
+  "messages.selfdevservice.text_dolia_dang_dieu_chinh_lai_mot_xiu": {
+    "source": "services/selfDevService.js",
+    "parameters": []
+  },
+  "messages.selfdevservice.text_dolia_dang_chuan_bi_mau_ve_va": {
+    "source": "services/selfDevService.js",
+    "parameters": []
+  },
+  "messages.selfdevservice.text_dolia_dang_hoan_thien_va_ket_xuat": {
+    "source": "services/selfDevService.js",
+    "parameters": []
+  },
+  "messages.selfdevservice.text_da_hoan_thanh_xuat_sac_dang_dong": {
+    "source": "services/selfDevService.js",
+    "parameters": []
+  },
+  "messages.selfdevservice.text_tinh_nang_moi_duoc_lap_trinh_boi": {
+    "source": "services/selfDevService.js",
+    "parameters": []
+  },
+  "messages.selfdevservice.text_chua_co_tinh_nang_nao_duoc_tao": {
+    "source": "services/selfDevService.js",
+    "parameters": []
+  },
+  "messages.selfdevservice.text_dolia_dang_chuan_bi_ma_nguon_trong": {
+    "source": "services/selfDevService.js",
+    "parameters": []
+  },
+  "messages.selfdevservice.text_dolia_khong_the_tao_script_phu_hop": {
+    "source": "services/selfDevService.js",
+    "parameters": []
+  },
+  "messages.selfdevservice.text_dolia_da_gap_su_co_khi_thuc": {
+    "source": "services/selfDevService.js",
+    "parameters": []
+  },
+  "messages.selfdevservice.text_server_co_tong_cong_thanh_vien_nguoi": {
+    "source": "services/selfDevService.js",
+    "parameters": [
+      "name",
+      "total",
+      "humans",
+      "bots",
+      "name5",
+      "channelMembersCount"
+    ]
+  },
+  "messages.block_agent.text_block_agent_con_hm": {
+    "source": "commands/slash/block-agent.js",
+    "parameters": [
+      "hours",
+      "minutes",
+      "value"
+    ]
+  },
+  "messages.block_agent.text_khong_co_model_nao_trong_database": {
+    "source": "commands/slash/block-agent.js",
+    "parameters": []
+  },
+  "messages.block_agent.text_blocked_agent": {
+    "source": "commands/slash/block-agent.js",
+    "parameters": [
+      "modelId",
+      "value"
+    ]
+  },
+  "messages.block_agent.text_unblocked_cho_agent": {
+    "source": "commands/slash/block-agent.js",
+    "parameters": [
+      "modelId"
+    ]
+  },
+  "messages.lavalinkhelper.text_unknown": {
+    "source": "utils/lavalinkHelper.js",
+    "parameters": []
+  },
+  "messages.lavalinkhelper.text_link_truc_tiep_url": {
+    "source": "utils/lavalinkHelper.js",
+    "parameters": []
+  },
+  "messages.lavalinkmanager.text_live": {
+    "source": "utils/LavalinkManager.js",
+    "parameters": []
+  },
+  "messages.lavalinkmanager.text_unknown": {
+    "source": "utils/LavalinkManager.js",
+    "parameters": []
+  },
+  "messages.messagehelper.text_tin_nhan_qua_dai_xem_file": {
+    "source": "utils/messageHelper.js",
+    "parameters": []
+  },
+  "messages.musicfunctions.text_ban_can_vao_voice_channel_hoac_server": {
+    "source": "utils/musicFunctions.js",
+    "parameters": []
+  },
+  "messages.musicfunctions.text_khong_the_ket_noi_den_voice_no": {
+    "source": "utils/musicFunctions.js",
+    "parameters": []
+  },
+  "messages.musicfunctions.text_loi_ket_noi_den_may_chu_nhac": {
+    "source": "utils/musicFunctions.js",
+    "parameters": []
+  },
+  "messages.musicfunctions.text_loi_tai_nhac_tu_nguon": {
+    "source": "utils/musicFunctions.js",
+    "parameters": []
+  },
+  "messages.musicfunctions.text_khong_tim_thay_bai_hat_nao": {
+    "source": "utils/musicFunctions.js",
+    "parameters": []
+  },
+  "messages.musicfunctions.text_trinh_phat_nhac_chua_san_sang_ban": {
+    "source": "utils/musicFunctions.js",
+    "parameters": []
+  },
+  "messages.musicfunctions.text_uu_tien_playlist": {
+    "source": "utils/musicFunctions.js",
+    "parameters": [
+      "name"
+    ]
+  },
+  "messages.musicfunctions.text_khong_tim_thay_thong_tin_bai_hat": {
+    "source": "utils/musicFunctions.js",
+    "parameters": []
+  },
+  "messages.musicfunctions.text_uu_tien_bai": {
+    "source": "utils/musicFunctions.js",
+    "parameters": [
+      "title"
+    ]
+  },
+  "messages.musicfunctions.text_bai": {
+    "source": "utils/musicFunctions.js",
+    "parameters": [
+      "title"
+    ]
+  },
+  "messages.musicfunctions.text_bot_chua_phat_nhac": {
+    "source": "utils/musicFunctions.js",
+    "parameters": []
+  },
+  "messages.musicfunctions.text_da_bo_qua_bai_hat": {
+    "source": "utils/musicFunctions.js",
+    "parameters": []
+  },
+  "messages.musicfunctions.text_da_dung_nhac_va_roi_kenh": {
+    "source": "utils/musicFunctions.js",
+    "parameters": []
+  },
+  "messages.musicfunctions.text_da_tam_dung": {
+    "source": "utils/musicFunctions.js",
+    "parameters": []
+  },
+  "messages.musicfunctions.text_da_tiep_tuc_phat": {
+    "source": "utils/musicFunctions.js",
+    "parameters": []
+  },
+  "messages.musicfunctions.text_hanh_dong_khong_hop_le": {
+    "source": "utils/musicFunctions.js",
+    "parameters": []
+  },
+  "messages.musicfunctions.text_da_cap_nhat_cai_dat_am_thanh": {
+    "source": "utils/musicFunctions.js",
+    "parameters": []
+  },
+  "messages.musicfunctions.text_da_luu_cai_dat_ap_dung_khi": {
+    "source": "utils/musicFunctions.js",
+    "parameters": []
+  },
+  "messages.musicfunctions.text_vui_long_nhap_link_bai_hat": {
+    "source": "utils/musicFunctions.js",
+    "parameters": []
+  },
+  "messages.musicfunctions.text_link_khong_hop_le_hoac_khong_tim": {
+    "source": "utils/musicFunctions.js",
+    "parameters": []
+  },
+  "messages.musicfunctions.text_unknown": {
+    "source": "utils/musicFunctions.js",
+    "parameters": []
+  },
+  "messages.musicfunctions.text_da_them_vao_radio": {
+    "source": "utils/musicFunctions.js",
+    "parameters": [
+      "title"
+    ]
+  },
+  "messages.musicfunctions.text_so_thu_tu_khong_hop_le": {
+    "source": "utils/musicFunctions.js",
+    "parameters": []
+  },
+  "messages.musicfunctions.text_da_xoa_khoi_radio": {
+    "source": "utils/musicFunctions.js",
+    "parameters": [
+      "title"
+    ]
+  },
+  "messages.musicfunctions.text_da_hien_thi_bang_dieu_khien_nhac": {
+    "source": "utils/musicFunctions.js",
+    "parameters": []
+  },
+  "messages.geminimanager.text_dolia_da_ghi_nhan_va_xu_ly": {
+    "source": "class/GeminiManager.js",
+    "parameters": []
+  },
+  "messages.geminimanager.text_tada_dolia_da_hoan_thanh_xong_tac": {
+    "source": "class/GeminiManager.js",
+    "parameters": []
+  },
+  "messages.music.live": {
+    "source": "commands/slash/nowplaying.js",
+    "parameters": []
+  },
+  "messages.music.radio_requester": {
+    "source": "commands/slash/nowplaying.js",
+    "parameters": []
+  },
+  "messages.music.default_artwork": {
+    "source": "utils/PanelRenderer.js",
+    "parameters": []
+  },
+  "messages.music.radio_added_by": {
+    "source": "commands/slash/radio-list247.js",
+    "parameters": []
+  },
+  "messages.music.radio_list_item": {
+    "source": "commands/slash/radio-list247.js",
+    "parameters": [
+      "rank",
+      "title",
+      "url",
+      "addedBy"
+    ]
+  },
+  "messages.providers.ytsearch": {
+    "source": "utils/lavalinkHelper.js",
+    "parameters": []
+  },
+  "messages.providers.ytmsearch": {
+    "source": "utils/lavalinkHelper.js",
+    "parameters": []
+  },
+  "messages.providers.scsearch": {
+    "source": "utils/lavalinkHelper.js",
+    "parameters": []
+  },
+  "messages.providers.spsearch": {
+    "source": "utils/lavalinkHelper.js",
+    "parameters": []
+  },
+  "music.track_start": {
+    "source": "utils/LavalinkManager.js",
+    "parameters": [
+      "title",
+      "time"
+    ]
+  },
+  "music.track_error": {
+    "source": "utils/LavalinkManager.js",
+    "parameters": [
+      "title"
+    ]
+  },
+  "music.track_stuck": {
+    "source": "utils/LavalinkManager.js",
+    "parameters": [
+      "title"
+    ]
+  },
+  "music.queue_end": {
+    "source": "utils/LavalinkManager.js",
+    "parameters": []
+  },
+  "music.radio_empty": {
+    "source": "utils/LavalinkManager.js",
+    "parameters": []
+  },
+  "music.radio_auto_play": {
+    "source": "utils/LavalinkManager.js",
+    "parameters": [
+      "title"
+    ]
+  },
+  "music.errors.no_voice_channel": {
+    "source": "utils/PlayUtils.js",
+    "parameters": []
+  },
+  "music.errors.no_voice_user": {
+    "source": "commands/slash/play-247.js",
+    "parameters": []
+  },
+  "music.errors.no_voice_play": {
+    "source": "events/client/interactionCreate.js",
+    "parameters": []
+  },
+  "music.errors.load_failed": {
+    "source": "commands/slash/play.js",
+    "parameters": []
+  },
+  "music.errors.load_failed_alt": {
+    "source": "utils/PlayUtils.js",
+    "parameters": []
+  },
+  "music.errors.no_matches": {
+    "source": "utils/PlayUtils.js",
+    "parameters": []
+  },
+  "music.errors.connection_error": {
+    "source": "events/client/interactionCreate.js",
+    "parameters": []
+  },
+  "music.errors.connection_error_search": {
+    "source": "events/client/interactionCreate.js",
+    "parameters": []
+  },
+  "music.errors.bad_gateway": {
+    "source": "commands/slash/play.js",
+    "parameters": []
+  },
+  "music.errors.lavalink_error": {
+    "source": "utils/PlayUtils.js",
+    "parameters": []
+  },
+  "music.errors.not_playing": {
+    "source": "commands/slash/stop.js",
+    "parameters": []
+  },
+  "music.errors.no_track_to_skip": {
+    "source": "commands/slash/skip.js",
+    "parameters": []
+  },
+  "music.errors.no_track_playing": {
+    "source": "commands/slash/nowplaying.js",
+    "parameters": []
+  },
+  "music.errors.invalid_index": {
+    "source": "events/client/interactionCreate.js",
+    "parameters": []
+  },
+  "music.errors.index_out_of_range": {
+    "source": "events/client/interactionCreate.js",
+    "parameters": [
+      "max"
+    ]
+  },
+  "music.errors.index_out_of_range_simple": {
+    "source": "commands/slash/radio-remove247.js",
+    "parameters": [
+      "max"
+    ]
+  },
+  "music.play.priority_playlist": {
+    "source": "utils/PlayUtils.js",
+    "parameters": [
+      "name",
+      "count"
+    ]
+  },
+  "music.play.priority_playlist_simple": {
+    "source": "commands/slash/play.js",
+    "parameters": [
+      "name"
+    ]
+  },
+  "music.play.added_playlist": {
+    "source": "utils/PlayUtils.js",
+    "parameters": [
+      "name",
+      "count"
+    ]
+  },
+  "music.play.added_playlist_queue": {
+    "source": "commands/slash/play.js",
+    "parameters": [
+      "name"
+    ]
+  },
+  "music.play.priority_track": {
+    "source": "utils/PlayUtils.js",
+    "parameters": [
+      "title"
+    ]
+  },
+  "music.play.priority_track_simple": {
+    "source": "commands/slash/play.js",
+    "parameters": [
+      "title"
+    ]
+  },
+  "music.play.added_to_queue": {
+    "source": "utils/PlayUtils.js",
+    "parameters": [
+      "title"
+    ]
+  },
+  "music.play.added_to_queue_alt": {
+    "source": "commands/slash/play.js",
+    "parameters": [
+      "title"
+    ]
+  },
+  "music.play.now_playing": {
+    "source": "utils/PlayUtils.js",
+    "parameters": [
+      "title"
+    ]
+  },
+  "music.play.now_playing_at": {
+    "source": "commands/slash/play.js",
+    "parameters": [
+      "title",
+      "channel"
+    ]
+  },
+  "music.stop": {
+    "source": "commands/slash/stop.js",
+    "parameters": []
+  },
+  "music.skip": {
+    "source": "commands/slash/skip.js",
+    "parameters": [
+      "title"
+    ]
+  },
+  "music.radio.added": {
+    "source": "commands/slash/radio-add247.js",
+    "parameters": [
+      "title"
+    ]
+  },
+  "music.radio.added_247": {
+    "source": "events/client/interactionCreate.js",
+    "parameters": [
+      "title"
+    ]
+  },
+  "music.radio.added_short": {
+    "source": "events/client/interactionCreate.js",
+    "parameters": []
+  },
+  "music.radio.removed": {
+    "source": "events/client/interactionCreate.js",
+    "parameters": [
+      "title"
+    ]
+  },
+  "music.radio.removed_indexed": {
+    "source": "commands/slash/radio-remove247.js",
+    "parameters": [
+      "index",
+      "title"
+    ]
+  },
+  "music.radio.empty_list": {
+    "source": "commands/slash/radio-list247.js",
+    "parameters": []
+  },
+  "music.radio.empty_list_prompt": {
+    "source": "commands/slash/play-247.js",
+    "parameters": []
+  },
+  "music.radio.invalid_page": {
+    "source": "commands/slash/radio-list247.js",
+    "parameters": [
+      "totalPages"
+    ]
+  },
+  "music.radio.mode_enabled": {
+    "source": "commands/slash/play-247.js",
+    "parameters": [
+      "count",
+      "title"
+    ]
+  },
+  "music.radio.list_title": {
+    "source": "commands/slash/radio-list247.js",
+    "parameters": [
+      "total"
+    ],
+    "maxLength": 256
+  },
+  "music.radio.list_footer": {
+    "source": "commands/slash/radio-list247.js",
+    "parameters": [
+      "page",
+      "totalPages"
+    ]
+  },
+  "music.radio.track_not_found": {
+    "source": "commands/slash/radio-add247.js",
+    "parameters": []
+  },
+  "music.playlist.created": {
+    "source": "events/client/interactionCreate.js",
+    "parameters": [
+      "name"
+    ]
+  },
+  "music.playlist.added_tracks": {
+    "source": "events/client/interactionCreate.js",
+    "parameters": [
+      "count",
+      "name"
+    ]
+  },
+  "music.playlist.added_to_selected": {
+    "source": "events/client/interactionCreate.js",
+    "parameters": [
+      "name"
+    ]
+  },
+  "music.playlist.playing": {
+    "source": "events/client/interactionCreate.js",
+    "parameters": [
+      "name"
+    ]
+  },
+  "music.playlist.empty": {
+    "source": "events/client/interactionCreate.js",
+    "parameters": []
+  },
+  "music.playlist.load_failed": {
+    "source": "events/client/interactionCreate.js",
+    "parameters": []
+  },
+  "music.playlist.not_found": {
+    "source": "events/client/interactionCreate.js",
+    "parameters": []
+  },
+  "music.playlist.no_selected": {
+    "source": "events/client/interactionCreate.js",
+    "parameters": []
+  },
+  "music.switch_provider.success": {
+    "source": "commands/slash/switch-provider.js",
+    "parameters": [
+      "provider"
+    ]
+  },
+  "music.switch_provider.error": {
+    "source": "commands/slash/switch-provider.js",
+    "parameters": []
+  },
+  "music.settings.title": {
+    "source": "commands/slash/music-settings.js",
+    "parameters": [],
+    "maxLength": 256
+  },
+  "music.settings.description": {
+    "source": "commands/slash/music-settings.js",
+    "parameters": [],
+    "maxLength": 4096
+  },
+  "music.settings.footer": {
+    "source": "commands/slash/music-settings.js",
+    "parameters": []
+  },
+  "music.nowplaying.title": {
+    "source": "commands/slash/nowplaying.js",
+    "parameters": [],
+    "maxLength": 256
+  },
+  "music.nowplaying.field_artist": {
+    "source": "commands/slash/nowplaying.js",
+    "parameters": []
+  },
+  "music.nowplaying.field_requester": {
+    "source": "commands/slash/nowplaying.js",
+    "parameters": []
+  },
+  "music.nowplaying.field_time": {
+    "source": "commands/slash/nowplaying.js",
+    "parameters": []
+  },
+  "music.nowplaying.field_progress": {
+    "source": "commands/slash/nowplaying.js",
+    "parameters": []
+  },
+  "music.nowplaying.footer": {
+    "source": "commands/slash/nowplaying.js",
+    "parameters": [
+      "volume",
+      "loop"
+    ]
+  },
+  "panel.home.title_playing": {
+    "source": "utils/PanelRenderer.js",
+    "parameters": [],
+    "maxLength": 256
+  },
+  "panel.home.title_idle": {
+    "source": "utils/PanelRenderer.js",
+    "parameters": [],
+    "maxLength": 256
+  },
+  "panel.home.desc_idle": {
+    "source": "utils/PanelRenderer.js",
+    "parameters": [],
+    "maxLength": 4096
+  },
+  "panel.home.field_artist": {
+    "source": "utils/PanelRenderer.js",
+    "parameters": []
+  },
+  "panel.home.field_requester": {
+    "source": "utils/PanelRenderer.js",
+    "parameters": []
+  },
+  "panel.home.field_time": {
+    "source": "utils/PanelRenderer.js",
+    "parameters": [
+      "current",
+      "total"
+    ]
+  },
+  "panel.home.field_status": {
+    "source": "utils/PanelRenderer.js",
+    "parameters": []
+  },
+  "panel.home.status_value": {
+    "source": "utils/PanelRenderer.js",
+    "parameters": [
+      "volume",
+      "loop",
+      "autoplay"
+    ]
+  },
+  "panel.home.autoplay_on": {
+    "source": "utils/PanelRenderer.js",
+    "parameters": []
+  },
+  "panel.home.autoplay_off": {
+    "source": "utils/PanelRenderer.js",
+    "parameters": []
+  },
+  "panel.settings.title": {
+    "source": "utils/PanelRenderer.js",
+    "parameters": [],
+    "maxLength": 256
+  },
+  "panel.settings.description": {
+    "source": "utils/PanelRenderer.js",
+    "parameters": [],
+    "maxLength": 4096
+  },
+  "panel.settings.nightcore_on": {
+    "source": "utils/PanelRenderer.js",
+    "parameters": []
+  },
+  "panel.settings.nightcore_off": {
+    "source": "utils/PanelRenderer.js",
+    "parameters": []
+  },
+  "panel.settings.bassboost_on": {
+    "source": "utils/PanelRenderer.js",
+    "parameters": []
+  },
+  "panel.settings.bassboost_off": {
+    "source": "utils/PanelRenderer.js",
+    "parameters": []
+  },
+  "panel.settings.footer": {
+    "source": "resources/vi/panel.json",
+    "parameters": []
+  },
+  "panel.radio.title": {
+    "source": "utils/PanelRenderer.js",
+    "parameters": [
+      "total"
+    ],
+    "maxLength": 256
+  },
+  "panel.radio.status_running": {
+    "source": "utils/PanelRenderer.js",
+    "parameters": []
+  },
+  "panel.radio.status_stopped": {
+    "source": "utils/PanelRenderer.js",
+    "parameters": []
+  },
+  "panel.radio.empty_list": {
+    "source": "utils/PanelRenderer.js",
+    "parameters": []
+  },
+  "panel.radio.footer_page": {
+    "source": "utils/PanelRenderer.js",
+    "parameters": [
+      "page",
+      "totalPages"
+    ]
+  },
+  "panel.radio.toggle_on": {
+    "source": "utils/PanelRenderer.js",
+    "parameters": []
+  },
+  "panel.radio.toggle_off": {
+    "source": "utils/PanelRenderer.js",
+    "parameters": []
+  },
+  "panel.playlist.title": {
+    "source": "utils/PanelRenderer.js",
+    "parameters": [],
+    "maxLength": 256
+  },
+  "panel.playlist.no_playlist": {
+    "source": "utils/PanelRenderer.js",
+    "parameters": []
+  },
+  "panel.playlist.click_to_view": {
+    "source": "utils/PanelRenderer.js",
+    "parameters": []
+  },
+  "panel.playlist.select_placeholder": {
+    "source": "utils/PanelRenderer.js",
+    "parameters": [],
+    "maxLength": 150
+  },
+  "panel.playlist.selected_info": {
+    "source": "utils/PanelRenderer.js",
+    "parameters": [
+      "name",
+      "trackList",
+      "remaining"
+    ],
+    "maxLength": 4096
+  },
+  "panel.playlist.not_found": {
+    "source": "utils/PanelRenderer.js",
+    "parameters": [],
+    "maxLength": 4096
+  },
+  "panel.playlist.select_prompt": {
+    "source": "utils/PanelRenderer.js",
+    "parameters": [],
+    "maxLength": 4096
+  },
+  "panel.queue.title": {
+    "source": "utils/PanelRenderer.js",
+    "parameters": [
+      "count"
+    ],
+    "maxLength": 256
+  },
+  "panel.queue.now_playing": {
+    "source": "utils/PanelRenderer.js",
+    "parameters": [
+      "title",
+      "uri"
+    ]
+  },
+  "panel.queue.not_playing": {
+    "source": "utils/PanelRenderer.js",
+    "parameters": []
+  },
+  "panel.queue.next_header": {
+    "source": "utils/PanelRenderer.js",
+    "parameters": []
+  },
+  "panel.queue.now_playing_desc": {
+    "source": "resources/vi/panel.json",
+    "parameters": [
+      "title",
+      "list"
+    ]
+  },
+  "panel.queue.empty": {
+    "source": "utils/PanelRenderer.js",
+    "parameters": []
+  },
+  "panel.queue.footer": {
+    "source": "utils/PanelRenderer.js",
+    "parameters": [
+      "page",
+      "totalPages",
+      "totalTime"
+    ]
+  },
+  "panel.buttons.vol_down": {
+    "source": "utils/PanelRenderer.js",
+    "parameters": [],
+    "maxLength": 80
+  },
+  "panel.buttons.vol_up": {
+    "source": "utils/PanelRenderer.js",
+    "parameters": [],
+    "maxLength": 80
+  },
+  "panel.buttons.reset_all": {
+    "source": "utils/PanelRenderer.js",
+    "parameters": [],
+    "maxLength": 80
+  },
+  "panel.buttons.speed_down": {
+    "source": "utils/PanelRenderer.js",
+    "parameters": [],
+    "maxLength": 80
+  },
+  "panel.buttons.speed_reset": {
+    "source": "utils/PanelRenderer.js",
+    "parameters": [],
+    "maxLength": 80
+  },
+  "panel.buttons.speed_up": {
+    "source": "utils/PanelRenderer.js",
+    "parameters": [],
+    "maxLength": 80
+  },
+  "panel.buttons.nightcore": {
+    "source": "utils/PanelRenderer.js",
+    "parameters": [],
+    "maxLength": 80
+  },
+  "panel.buttons.bassboost": {
+    "source": "utils/PanelRenderer.js",
+    "parameters": [],
+    "maxLength": 80
+  },
+  "panel.buttons.radio_add_current": {
+    "source": "utils/PanelRenderer.js",
+    "parameters": [],
+    "maxLength": 80
+  },
+  "panel.buttons.radio_add_query": {
+    "source": "utils/PanelRenderer.js",
+    "parameters": [],
+    "maxLength": 80
+  },
+  "panel.buttons.radio_remove": {
+    "source": "utils/PanelRenderer.js",
+    "parameters": [],
+    "maxLength": 80
+  },
+  "panel.buttons.pl_create": {
+    "source": "utils/PanelRenderer.js",
+    "parameters": [],
+    "maxLength": 80
+  },
+  "panel.buttons.pl_create_short": {
+    "source": "utils/PanelRenderer.js",
+    "parameters": [],
+    "maxLength": 80
+  },
+  "panel.buttons.pl_play": {
+    "source": "utils/PanelRenderer.js",
+    "parameters": [],
+    "maxLength": 80
+  },
+  "panel.buttons.pl_add_current": {
+    "source": "utils/PanelRenderer.js",
+    "parameters": [],
+    "maxLength": 80
+  },
+  "panel.buttons.pl_add_query": {
+    "source": "utils/PanelRenderer.js",
+    "parameters": [],
+    "maxLength": 80
+  },
+  "panel.buttons.pl_delete": {
+    "source": "utils/PanelRenderer.js",
+    "parameters": [],
+    "maxLength": 80
+  },
+  "panel.buttons.queue_shuffle": {
+    "source": "utils/PanelRenderer.js",
+    "parameters": [],
+    "maxLength": 80
+  },
+  "panel.buttons.queue_clear": {
+    "source": "utils/PanelRenderer.js",
+    "parameters": [],
+    "maxLength": 80
+  },
+  "panel.buttons.queue_add_priority": {
+    "source": "utils/PanelRenderer.js",
+    "parameters": [],
+    "maxLength": 80
+  },
+  "panel.buttons.nav_settings": {
+    "source": "utils/PanelRenderer.js",
+    "parameters": [],
+    "maxLength": 80
+  },
+  "panel.buttons.nav_home": {
+    "source": "utils/PanelRenderer.js",
+    "parameters": [],
+    "maxLength": 80
+  },
+  "panel.buttons.nav_queue": {
+    "source": "utils/PanelRenderer.js",
+    "parameters": [],
+    "maxLength": 80
+  },
+  "panel.buttons.nav_radio": {
+    "source": "utils/PanelRenderer.js",
+    "parameters": [],
+    "maxLength": 80
+  },
+  "panel.buttons.nav_playlist": {
+    "source": "utils/PanelRenderer.js",
+    "parameters": [],
+    "maxLength": 80
+  },
+  "panel.buttons.nav_close": {
+    "source": "utils/PanelRenderer.js",
+    "parameters": [],
+    "maxLength": 80
+  },
+  "panel.modals.title_pl_create": {
+    "source": "events/client/interactionCreate.js",
+    "parameters": [],
+    "maxLength": 256
+  },
+  "panel.modals.label_pl_name": {
+    "source": "events/client/interactionCreate.js",
+    "parameters": [],
+    "maxLength": 80
+  },
+  "panel.modals.title_queue_priority": {
+    "source": "events/client/interactionCreate.js",
+    "parameters": [],
+    "maxLength": 256
+  },
+  "panel.modals.label_query": {
+    "source": "events/client/interactionCreate.js",
+    "parameters": [],
+    "maxLength": 80
+  },
+  "panel.modals.title_pl_add": {
+    "source": "events/client/interactionCreate.js",
+    "parameters": [],
+    "maxLength": 256
+  },
+  "panel.modals.title_radio_add": {
+    "source": "events/client/interactionCreate.js",
+    "parameters": [],
+    "maxLength": 256
+  },
+  "panel.modals.title_radio_remove": {
+    "source": "events/client/interactionCreate.js",
+    "parameters": [],
+    "maxLength": 256
+  },
+  "panel.modals.label_radio_index": {
+    "source": "events/client/interactionCreate.js",
+    "parameters": [],
+    "maxLength": 80
+  },
+  "panel.errors.data_error": {
+    "source": "events/client/interactionCreate.js",
+    "parameters": []
+  },
+  "panel.errors.process_error": {
+    "source": "events/client/interactionCreate.js",
+    "parameters": []
+  },
+  "self_dev.only_owner": {
+    "source": "services/selfDevService.js",
+    "parameters": []
+  }
+}

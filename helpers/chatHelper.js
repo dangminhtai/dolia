@@ -1,3 +1,4 @@
+import { t as tr } from '../services/i18nService.js';
 import Chat from '../models/Chat.js';
 import User from '../models/User.js';
 import Logger from '../class/Logger.js';
@@ -17,7 +18,7 @@ export async function getChatSession(channelId, userId = null) {
         }
         return chatSession;
     } catch (error) {
-        console.error('Error getting chat session:', error);
+        console.error(tr('logs.chathelper.error_error_getting_chat_session'), error);
         throw error;
     }
 }
@@ -72,7 +73,7 @@ export async function getHistory(userId, chatSession) {
             const hasCall = lastTurn.parts.some(p => p.functionCall);
 
             if (isModel && hasCall) {
-                console.warn('⚠️ Found dangling FunctionCall at end of history. Removing to fix Error 400.');
+                console.warn(tr('logs.chathelper.warn_found_dangling_functioncall_at_end_of_history'));
                 history.pop();
             }
         }
@@ -98,7 +99,7 @@ export async function getHistory(userId, chatSession) {
 
         return history;
     } catch (error) {
-        console.error('Error in getHistory (Fixed):', error);
+        console.error(tr('logs.chathelper.error_error_in_gethistory_fixed'), error);
         return [];
     }
 }
@@ -138,7 +139,7 @@ export async function saveInteraction(chatSession, newContents, authorInfo = nul
 
         await chatSession.save();
     } catch (error) {
-        console.error('Failed to save interaction:', error);
+        console.error(tr('logs.chathelper.error_failed_to_save_interaction'), error);
     }
 }
 
@@ -151,7 +152,7 @@ export async function getAgentSession(userId, channelId) {
             || await Chat.findOne({ channelId }).select('agentSession');
         return session?.agentSession || null;
     } catch (error) {
-        console.error('Error getting agent session:', error);
+        console.error(tr('logs.chathelper.error_error_getting_agent_session'), error);
         return null;
     }
 }
@@ -180,10 +181,10 @@ export async function updateAgentSession(userId, channelId, updates = {}) {
         chatSession.agentSession.updatedAt = new Date();
 
         await chatSession.save();
-        Logger.info(`[AgentSession] 💾 Đã lưu session kênh [${channelId}]: environmentId=${chatSession.agentSession.environmentId || 'null'}, lastInteractionId=${chatSession.agentSession.lastInteractionId || 'null'}, lastScript=${chatSession.agentSession.lastScript?.name || 'none'}`);
+        Logger.info(tr('logs.chathelper.info_agentsession_da_luu_session_kenh_environmentid_lastinteractionid', { channelId: channelId, value: chatSession.agentSession.environmentId || 'null', value3: chatSession.agentSession.lastInteractionId || 'null', value4: chatSession.agentSession.lastScript?.name || 'none' }));
         return chatSession.agentSession;
     } catch (error) {
-        Logger.error('[AgentSession] ❌ Lỗi cập nhật agent session:', error);
+        Logger.error(tr('logs.chathelper.error_agentsession_loi_cap_nhat_agent_session'), error);
         return null;
     }
 }

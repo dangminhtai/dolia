@@ -7,7 +7,9 @@
     "scripts": {
         "start": "node index.js",
         "dev": "node --watch index.js",
-        "deploy": "node deployCommands.js"
+        "deploy": "node deployCommands.js",
+        "check:resources": "node scripts/check-resources.js",
+        "test:resources": "node --test test/test_resources.mjs"
     },
     "keywords": [],
     "author": "",

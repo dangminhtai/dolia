@@ -1,3 +1,4 @@
+import { t as tr } from './i18nService.js';
 import { GoogleGenAI } from '@google/genai';
 import ApiKeyManager from '../class/apiKeyManager.js';
 import GeminiModel from '../models/GeminiModel.js';
@@ -52,7 +53,7 @@ class GeminiModelService {
                     GeminiModel.updateOne(
                         { modelId: m.modelId },
                         { $set: { blockedUntil: null, blockReason: null } }
-                    ).exec().catch(e => Logger.warn(`[GeminiModelService] Failed to auto-clear expired block: ${e.message}`));
+                    ).exec().catch(e => Logger.warn(tr('logs.geminimodelservice.warn_geminimodelservice_failed_to_auto_clear_expired_block', { message: e.message })));
                 }
 
                 // 2. Agent Specific Block (Antigravity & SelfDev)
@@ -65,13 +66,13 @@ class GeminiModelService {
                     GeminiModel.updateOne(
                         { modelId: m.modelId },
                         { $set: { agentBlockedUntil: null, agentBlockReason: null } }
-                    ).exec().catch(e => Logger.warn(`[GeminiModelService] Failed to auto-clear expired agent block: ${e.message}`));
+                    ).exec().catch(e => Logger.warn(tr('logs.geminimodelservice.warn_geminimodelservice_failed_to_auto_clear_expired_agent', { message: e.message })));
                 }
             }
 
             this.lastBlockSync = Date.now();
         } catch (err) {
-            Logger.warn(`[GeminiModelService] Failed to sync block cache: ${err.message}`);
+            Logger.warn(tr('logs.geminimodelservice.warn_geminimodelservice_failed_to_sync_block_cache', { message: err.message }));
         }
     }
 
@@ -93,9 +94,9 @@ class GeminiModelService {
         await GeminiModel.updateOne(
             { modelId },
             { $set: { agentBlockedUntil: until, agentBlockReason: reason } }
-        ).exec().catch(e => Logger.warn(`[GeminiModelService] Failed to persist agent block: ${e.message}`));
+        ).exec().catch(e => Logger.warn(tr('logs.geminimodelservice.warn_geminimodelservice_failed_to_persist_agent_block', { message: e.message })));
 
-        Logger.warn(`[GeminiModelService] 🚫 [AGENT ONLY] Blocked ${modelId} for ${Math.round(cooldownMs / 1000)}s (${reason})`);
+        Logger.warn(tr('logs.geminimodelservice.warn_geminimodelservice_agent_only_blocked_for_s', { modelId: modelId, value: Math.round(cooldownMs / 1000), reason: reason }));
     }
 
     /**
@@ -109,9 +110,9 @@ class GeminiModelService {
         await GeminiModel.updateOne(
             { modelId },
             { $set: { agentBlockedUntil: null, agentBlockReason: null } }
-        ).exec().catch(e => Logger.warn(`[GeminiModelService] Failed to clear agent block: ${e.message}`));
+        ).exec().catch(e => Logger.warn(tr('logs.geminimodelservice.warn_geminimodelservice_failed_to_clear_agent_block', { message: e.message })));
 
-        Logger.info(`[GeminiModelService] 🟢 [AGENT ONLY] Unblocked ${modelId}`);
+        Logger.info(tr('logs.geminimodelservice.info_geminimodelservice_agent_only_unblocked', { modelId: modelId }));
     }
 
     /**
@@ -151,9 +152,9 @@ class GeminiModelService {
         GeminiModel.updateOne(
             { modelId },
             { $set: { blockedUntil: until, blockReason: reason } }
-        ).exec().catch(e => Logger.warn(`[GeminiModelService] Failed to persist model block: ${e.message}`));
+        ).exec().catch(e => Logger.warn(tr('logs.geminimodelservice.warn_geminimodelservice_failed_to_persist_model_block', { message: e.message })));
 
-        Logger.warn(`[GeminiModelService] ⏳ Blocked ${modelId} for ${Math.round(cooldownMs / 1000)}s in MongoDB (${reason})`);
+        Logger.warn(tr('logs.geminimodelservice.warn_geminimodelservice_blocked_for_s_in_mongodb', { modelId: modelId, value: Math.round(cooldownMs / 1000), reason: reason }));
     }
 
     /**
@@ -168,7 +169,7 @@ class GeminiModelService {
             GeminiModel.updateOne(
                 { modelId },
                 { $set: { blockedUntil: null, blockReason: null } }
-            ).exec().catch(e => Logger.warn(`[GeminiModelService] Failed to clear model block: ${e.message}`));
+            ).exec().catch(e => Logger.warn(tr('logs.geminimodelservice.warn_geminimodelservice_failed_to_clear_model_block', { message: e.message })));
         }
     }
 
@@ -280,7 +281,7 @@ class GeminiModelService {
                 return ordered;
             }
         } catch (dbError) {
-            Logger.error(`[GeminiModelService] Lỗi truy vấn candidate models: ${dbError.message}`);
+            Logger.error(tr('logs.geminimodelservice.error_geminimodelservice_loi_truy_van_candidate_models', { message: dbError.message }));
         }
 
         return preferType === 'flash'
@@ -309,7 +310,7 @@ class GeminiModelService {
         this.isSyncing = true;
 
         try {
-            Logger.info('[GeminiModelService] Đang quét danh sách model từ Google API...');
+            Logger.info(tr('logs.geminimodelservice.info_geminimodelservice_dang_quet_danh_sach_model_tu'));
 
             const validModels = await ApiKeyManager.execute('model-sync', async (key) => {
                 const ai = ApiKeyManager.getClient(key);
@@ -362,14 +363,14 @@ class GeminiModelService {
                     );
                 }
 
-                Logger.info(`[GeminiModelService] ✅ Đã lưu ${validModels.length} model hợp lệ vào Database: ${validModels.map(m => m.modelId).join(', ')}`);
+                Logger.info(tr('logs.geminimodelservice.info_geminimodelservice_da_luu_model_hop_le_vao', { length: validModels.length, value: validModels.map(m => m.modelId).join(', ') }));
                 // Làm mới cache bộ nhớ
                 this.cachedModels = {};
             } else {
-                Logger.warn('[GeminiModelService] Không tìm thấy model nào khớp với pattern.');
+                Logger.warn(tr('logs.geminimodelservice.warn_geminimodelservice_khong_tim_thay_model_nao_khop'));
             }
         } catch (error) {
-            Logger.error(`[GeminiModelService] Lỗi khi đồng bộ danh sách model: ${error.message}`);
+            Logger.error(tr('logs.geminimodelservice.error_geminimodelservice_loi_khi_dong_bo_danh_sach', { message: error.message }));
         } finally {
             this.isSyncing = false;
         }
@@ -420,14 +421,14 @@ class GeminiModelService {
             const blockedList = [...this.blockCache.entries()]
                 .map(([id, b]) => `${id} (${b.reason}, hết: ${b.until.toLocaleTimeString()})`)
                 .join(', ');
-            Logger.warn(`[GeminiModelService] 🔒 Boot recovery (Chat): ${chatBlockedCount} model(s) đang cooldown: ${blockedList}`);
+            Logger.warn(tr('logs.geminimodelservice.warn_geminimodelservice_boot_recovery_chat_model_s_dang', { chatBlockedCount: chatBlockedCount, blockedList: blockedList }));
         }
 
         if (agentBlockedCount > 0) {
             const blockedList = [...this.agentBlockCache.entries()]
                 .map(([id, b]) => `${id} (${b.reason}, hết: ${b.until.toLocaleTimeString()})`)
                 .join(', ');
-            Logger.warn(`[GeminiModelService] 🚫 Boot recovery [AGENT ONLY]: ${agentBlockedCount} model(s) đang bị block: ${blockedList}`);
+            Logger.warn(tr('logs.geminimodelservice.warn_geminimodelservice_boot_recovery_agent_only_model_s', { agentBlockedCount: agentBlockedCount, blockedList: blockedList }));
         }
 
         // Đồng bộ ngay khi khởi động
@@ -437,7 +438,7 @@ class GeminiModelService {
         if (this.syncInterval) clearInterval(this.syncInterval);
         this.syncInterval = setInterval(() => {
             this.syncModelsFromAPI().catch(err => {
-                Logger.error(`[GeminiModelService] Định kỳ đồng bộ thất bại: ${err.message}`);
+                Logger.error(tr('logs.geminimodelservice.error_geminimodelservice_dinh_ky_dong_bo_that_bai', { message: err.message }));
             });
         }, 6 * 60 * 60 * 1000);
     }

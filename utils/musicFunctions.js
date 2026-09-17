@@ -1,3 +1,4 @@
+import { t as tr } from '../services/i18nService.js';
 import { poru } from '../utils/LavalinkManager.js';
 import MusicSetting from '../models/MusicSetting.js';
 import RadioSong from '../models/RadioSong.js';
@@ -32,7 +33,7 @@ export async function play_music({ guild, channel, user, query, priority }) {
     }
 
     if (!voiceChannel) {
-        return { success: false, error: "NO_VOICE", message: "Bạn cần vào Voice Channel hoặc Server cần có một Voice Channel trống để mình vào nhé!" };
+        return { success: false, error: "NO_VOICE", message: tr('messages.musicfunctions.text_ban_can_vao_voice_channel_hoac_server') };
     }
 
     // Connect to voice (Đảm bảo player được gán trực tiếp)
@@ -46,8 +47,8 @@ export async function play_music({ guild, channel, user, query, priority }) {
             });
             await applyAudioSettings(player);
         } catch (err) {
-            console.error("Poru Create Connection Error:", err);
-            return { success: false, error: "CONNECTION_ERROR", message: "Không thể kết nối đến Voice (No Nodes Available)." };
+            console.error(tr('logs.musicfunctions.error_poru_create_connection_error'), err);
+            return { success: false, error: "CONNECTION_ERROR", message: tr('messages.musicfunctions.text_khong_the_ket_noi_den_voice_no') };
         }
     }
 
@@ -68,10 +69,10 @@ export async function play_music({ guild, channel, user, query, priority }) {
             res = resolveResult.res;
             if (res) break; // Success
         } catch (err) {
-            console.warn(`⚠️ Music Resolve Error (Attempt ${resolveAttempts + 1}/${maxResolveRetries}): ${err.message}`);
+            console.warn(tr('logs.musicfunctions.warn_music_resolve_error_attempt', { value: resolveAttempts + 1, maxResolveRetries: maxResolveRetries, message: err.message }));
             resolveAttempts++;
             if (resolveAttempts >= maxResolveRetries) {
-                return { success: false, error: "RESOLVE_FAILED", message: "Lỗi kết nối đến máy chủ nhạc (Timeout/Proxy Error)." };
+                return { success: false, error: "RESOLVE_FAILED", message: tr('messages.musicfunctions.text_loi_ket_noi_den_may_chu_nhac') };
             }
             // Wait 1s before retry
             await new Promise(r => setTimeout(r, 1000));
@@ -79,9 +80,9 @@ export async function play_music({ guild, channel, user, query, priority }) {
     }
 
     if (!res || isFailed(res.loadType)) {
-        return { success: false, error: "LOAD_FAILED", message: "Lỗi tải nhạc từ nguồn." };
+        return { success: false, error: "LOAD_FAILED", message: tr('messages.musicfunctions.text_loi_tai_nhac_tu_nguon') };
     } else if (isEmpty(res.loadType, res.tracks)) {
-        return { success: false, error: "NO_MATCHES", message: "Không tìm thấy bài hát nào." };
+        return { success: false, error: "NO_MATCHES", message: tr('messages.musicfunctions.text_khong_tim_thay_bai_hat_nao') };
     }
 
     // Đảm bảo player và queue sẵn sàng (phòng trường hợp player bị destroy giữa chừng)
@@ -100,7 +101,7 @@ export async function play_music({ guild, channel, user, query, priority }) {
         } catch (e) { }
     }
     if (!player || !player.queue) {
-        return { success: false, error: "PLAYER_NOT_READY", message: "Trình phát nhạc chưa sẵn sàng, bạn đợi một chút rồi thử lại nhé!" };
+        return { success: false, error: "PLAYER_NOT_READY", message: tr('messages.musicfunctions.text_trinh_phat_nhac_chua_san_sang_ban') };
     }
 
     // Handle Tracks & DB
@@ -127,7 +128,7 @@ export async function play_music({ guild, channel, user, query, priority }) {
             for (let i = res.tracks.length - 1; i >= 0; i--) {
                 player.queue.unshift(res.tracks[i]);
             }
-            addedMsg = `⚡ [ƯU TIÊN] Playlist: ${res.playlistInfo.name}`;
+            addedMsg = tr('messages.musicfunctions.text_uu_tien_playlist', { name: res.playlistInfo.name });
         } else {
             player.queue.add(res.tracks);
             addedMsg = `Playlist: ${res.playlistInfo.name}`;
@@ -135,17 +136,17 @@ export async function play_music({ guild, channel, user, query, priority }) {
     } else {
         const track = res.tracks[0];
         if (!track) {
-            return { success: false, error: "TRACK_UNDEFINED", message: "Không tìm thấy thông tin bài hát." };
+            return { success: false, error: "TRACK_UNDEFINED", message: tr('messages.musicfunctions.text_khong_tim_thay_thong_tin_bai_hat') };
         }
         track.info.requester = user;
         tracksToAdd.push(formatTrackForDB(track));
 
         if (priority) {
             player.queue.unshift(track);
-            addedMsg = `⚡ [ƯU TIÊN] Bài: ${track.info.title}`;
+            addedMsg = tr('messages.musicfunctions.text_uu_tien_bai', { title: track.info.title });
         } else {
             player.queue.add(track);
-            addedMsg = `Bài: ${track.info.title}`;
+            addedMsg = tr('messages.musicfunctions.text_bai', { title: track.info.title });
         }
     }
 
@@ -158,7 +159,7 @@ export async function play_music({ guild, channel, user, query, priority }) {
         { guildId: guild.id },
         { ...updateQuery, $set: { updatedAt: new Date() } },
         { upsert: true }
-    ).catch(e => console.error('Lỗi lưu Queue DB:', e));
+    ).catch(e => console.error(tr('logs.musicfunctions.error_loi_luu_queue_db'), e));
 
 
     // Play Trigger
@@ -184,23 +185,23 @@ export async function play_music({ guild, channel, user, query, priority }) {
  */
 export async function control_playback({ guild, action }) {
     const player = poru.players.get(guild.id);
-    if (!player) return { success: false, message: "❌ Bot chưa phát nhạc." };
+    if (!player) return { success: false, message: tr('messages.musicfunctions.text_bot_chua_phat_nhac') };
 
     switch (action) {
         case 'skip':
             player.skip();
-            return { success: true, message: "⏭️ Đã bỏ qua bài hát." };
+            return { success: true, message: tr('messages.musicfunctions.text_da_bo_qua_bai_hat') };
         case 'stop':
             await player.destroy();
-            return { success: true, message: "🛑 Đã dừng nhạc và rời kênh." };
+            return { success: true, message: tr('messages.musicfunctions.text_da_dung_nhac_va_roi_kenh') };
         case 'pause':
             player.pause(true);
-            return { success: true, message: "⏸️ Đã tạm dừng." };
+            return { success: true, message: tr('messages.musicfunctions.text_da_tam_dung') };
         case 'resume':
             player.pause(false);
-            return { success: true, message: "▶️ Đã tiếp tục phát." };
+            return { success: true, message: tr('messages.musicfunctions.text_da_tiep_tuc_phat') };
         default:
-            return { success: false, message: "❌ Hành động không hợp lệ." };
+            return { success: false, message: tr('messages.musicfunctions.text_hanh_dong_khong_hop_le') };
     }
 }
 
@@ -244,7 +245,7 @@ export async function adjust_audio_settings({ guild, ...settings }) {
         await applyAudioSettings(player);
         return {
             success: true,
-            message: `✅ Đã cập nhật cài đặt âm thanh!`,
+            message: tr('messages.musicfunctions.text_da_cap_nhat_cai_dat_am_thanh'),
             settings: {
                 volume: dbSetting.volume,
                 nightcore: dbSetting.nightcore,
@@ -255,7 +256,7 @@ export async function adjust_audio_settings({ guild, ...settings }) {
 
     return {
         success: true,
-        message: `✅ Đã lưu cài đặt (áp dụng khi phát nhạc).`,
+        message: tr('messages.musicfunctions.text_da_luu_cai_dat_ap_dung_khi'),
         settings: {
             volume: dbSetting.volume
         }
@@ -267,16 +268,16 @@ export async function adjust_audio_settings({ guild, ...settings }) {
  */
 export async function manage_radio({ guild, user, action, query, index }) {
     if (action === 'add') {
-        if (!query) return { success: false, message: "❌ Vui lòng nhập link bài hát." };
+        if (!query) return { success: false, message: tr('messages.musicfunctions.text_vui_long_nhap_link_bai_hat') };
 
         // Check URL validity using Poru
         const isUrl = /^https?:\/\//.test(query);
         const res = await poru.resolve({ query, source: isUrl ? null : 'ytsearch', requester: user });
         if (!isSuccess(res)) {
-            return { success: false, message: "❌ Link không hợp lệ hoặc không tìm thấy nhạc." };
+            return { success: false, message: tr('messages.musicfunctions.text_link_khong_hop_le_hoac_khong_tim') };
         }
 
-        let title = "Unknown";
+        let title = tr('messages.musicfunctions.text_unknown');
         let url = query;
         if (res.tracks.length > 0) {
             title = res.tracks[0].info.title;
@@ -288,19 +289,19 @@ export async function manage_radio({ guild, user, action, query, index }) {
             title: title,
             addedBy: user.username
         });
-        return { success: true, message: `✅ Đã thêm vào Radio: **${title}**` };
+        return { success: true, message: tr('messages.musicfunctions.text_da_them_vao_radio', { title: title }) };
     }
 
     else if (action === 'remove') {
         const songs = await RadioSong.find().sort({ addedAt: 1 });
-        if (!index || index < 1 || index > songs.length) return { success: false, message: "❌ Số thứ tự không hợp lệ." };
+        if (!index || index < 1 || index > songs.length) return { success: false, message: tr('messages.musicfunctions.text_so_thu_tu_khong_hop_le') };
 
         const songToRemove = songs[index - 1];
         await RadioSong.findByIdAndDelete(songToRemove._id);
-        return { success: true, message: `🗑️ Đã xóa khỏi Radio: **${songToRemove.title}**` };
+        return { success: true, message: tr('messages.musicfunctions.text_da_xoa_khoi_radio', { title: songToRemove.title }) };
     }
 
-    return { success: false, message: "❌ Hành động không hợp lệ." };
+    return { success: false, message: tr('messages.musicfunctions.text_hanh_dong_khong_hop_le') };
 }
 
 /**
@@ -329,7 +330,7 @@ export async function show_music_panel({ guild, channel, user }) {
 
     return {
         success: true,
-        message: "✅ Đã hiển thị bảng điều khiển nhạc.",
+        message: tr('messages.musicfunctions.text_da_hien_thi_bang_dieu_khien_nhac'),
         panelId: message.id,
         channel: channel.name
     };

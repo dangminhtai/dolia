@@ -1,3 +1,4 @@
+import { t as tr } from '../../services/i18nService.js';
 import { SlashCommandBuilder } from 'discord.js';
 import PanelState from '../../models/PanelState.js';
 import { renderMusicPanel } from '../../utils/PanelRenderer.js';
@@ -6,7 +7,7 @@ import { t } from '../../services/i18nService.js';
 export default {
     data: new SlashCommandBuilder()
         .setName('music-panel')
-        .setDescription('Mở bảng điều khiển âm nhạc'),
+        .setDescription(tr('commands.music_pannel.setdescription_mo_bang_dieu_khien_am_nhac')),
 
     async execute(interaction) {
         if (!interaction.guild) return interaction.reply({ content: t('common.guild_only'), ephemeral: true });

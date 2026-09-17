@@ -1,3 +1,4 @@
+import { t as tr } from '../../services/i18nService.js';
 import { SlashCommandBuilder, PermissionFlagsBits } from 'discord.js';
 import { poru } from '../../utils/LavalinkManager.js';
 import RadioSong from '../../models/RadioSong.js';
@@ -7,8 +8,8 @@ import { isSuccess } from '../../utils/lavalinkHelper.js';
 export default {
     data: new SlashCommandBuilder()
         .setName('radio-add247')
-        .setDescription('Thêm bài hát vào kho nhạc 24/7')
-        .addStringOption(o => o.setName('query').setDescription('Link bài hát hoặc tên').setRequired(true))
+        .setDescription(tr('commands.radio_add247.setdescription_them_bai_hat_vao_kho_nhac_24'))
+        .addStringOption(o => o.setName('query').setDescription(tr('commands.radio_add247.setdescription_link_bai_hat_hoac_ten')).setRequired(true))
         .setDefaultMemberPermissions(PermissionFlagsBits.Administrator), // Chỉ Admin được dùng
 
     async execute(interaction) {
