@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { discord_query, buildDiscordRuntimeContext } from '../utils/discordFunctions.js';
+import { discord_query } from '../utils/discordFunctions.js';
 
 function member(name, bot = false, status = 'offline') {
     return {
@@ -44,21 +44,18 @@ const message = {
     mentions: { members: new Map([['1', alice]]) }
 };
 
-const runtime = await buildDiscordRuntimeContext(message);
-const discordEntities = runtime.entities;
-
-const overview = await discord_query({ action: 'server_overview', guild, message, discordEntities });
+const overview = await discord_query({ action: 'server_overview', guild, message });
 assert.equal(overview.guild.total_members, 2);
 assert.equal(overview.guild.humans, 1);
 assert.equal(overview.guild.bots, 1);
 
-const online = await discord_query({ action: 'online_members', guild, message, discordEntities });
+const online = await discord_query({ action: 'online_members', guild, message });
 assert.equal(online.count, 2);
 
-const profile = await discord_query({ action: 'member_profile', target: 'u1', guild, message, discordEntities });
+const profile = await discord_query({ action: 'member_profile', target: 'u1', guild, message });
 assert.equal(profile.profile.display_name, 'Alice');
 
-const bad = await discord_query({ action: 'member_profile', target: 'u99', guild, message, discordEntities });
+const bad = await discord_query({ action: 'member_profile', target: 'u99', guild, message });
 assert.equal(bad.code, 'TARGET_REQUIRED');
 
 console.log('discord_query tests: PASS');

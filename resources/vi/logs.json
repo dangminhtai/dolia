@@ -191,7 +191,9 @@
     "error_error_executing": "[Gemini] Lỗi khi thực thi {{name}}:",
     "info_function_calls_detected": "[Gemini] Phát hiện function call: {{callNames}}",
     "info_geminimanager_toi_uu_2_request_tra_ve": "[Gemini] Đã nhận kết quả từ agent; bỏ qua lượt tổng hợp cuối để giảm độ trễ.",
-    "warn_model_gap_su_co_dang_thu_model": "[Gemini] Model {{modelId}} gặp sự cố: {{message}}. Đang thử model tiếp theo."
+    "warn_model_gap_su_co_dang_thu_model": "[Gemini] Model {{modelId}} gặp sự cố: {{message}}. Đang thử model tiếp theo.",
+    "info_vision_ready": "[Gemini] Đã chuẩn bị {{count}} ảnh cho Vision ({{sizeKb}} KB).",
+    "warn_attachment_processing": "[Gemini] Xử lý attachment: {{message}}"
   },
   "chathelper": {
     "error_error_getting_chat_session": "[ChatStore] Lỗi đọc phiên chat:",
