@@ -66,30 +66,71 @@ class GeminiManager {
         const discordEntityContext = discordRuntime.text;
         context.discordEntities = discordRuntime.entities;
 
-        // Tự động đọc nội dung file đính kèm nếu người dùng tải lên code/text file (.js, .bak, .txt, .json, .py, v.v.)
-        if (message.attachments && message.attachments.size > 0) {
-            const attachedFileTexts = [];
-            for (const [, att] of message.attachments) {
-                if (/\.(js|bak|txt|json|py|md|ts|html|css)$/i.test(att.name)) {
-                    try {
-                        const res = await fetch(att.url);
-                        if (res.ok) {
-                            const fileContent = await res.text();
-                            attachedFileTexts.push(`[Tệp đính kèm: ${att.name}]\n\`\`\`javascript\n${fileContent}\n\`\`\``);
-                        }
-                    } catch (attErr) {
-                        console.error(tr('logs.geminimanager.error_khong_the_doc_file_dinh_kem'), attErr.message);
+        // ── Thu thập attachment từ tin nhắn hiện tại + tin nhắn được reply ──
+        let allAttachments = [...(message.attachments?.values() || [])];
+        const hasImageInCurrent = allAttachments.some(a => /^image\//i.test(a.contentType || ''));
+        if (!hasImageInCurrent && message.reference?.messageId) {
+            try {
+                const referenced = await message.channel.messages.fetch(message.reference.messageId);
+                if (referenced?.attachments?.size > 0) {
+                    allAttachments.push(...referenced.attachments.values());
+                }
+            } catch (_) { /* tin nhắn gốc đã bị xóa hoặc không truy cập được */ }
+        }
+
+        // ── Xử lý file text đính kèm (code/text) ──
+        const attachedFileTexts = [];
+        for (const att of allAttachments) {
+            if (/\.(js|bak|txt|json|py|md|ts|html|css)$/i.test(att.name)) {
+                try {
+                    const res = await fetch(att.url);
+                    if (res.ok) {
+                        const fileContent = await res.text();
+                        attachedFileTexts.push(`[Tệp đính kèm: ${att.name}]\n\`\`\`javascript\n${fileContent}\n\`\`\``);
                     }
+                } catch (attErr) {
+                    console.error(tr('logs.geminimanager.error_khong_the_doc_file_dinh_kem'), attErr.message);
                 }
             }
-            if (attachedFileTexts.length > 0) {
-                fullUserText = `${fullUserText}\n\n${attachedFileTexts.join('\n\n')}`.trim();
+        }
+        if (attachedFileTexts.length > 0) {
+            fullUserText = `${fullUserText}\n\n${attachedFileTexts.join('\n\n')}`.trim();
+        }
+
+        // ── Xử lý ảnh: tải từ Discord CDN → base64 → inlineData cho Gemini Vision ──
+        const imageParts = [];
+        const MAX_VISION_BYTES = 8 * 1024 * 1024; // 8 MB tổng cho ảnh mỗi lượt
+        let visionBytes = 0;
+        for (const att of allAttachments) {
+            const mime = (att.contentType || '').split(';')[0].trim();
+            if (!['image/png', 'image/jpeg', 'image/webp'].includes(mime)) continue;
+            if (visionBytes >= MAX_VISION_BYTES) break;
+            try {
+                const res = await fetch(att.url);
+                if (!res.ok) continue;
+                const arrayBuffer = await res.arrayBuffer();
+                const buffer = Buffer.from(arrayBuffer);
+                if (buffer.length + visionBytes > MAX_VISION_BYTES) continue;
+                visionBytes += buffer.length;
+                imageParts.push({ inlineData: { mimeType: mime, data: buffer.toString('base64') } });
+                fullUserText += `\n[Ảnh đính kèm: ${att.name}; loại: ${mime}]`;
+                this.logger.info(`👁️ Đã tải ảnh ${att.name} (${Math.round(buffer.length / 1024)} KB) cho Gemini Vision.`);
+            } catch (imgErr) {
+                this.logger.warn(`⚠️ Không thể tải ảnh ${att.name}: ${imgErr.message}`);
             }
         }
 
-        const userTurn = {
+        // ── Tách turn: persistedUserTurn (lưu DB, không chứa ảnh) vs requestUserTurn (gửi Gemini, có ảnh) ──
+        const persistedUserTurn = {
             role: 'user',
             parts: [{ text: `[${displayName}]: ${fullUserText}` }],
+            authorId: userId,
+            authorName: displayName
+        };
+        const requestParts = [{ text: `[${displayName}]: ${fullUserText}` }, ...imageParts];
+        const requestUserTurn = {
+            role: 'user',
+            parts: requestParts,
             authorId: userId,
             authorName: displayName
         };
@@ -240,8 +281,8 @@ ${topSongsStr || "- Chưa có bài nào nổi bật"}
         for (const modelId of candidates) {
             try {
                 // Tạo bản sao độc lập cho turn hiện tại và danh sách newTurns
-                const contents = [...baseHistory.map(h => ({ role: h.role, parts: [...h.parts] })), { ...userTurn }];
-                const newTurns = [userTurn];
+                const contents = [...baseHistory.map(h => ({ role: h.role, parts: [...h.parts] })), { ...requestUserTurn, parts: [...requestUserTurn.parts] }];
+                const newTurns = [{ ...persistedUserTurn, parts: [...persistedUserTurn.parts] }];
 
                 let functionCallAttempts = 0;
                 let finalResponseText = null;
