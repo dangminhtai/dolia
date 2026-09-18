@@ -16,6 +16,17 @@ const BLOCKED_PACKAGES = new Set([
     'npm', 'yarn', 'pnpm', 'node', 'core-js', 'process'
 ]);
 
+const TERMUX_INCOMPATIBLE_PACKAGES = new Set([
+    'canvas',
+    'sharp',
+    'gifencoder',
+    'gif-encoder-2'
+]);
+
+const isTermuxHost = () => process.platform === 'android'
+    || Boolean(process.env.TERMUX_VERSION)
+    || String(process.env.PREFIX || '').includes('com.termux');
+
 export class PackageInstaller {
     /**
      * Trích xuất tên package gốc từ chuỗi import (vd: '@napi-rs/canvas' hoặc 'lodash/get' -> 'lodash')
@@ -84,6 +95,11 @@ export class PackageInstaller {
 
         if (BLOCKED_PACKAGES.has(cleanName)) {
             Logger.warn(tr('logs.package_installer.warn_packageinstaller_package_nam_trong_danh_sach_bao', { cleanName: cleanName }));
+            return false;
+        }
+
+        if (isTermuxHost() && TERMUX_INCOMPATIBLE_PACKAGES.has(cleanName)) {
+            Logger.warn(tr('logs.package_installer.warn_packageinstaller_package_khong_tuong_thich_termux', { cleanName }));
             return false;
         }
 

@@ -1,283 +1,284 @@
 {
   "play": {
-    "error_lavalink_resolve_error": "Lavalink Resolve Error:",
-    "error_loi_luu_queue_db": "Lỗi lưu Queue DB:"
+    "error_lavalink_resolve_error": "[Play] Lavalink Resolve Lỗi:",
+    "error_loi_luu_queue_db": "[Play] Lỗi lưu Queue DB:"
   },
   "switch_provider": {
-    "error_error_switching_provider": "Error switching provider:"
+    "error_error_switching_provider": "[MusicProvider] Lỗi chuyển nguồn nhạc:"
   },
   "tictactoe": {
-    "error_tictactoe": "[tictactoe]"
+    "error_tictactoe": ""
   },
   "interactioncreate": {
-    "error_error_resolving_playlist_track": "Error resolving playlist track:",
-    "error_music_panel_error": "Music Panel Error:",
-    "error_lyrics_modal_error": "Lyrics Modal Error:",
-    "error_block_agent_menu_error": "Block-Agent Menu Error:",
-    "error_command_execution_error": "Command Execution Error:"
+    "error_error_resolving_playlist_track": "[Interaction] Lỗi resolve bài trong playlist:",
+    "error_music_panel_error": "[Interaction] Music Panel Lỗi:",
+    "error_lyrics_modal_error": "[Interaction] Lyrics Modal Lỗi:",
+    "error_block_agent_menu_error": "[Interaction] Block-Agent Menu Lỗi:",
+    "error_command_execution_error": "[Interaction] Command Execution Lỗi:"
   },
   "messagecreate": {
-    "error_gemini_chat_error": "Gemini Chat Error:"
+    "error_gemini_chat_error": "[Message] Gemini Chat Lỗi:"
   },
   "onready": {
-    "log_bot_da_dang_nhap_duoi_ten": "Bot đã đăng nhập dưới tên {{tag}}"
+    "log_bot_da_dang_nhap_duoi_ten": "[Client] Đăng nhập Discord thành công: {{tag}}"
   },
   "devfunctions": {
-    "info_devfunctions_dang_thuc_thi_lenh_cho_user": "[DevFunctions] 🎮 Đang thực thi lệnh /{{name}} cho user {{id}} ({{username}})...",
+    "info_devfunctions_dang_thuc_thi_lenh_cho_user": "[DevFunctions] Đang thực thi lệnh /{{name}} cho user {{id}} ({{username}}).",
     "error_devfunctions_loi_khi_chay_lenh": "[DevFunctions] Lỗi khi chạy lệnh /{{name}}:",
-    "info_devfunctions_agent_code_tool_invoked_by_user": "[DevFunctions] agent_code tool invoked by user {{id}} ({{username}}): action=\"{{action}}\", prompt=\"{{prompt}}\", feature_name=\"{{feature_name}}\"",
-    "info_devfunctions_yeu_cau_khoi_chay_tinh_nang": "[DevFunctions] 🎮 Yêu cầu khởi chạy tính năng/game: \"{{targetCmd}}\"...",
-    "info_devfunctions_chay_script_ngam_trong_sandbox_action": "[DevFunctions] 🔍 Chạy script ngầm trong sandbox (action: \"{{lowerAction}}\"): \"{{prompt}}\"...",
+    "info_devfunctions_agent_code_tool_invoked_by_user": "[DevFunctions] agent_code | user={{id}} ({{username}}) | action={{action}} | feature={{feature_name}} | prompt=\"{{prompt}}\"",
+    "info_devfunctions_yeu_cau_khoi_chay_tinh_nang": "[DevFunctions] Yêu cầu khởi chạy tính năng/game: \"{{targetCmd}}\".",
+    "info_devfunctions_chay_script_ngam_trong_sandbox_action": "[DevFunctions] Chạy script ngầm trong sandbox (action: \"{{lowerAction}}\"): \"{{prompt}}\".",
     "warn_devfunctions_khong_the_gui_tin_nhan_tien": "[DevFunctions] Không thể gửi tin nhắn tiến trình chờ:",
     "error_devfunctions_loi_chay_dynamic_script": "[DevFunctions] Lỗi chạy dynamic script:",
     "error_devfunctions_error_starting_delete_session": "[DevFunctions] Error starting Delete session:",
     "error_devfunctions_error_starting_self_dev_session": "[DevFunctions] Error starting Self-Dev session:",
-    "info_devfunctions_dang_tim_kiem_google_cho": "[DevFunctions] 🌐 Đang tìm kiếm Google cho: \"{{query}}\"...",
-    "warn_devfunctions_model_gap_su_co_khi_web": "[DevFunctions] ⚠️ Model {{modelId}} gặp sự cố khi web_search: {{message}}. Đang thử model tiếp theo...",
-    "info_devfunctions_da_tim_kiem_thanh_cong_cho": "[DevFunctions] ✅ Đã tìm kiếm thành công cho \"{{query}}\" ({{length}} nguồn trích dẫn)",
-    "error_devfunctions_loi_khi_tim_kiem_google_cho": "[DevFunctions] ❌ Lỗi khi tìm kiếm Google cho \"{{query}}\":"
+    "info_devfunctions_dang_tim_kiem_google_cho": "[DevFunctions] Đang tìm kiếm Google cho: \"{{query}}\".",
+    "warn_devfunctions_model_gap_su_co_khi_web": "[DevFunctions] Model {{modelId}} gặp sự cố khi web_search: {{message}}. Đang thử model tiếp theo.",
+    "info_devfunctions_da_tim_kiem_thanh_cong_cho": "[DevFunctions] Đã tìm kiếm thành công cho \"{{query}}\" ({{length}} nguồn trích dẫn)",
+    "error_devfunctions_loi_khi_tim_kiem_google_cho": "[DevFunctions] Lỗi khi tìm kiếm Google cho \"{{query}}\":"
   },
   "lavalinkhelper": {
-    "error_loi_khi_doc_musicprovider_cua_user": "Lỗi khi đọc musicProvider của user:",
-    "info_music_tim_kiem_user_provider": "[Music] 🔍 Tìm kiếm: \"{{query}}\" | User: {{userTag}} | Provider: {{providerName}} ({{value}})",
-    "warn_music_that_bai_loadtype_nguon": "[Music] ❌ Thất bại: loadType=\"{{loadType}}\" | Nguồn: [{{providerName}}]",
-    "warn_music_rong_khong_tim_thay_bai_nao": "[Music] ⚠️ Rỗng: Không tìm thấy bài nào từ [{{providerName}}] | Query: \"{{query}}\"",
-    "success_music_thanh_cong_tim_thay_bai_bai": "[Music] ✨ Thành công: [{{loadType}}] tìm thấy {{trackCount}} bài | Bài đầu: \"{{firstTitle}}\" [Nguồn: {{sourceName}}]"
+    "error_loi_khi_doc_musicprovider_cua_user": "[Music] Lỗi khi đọc musicProvider của user:",
+    "info_music_tim_kiem_user_provider": "[Music] Tìm kiếm | query=\"{{query}}\" | user={{userTag}} | provider={{providerName}} ({{value}})",
+    "warn_music_that_bai_loadtype_nguon": "[Music] Resolve thất bại | loadType={{loadType}} | provider={{providerName}}",
+    "warn_music_rong_khong_tim_thay_bai_nao": "[Music] Không có kết quả | provider={{providerName}} | query=\"{{query}}\"",
+    "success_music_thanh_cong_tim_thay_bai_bai": "[Music] Resolve thành công | loadType={{loadType}} | tracks={{trackCount}} | first=\"{{firstTitle}}\" | source={{sourceName}}"
   },
   "lavalinkmanager": {
-    "error_khong_tim_thay_channel": "❌ Không tìm thấy channel {{channelId}}:",
-    "error_loi_lay_nhac_random": "Lỗi lấy nhạc Random:",
+    "error_khong_tim_thay_channel": "[Lavalink] Không tìm thấy channel {{channelId}}:",
+    "error_loi_lay_nhac_random": "[Lavalink] Lỗi lấy nhạc Random:",
     "warn_lavalink_poru_packetupdate_handled_error": "[Lavalink] Poru packetUpdate handled error: {{message}}",
-    "log_lavalink_node_da_ket_noi": "✅ [Lavalink] Node {{name}} đã kết nối!",
-    "log_lavalink_mat_ket_noi_node": "❌ [Lavalink] Mất kết nối Node: {{name}}",
-    "log_lavalink_node_loi": "⚠️ [Lavalink] Node {{name}} lỗi: {{message}}",
-    "info_music_bat_dau_phat_kenh_provider_goc": "[Music] ▶️ Bắt đầu phát: \"{{title}}\" [{{timeString}}] | Kênh: {{author}} | Provider gốc: [{{sourceName}}]",
-    "error_khong_gui_duoc_tin_nhan_trackstart": "Không gửi được tin nhắn trackStart:",
-    "error_loi_log_nhac": "Lỗi log nhạc:",
-    "error_track_loi": "⚠️ Track Lỗi [{{title}}]:",
-    "warn_track_bi_ket_qua_ms_dang_auto": "⚠️ Track bị kẹt [{{title}}] quá {{threshold}}ms -> Đang Auto Skip...",
-    "error_loi_khi_co_stop_track_bi_ket": "Lỗi khi cố stop track bị kẹt:",
-    "log_bai_radio_bi_loi_dang_thu_bai": "Bài Radio bị lỗi, đang thử bài khác..."
+    "log_lavalink_node_da_ket_noi": "[Lavalink] Node {{name}} đã kết nối.",
+    "log_lavalink_mat_ket_noi_node": "[Lavalink] Node {{name}} đã mất kết nối.",
+    "log_lavalink_node_loi": "[Lavalink] Node {{name}} gặp lỗi: {{message}}",
+    "info_music_bat_dau_phat_kenh_provider_goc": "[Music] Bắt đầu phát | title=\"{{title}}\" | duration={{timeString}} | author={{author}} | source={{sourceName}}",
+    "error_khong_gui_duoc_tin_nhan_trackstart": "[Lavalink] Không gửi được tin nhắn trackStart:",
+    "error_loi_log_nhac": "[Lavalink] Lỗi log nhạc:",
+    "error_track_loi": "[Lavalink] Track Lỗi [{{title}}]:",
+    "warn_track_bi_ket_qua_ms_dang_auto": "[Lavalink] Track bị kẹt [{{title}}] quá {{threshold}}ms -> đang tự động bỏ qua.",
+    "error_loi_khi_co_stop_track_bi_ket": "[Lavalink] Lỗi khi cố stop track bị kẹt:",
+    "log_bai_radio_bi_loi_dang_thu_bai": "[Lavalink] Bài Radio bị lỗi, đang thử bài khác."
   },
   "messagehelper": {
-    "error_failed_to_delete_temp_file": "Failed to delete temp file:"
+    "error_failed_to_delete_temp_file": "[Message] Không thể xóa tệp tạm:"
   },
   "musicfunctions": {
-    "error_poru_create_connection_error": "Poru Create Connection Error:",
-    "warn_music_resolve_error_attempt": "⚠️ Music Resolve Error (Attempt {{value}}/{{maxResolveRetries}}): {{message}}",
-    "error_loi_luu_queue_db": "Lỗi lưu Queue DB:"
+    "error_poru_create_connection_error": "[Music] Poru Create Connection Lỗi:",
+    "warn_music_resolve_error_attempt": "[Music] Lỗi resolve nhạc (Attempt {{value}}/{{maxResolveRetries}}): {{message}}",
+    "error_loi_luu_queue_db": "[Music] Lỗi lưu Queue DB:"
   },
   "musicplayer": {
-    "error_musicplayer_playnext_error": "[musicPlayer] playNext error:",
-    "error_musicplayer_addtrack_playnext": "[musicPlayer] addTrack playNext:",
-    "error_musicplayer_ontrackdone": "[musicPlayer] onTrackDone:",
-    "log_musicplayer_streaming": "[musicPlayer] Streaming:",
-    "error_musicplayer_stream_error": "[musicPlayer] stream error:"
+    "error_musicplayer_playnext_error": "[MusicPlayer] Lỗi playNext:",
+    "error_musicplayer_addtrack_playnext": "[MusicPlayer] Lỗi addTrack/playNext:",
+    "error_musicplayer_ontrackdone": "[MusicPlayer] Lỗi onTrackDone:",
+    "log_musicplayer_streaming": "[MusicPlayer] Đang stream:",
+    "error_musicplayer_stream_error": "[MusicPlayer] Lỗi stream:"
   },
   "playutils": {
-    "error_lavalink_resolve_error": "Lavalink Resolve Error:",
-    "error_loi_luu_queue_db": "Lỗi lưu Queue DB:"
+    "error_lavalink_resolve_error": "[PlayUtils] Lavalink Resolve Lỗi:",
+    "error_loi_luu_queue_db": "[PlayUtils] Lỗi lưu Queue DB:"
   },
   "antigravityservice": {
-    "info_antigravity_khoi_chay_antigravity_agent_cloud_sandbox": "[Antigravity] 🚀 Khởi chạy Antigravity Agent (Cloud Sandbox - Mode: {{mode}}) với model: {{activeModel}}...",
-    "info_antigravity_nap_session_kenh_environmentid_previousinteractionid": "[Antigravity] 🔍 Nạp Session kênh [{{value}}]: environmentId={{value2}}, previousInteractionId={{value3}}",
-    "info_antigravity_da_nhung_skills_vao_environment_sources": "[Antigravity] 📦 Đã nhúng {{length}} skills vào environment.sources (.agents/skills/): {{value}}",
-    "info_antigravity_tai_su_dung_warm_sandbox_container": "[Antigravity] ⚡ Tái sử dụng Warm Sandbox Container ID: {{environmentId}}{{value}}",
-    "info_antigravity_google_cloud_interaction_created_environmentid_interactionid": "[Antigravity] ☁️ Google Cloud Interaction Created: environmentId=\"{{value}}\", interactionId=\"{{value2}}\"",
-    "info_antigravity_google_cloud_interaction_completed_environmentid_interactionid": "[Antigravity] ✅ Google Cloud Interaction Completed: environmentId=\"{{value}}\", interactionId=\"{{value2}}\"",
-    "error_antigravity_interaction_failed": "[Antigravity] ❌ Interaction failed: {{value}}",
-    "info_antigravity_antigravity_cloud_stream_hoan_tat": "[Antigravity] ✅ Antigravity Cloud stream hoàn tất."
+    "info_antigravity_khoi_chay_antigravity_agent_cloud_sandbox": "[Antigravity] Khởi chạy cloud agent ở chế độ {{mode}} với model {{activeModel}}.",
+    "info_antigravity_nap_session_kenh_environmentid_previousinteractionid": "[Antigravity] Nạp session kênh {{value}} | environmentId={{value2}} | previousInteractionId={{value3}}",
+    "info_antigravity_da_nhung_skills_vao_environment_sources": "[Antigravity] Đã nạp {{length}} skill vào environment.sources: {{value}}",
+    "info_antigravity_tai_su_dung_warm_sandbox_container": "[Antigravity] Tái sử dụng environment {{environmentId}}{{value}}",
+    "info_antigravity_google_cloud_interaction_created_environmentid_interactionid": "[Antigravity] Interaction đã tạo | environmentId={{value}} | interactionId={{value2}}",
+    "info_antigravity_google_cloud_interaction_completed_environmentid_interactionid": "[Antigravity] Interaction hoàn tất | environmentId={{value}} | interactionId={{value2}}",
+    "error_antigravity_interaction_failed": "[Antigravity] Interaction thất bại: {{value}}",
+    "info_antigravity_antigravity_cloud_stream_hoan_tat": "[Antigravity] Stream cloud agent đã hoàn tất."
   },
   "commanddeploymentservice": {
     "info_deploy_auto_command_deploy_bi_tat_boi": "[Deploy] Auto command deploy bị tắt bởi AUTO_DEPLOY_COMMANDS=false",
     "warn_deploy_bo_qua_deploy_lenh_vi_thieu": "[Deploy] Bỏ qua deploy lệnh vì thiếu DISCORD_TOKEN hoặc CLIENT_ID.",
     "warn_deploy_khong_co_lenh_nao_duoc_tim": "[Deploy] Không có lệnh nào được tìm thấy để deploy.",
-    "info_deploy_slash_commands_khong_thay_doi_lenh": "[Deploy] ✅ Slash commands không thay đổi ({{length}} lệnh). Bỏ qua deploy Discord REST API.",
-    "info_deploy_bat_buoc_deploy_lenh_forcedeploy_true": "[Deploy] ⚡ Bắt buộc deploy lệnh (forceDeploy=true)...",
-    "info_deploy_da_deploy_thanh_cong_slash_command": "[Deploy] ✅ Đã deploy thành công {{length}} slash command(s) lên Discord."
+    "info_deploy_slash_commands_khong_thay_doi_lenh": "[Deploy] Slash commands không thay đổi ({{length}} lệnh); bỏ qua Discord REST API.",
+    "info_deploy_bat_buoc_deploy_lenh_forcedeploy_true": "[Deploy] Bắt buộc deploy lệnh (forceDeploy=true).",
+    "info_deploy_da_deploy_thanh_cong_slash_command": "[Deploy] Đã deploy {{length}} slash command lên Discord."
   },
   "geminimodelservice": {
     "warn_geminimodelservice_failed_to_auto_clear_expired_block": "[GeminiModelService] Failed to auto-clear expired block: {{message}}",
     "warn_geminimodelservice_failed_to_auto_clear_expired_agent": "[GeminiModelService] Failed to auto-clear expired agent block: {{message}}",
     "warn_geminimodelservice_failed_to_sync_block_cache": "[GeminiModelService] Failed to sync block cache: {{message}}",
     "warn_geminimodelservice_failed_to_persist_agent_block": "[GeminiModelService] Failed to persist agent block: {{message}}",
-    "warn_geminimodelservice_agent_only_blocked_for_s": "[GeminiModelService] 🚫 [AGENT ONLY] Blocked {{modelId}} for {{value}}s ({{reason}})",
+    "warn_geminimodelservice_agent_only_blocked_for_s": "[GeminiModelService] [AGENT ONLY] Blocked {{modelId}} for {{value}}s ({{reason}})",
     "warn_geminimodelservice_failed_to_clear_agent_block": "[GeminiModelService] Failed to clear agent block: {{message}}",
-    "info_geminimodelservice_agent_only_unblocked": "[GeminiModelService] 🟢 [AGENT ONLY] Unblocked {{modelId}}",
+    "info_geminimodelservice_agent_only_unblocked": "[GeminiModelService] [AGENT ONLY] Unblocked {{modelId}}",
     "warn_geminimodelservice_failed_to_persist_model_block": "[GeminiModelService] Failed to persist model block: {{message}}",
     "warn_geminimodelservice_blocked_for_s_in_mongodb": "[GeminiModelService] ⏳ Blocked {{modelId}} for {{value}}s in MongoDB ({{reason}})",
     "warn_geminimodelservice_failed_to_clear_model_block": "[GeminiModelService] Failed to clear model block: {{message}}",
     "error_geminimodelservice_loi_truy_van_candidate_models": "[GeminiModelService] Lỗi truy vấn candidate models: {{message}}",
-    "info_geminimodelservice_dang_quet_danh_sach_model_tu": "[GeminiModelService] Đang quét danh sách model từ Google API...",
-    "info_geminimodelservice_da_luu_model_hop_le_vao": "[GeminiModelService] ✅ Đã lưu {{length}} model hợp lệ vào Database: {{value}}",
+    "info_geminimodelservice_dang_quet_danh_sach_model_tu": "[GeminiModelService] Đang quét danh sách model từ Google API.",
+    "info_geminimodelservice_da_luu_model_hop_le_vao": "[GeminiModelService] Đã lưu {{length}} model hợp lệ vào Database: {{value}}",
     "warn_geminimodelservice_khong_tim_thay_model_nao_khop": "[GeminiModelService] Không tìm thấy model nào khớp với pattern.",
     "error_geminimodelservice_loi_khi_dong_bo_danh_sach": "[GeminiModelService] Lỗi khi đồng bộ danh sách model: {{message}}",
-    "warn_geminimodelservice_boot_recovery_chat_model_s_dang": "[GeminiModelService] 🔒 Boot recovery (Chat): {{chatBlockedCount}} model(s) đang cooldown: {{blockedList}}",
-    "warn_geminimodelservice_boot_recovery_agent_only_model_s": "[GeminiModelService] 🚫 Boot recovery [AGENT ONLY]: {{agentBlockedCount}} model(s) đang bị block: {{blockedList}}",
+    "warn_geminimodelservice_boot_recovery_chat_model_s_dang": "[GeminiModelService] Boot recovery (Chat): {{chatBlockedCount}} model(s) đang cooldown: {{blockedList}}",
+    "warn_geminimodelservice_boot_recovery_agent_only_model_s": "[GeminiModelService] Boot recovery [AGENT ONLY]: {{agentBlockedCount}} model(s) đang bị block: {{blockedList}}",
     "error_geminimodelservice_dinh_ky_dong_bo_that_bai": "[GeminiModelService] Định kỳ đồng bộ thất bại: {{message}}"
   },
   "selfdevservice": {
-    "info_selfdev_dang_goi_antigravity_agent_cloud_sandbox": "[SelfDev] 🧠 Đang gọi Antigravity Agent (Cloud Sandbox)...",
-    "info_selfdev_antigravity_cloud_sinh_ma_thanh_cong": "[SelfDev] ✅ Antigravity Cloud sinh mã thành công cho /{{commandName}}",
-    "warn_selfdev_ma_nguon_tu_antigravity_cloud_co": "[SelfDev] ⚠️ Mã nguồn từ Antigravity Cloud có lỗi kiểm thử: {{value}}. Chuyển sang chế độ tự sửa nội bộ...",
-    "warn_selfdev_antigravity_cloud_gap_su_co_tu": "[SelfDev] ⚠️ Antigravity Cloud gặp sự cố: {{message}}. Tự động chuyển sang chế độ dự phòng nội bộ...",
-    "warn_selfdev_kiem_thu_sandbox_luot_that_bai": "[SelfDev] ⚠️ Kiểm thử Sandbox lượt {{attempt}} thất bại: {{value}}",
-    "info_selfdev_successfully_hot_reloaded_command_from_sandbox": "[SelfDev] Successfully hot-reloaded command from sandbox: /{{name}}",
-    "warn_selfdev_warning_on_hot_reload": "[SelfDev] Warning on hot-reload: {{message}}",
-    "info_selfdev_successfully_deployed_slash_commands_to_discord": "[SelfDev] Successfully deployed slash commands to Discord REST API",
-    "warn_selfdev_warning_on_deploy_commands": "[SelfDev] Warning on deploy commands: {{message}}",
-    "info_selfdev_tu_dong_kich_hoat_tinh_nang": "[SelfDev] 🚀 Tự động kích hoạt tính năng /{{commandName}} cho người dùng ngay tại chỗ...",
-    "info_selfdev_da_tu_dong_kich_hoat_thanh": "[SelfDev] ✅ Đã tự động kích hoạt thành công tính năng /{{commandName}}!",
-    "warn_selfdev_warning_when_auto_executing": "[SelfDev] Warning when auto-executing /{{commandName}}: {{message}}",
-    "error_selfdev_error_in_session": "[SelfDev] Error in session {{sessionId}}:",
-    "info_selfdev_dang_goi_gemini_coding_model_cho": "[SelfDev] 🧠 Đang gọi Gemini Coding Model ({{modelId}}) cho tính năng: \"{{suggestedName}}\"...",
-    "info_selfdev_gemini_coding_model_da_phan_hoi": "[SelfDev] ✅ Gemini Coding Model ({{modelId}}) đã phản hồi ({{length}} ký tự)!",
-    "warn_selfdev_model_gap_su_co_tu_dong": "[SelfDev] ⚠️ Model {{modelId}} gặp sự cố: {{message}}. Tự động thử model tiếp theo...",
-    "info_selfdev_dang_tien_hanh_xoa_lenh_khoi": "[SelfDev] 🗑️ Đang tiến hành xóa lệnh /{{targetName}} khỏi Sandbox...",
+    "info_selfdev_dang_goi_antigravity_agent_cloud_sandbox": "[SelfDev] Đang gọi Antigravity Agent (Cloud Sandbox).",
+    "info_selfdev_antigravity_cloud_sinh_ma_thanh_cong": "[SelfDev] Antigravity Cloud sinh mã thành công cho /{{commandName}}",
+    "warn_selfdev_ma_nguon_tu_antigravity_cloud_co": "[SelfDev] Mã nguồn từ Antigravity Cloud có lỗi kiểm thử: {{value}}. Chuyển sang chế độ tự sửa nội bộ.",
+    "warn_selfdev_antigravity_cloud_gap_su_co_tu": "[SelfDev] Antigravity Cloud gặp sự cố: {{message}}. Tự động chuyển sang chế độ dự phòng nội bộ.",
+    "warn_selfdev_kiem_thu_sandbox_luot_that_bai": "[SelfDev] Kiểm thử Sandbox lượt {{attempt}} thất bại: {{value}}",
+    "info_selfdev_successfully_hot_reloaded_command_from_sandbox": "[SelfDev] Đã hot-reload lệnh từ sandbox: /{{name}}",
+    "warn_selfdev_warning_on_hot_reload": "[SelfDev] Cảnh báo khi hot-reload: {{message}}",
+    "info_selfdev_successfully_deployed_slash_commands_to_discord": "[SelfDev] Đã đồng bộ slash commands với Discord REST API.",
+    "warn_selfdev_warning_on_deploy_commands": "[SelfDev] Cảnh báo khi deploy lệnh: {{message}}",
+    "info_selfdev_tu_dong_kich_hoat_tinh_nang": "[SelfDev] Tự động kích hoạt tính năng /{{commandName}} cho người dùng ngay tại chỗ.",
+    "info_selfdev_da_tu_dong_kich_hoat_thanh": "[SelfDev] Đã tự động kích hoạt thành công tính năng /{{commandName}}!",
+    "warn_selfdev_warning_when_auto_executing": "[SelfDev] Cảnh báo khi tự động thực thi /{{commandName}}: {{message}}",
+    "error_selfdev_error_in_session": "[SelfDev] Lỗi trong phiên {{sessionId}}:",
+    "info_selfdev_dang_goi_gemini_coding_model_cho": "[SelfDev] Đang gọi Gemini Coding Model ({{modelId}}) cho tính năng: \"{{suggestedName}}\".",
+    "info_selfdev_gemini_coding_model_da_phan_hoi": "[SelfDev] Gemini Coding Model ({{modelId}}) đã phản hồi ({{length}} ký tự)!",
+    "warn_selfdev_model_gap_su_co_tu_dong": "[SelfDev] Model {{modelId}} gặp sự cố: {{message}}. Tự động thử model tiếp theo.",
+    "info_selfdev_dang_tien_hanh_xoa_lenh_khoi": "[SelfDev] Đang tiến hành xóa lệnh /{{targetName}} khỏi Sandbox.",
     "info_selfdev_da_go_lenh_khoi_ram_cua": "[SelfDev] Đã gỡ lệnh /{{targetName}} khỏi RAM của bot",
-    "info_selfdev_da_dong_bo_lai_danh_sach": "[SelfDev] ✅ Đã đồng bộ lại danh sách lệnh lên Discord REST API",
+    "info_selfdev_da_dong_bo_lai_danh_sach": "[SelfDev] Đã đồng bộ lại danh sách lệnh lên Discord REST API",
     "error_selfdev_loi_khi_xoa_lenh": "[SelfDev] Lỗi khi xóa lệnh /{{targetName}}:",
-    "info_selfdev_kiem_tra_agent_session_kenh_environmentid": "[SelfDev] 🔍 Kiểm tra Agent Session kênh #{{value}}: environmentId={{value2}}, lastInteractionId={{value3}}, lastScript={{value4}}",
-    "info_selfdev_kich_hoat_chained_script_modification_cho": "[SelfDev] 🔄 Kích hoạt Chained Script Modification cho kênh #{{value}}: Kế thừa script trước đó ({{value2}})...",
-    "info_selfdev_dang_goi_antigravity_agent_cloud_sandbox_2": "[SelfDev] 🧠 Đang gọi Antigravity Agent (Cloud Sandbox) sinh script cho kênh #{{value}}...",
-    "info_selfdev_antigravity_cloud_sinh_script_thanh_cong": "[SelfDev] ✅ Antigravity Cloud sinh script thành công (environmentId: {{value}})",
-    "warn_selfdev_antigravity_cloud_gap_su_co_tu_2": "[SelfDev] ⚠️ Antigravity Cloud gặp sự cố: {{message}}. Tự động chuyển sang chế độ sinh script dự phòng nội bộ...",
-    "info_selfdev_dang_goi_model_sinh_script_kiem": "[SelfDev] 🧠 Đang gọi model ({{modelId}}) sinh script kiểm tra ngầm cho: \"{{prompt}}\"...",
-    "warn_selfdev_model_gap_su_co_khi_sinh": "[SelfDev] ⚠️ Model {{modelId}} gặp sự cố khi sinh script: {{message}}. Tự động chuyển model tiếp theo...",
-    "error_selfdev_tat_ca_cac_model_deu_khong": "[SelfDev] ❌ Tất cả các model đều không thể sinh script kiểm tra ngầm. Lỗi cuối: {{message}}",
-    "info_selfdev_bat_dau_thuc_thi_script_kiem": "[SelfDev] 🚀 Bắt đầu thực thi script kiểm tra ngầm ({{value}})...",
-    "info_selfdev_script_kiem_tra_ngam_trong_sandbox": "[SelfDev] ✅ Script kiểm tra ngầm trong sandbox trả về:",
-    "warn_selfdev_khong_the_luu_lastscript_vao_agentsession": "[SelfDev] ⚠️ Không thể lưu lastScript vào agentSession:",
-    "warn_selfdev_loi_trong_qua_trinh_chay_script": "[SelfDev] ⚠️ Lỗi trong quá trình chạy script ngầm:",
-    "info_selfdev_da_luu_ban_sao_luu_script": "[SelfDev] 💾 Đã lưu bản sao lưu script vào: sandbox/backup/{{baseName}}.bak",
-    "warn_selfdev_loi_khi_sao_luu_script_vao": "[SelfDev] ⚠️ Lỗi khi sao lưu script vào sandbox/backup:"
+    "info_selfdev_kiem_tra_agent_session_kenh_environmentid": "[SelfDev] Kiểm tra Agent Session kênh #{{value}}: environmentId={{value2}}, lastInteractionId={{value3}}, lastScript={{value4}}",
+    "info_selfdev_kich_hoat_chained_script_modification_cho": "[SelfDev] Kích hoạt Chained Script Modification cho kênh #{{value}}: Kế thừa script trước đó ({{value2}}).",
+    "info_selfdev_dang_goi_antigravity_agent_cloud_sandbox_2": "[SelfDev] Đang gọi Antigravity Agent (Cloud Sandbox) sinh script cho kênh #{{value}}.",
+    "info_selfdev_antigravity_cloud_sinh_script_thanh_cong": "[SelfDev] Antigravity Cloud sinh script thành công (environmentId: {{value}})",
+    "warn_selfdev_antigravity_cloud_gap_su_co_tu_2": "[SelfDev] Antigravity Cloud gặp sự cố: {{message}}. Tự động chuyển sang chế độ sinh script dự phòng nội bộ.",
+    "info_selfdev_dang_goi_model_sinh_script_kiem": "[SelfDev] Đang gọi model ({{modelId}}) sinh script kiểm tra ngầm cho: \"{{prompt}}\".",
+    "warn_selfdev_model_gap_su_co_khi_sinh": "[SelfDev] Model {{modelId}} gặp sự cố khi sinh script: {{message}}. Tự động chuyển model tiếp theo.",
+    "error_selfdev_tat_ca_cac_model_deu_khong": "[SelfDev] Tất cả các model đều không thể sinh script kiểm tra ngầm. Lỗi cuối: {{message}}",
+    "info_selfdev_bat_dau_thuc_thi_script_kiem": "[SelfDev] Bắt đầu thực thi script kiểm tra ngầm ({{value}}).",
+    "info_selfdev_script_kiem_tra_ngam_trong_sandbox": "[SelfDev] Script kiểm tra ngầm trong sandbox trả về:",
+    "warn_selfdev_khong_the_luu_lastscript_vao_agentsession": "[SelfDev] Không thể lưu lastScript vào agentSession:",
+    "warn_selfdev_loi_trong_qua_trinh_chay_script": "[SelfDev] Lỗi trong quá trình chạy script ngầm:",
+    "info_selfdev_da_luu_ban_sao_luu_script": "[SelfDev] Đã lưu bản sao lưu script vào: sandbox/backup/{{baseName}}.bak",
+    "warn_selfdev_loi_khi_sao_luu_script_vao": "[SelfDev] Lỗi khi sao lưu script vào sandbox/backup:"
   },
   "antigravitykeymanager": {
-    "warn_antigravitykeymanager_could_not_query_api_keys_from": "⚠️ [AntigravityKeyManager] Could not query API Keys from Database:",
-    "warn_antigravitykeymanager_no_active_api_keys_found": "⚠️ [AntigravityKeyManager] No active API Keys found.",
-    "log_antigravitykeymanager_loaded_api_keys_for_antigravity_agent": "✅ [AntigravityKeyManager] Loaded {{length}} API Keys for Antigravity Agent.",
-    "log_antigravitykeymanager_suspended_key_for_s": "⏳ [AntigravityKeyManager] Suspended key ...{{shortKey}} for {{value}}s ({{reason}})",
-    "log_antigravitykeymanager_all_keys_suspended_waiting_ms": "⏳ [AntigravityKeyManager] All keys suspended. Waiting {{waitMs}}ms...",
-    "warn_antigravitykeymanager_key_timed_out_sau_ms_cooldown": "⏱️ [AntigravityKeyManager] Key ...{{shortKey}} timed out sau {{timeoutMs}}ms. Cooldown 30s.",
-    "log_antigravitykeymanager_retrying_with_next_key": "🔄 [AntigravityKeyManager] Retrying with next key... ({{attempt}}/{{maxRetries}})"
+    "warn_antigravitykeymanager_could_not_query_api_keys_from": "[AntigravityKeyManager] Không thể truy vấn API key từ cơ sở dữ liệu:",
+    "warn_antigravitykeymanager_no_active_api_keys_found": "[AntigravityKeyManager] Không tìm thấy API key đang hoạt động.",
+    "log_antigravitykeymanager_loaded_api_keys_for_antigravity_agent": "[AntigravityKeyManager] Đã nạp {{length}} API key cho Antigravity Agent.",
+    "log_antigravitykeymanager_suspended_key_for_s": "[AntigravityKeyManager] ⏳ [AntigravityKeyManager] Tạm khóa key.{{shortKey}} for {{value}}s ({{reason}})",
+    "log_antigravitykeymanager_all_keys_suspended_waiting_ms": "[AntigravityKeyManager] ⏳ [AntigravityKeyManager] Tất cả key đang tạm khóa; chờ {{waitMs}}ms.",
+    "warn_antigravitykeymanager_key_timed_out_sau_ms_cooldown": "[AntigravityKeyManager] ⏱️ [AntigravityKeyManager] Key.{{shortKey}} timed out sau {{timeoutMs}}ms. Cooldown 30s.",
+    "log_antigravitykeymanager_retrying_with_next_key": "[AntigravityKeyManager] Thử lại với key tiếp theo. ({{attempt}}/{{maxRetries}})"
   },
   "apikeymanager": {
-    "warn_could_not_query_api_keys_from_database": "⚠️ Could not query API Keys from Database:",
-    "warn_no_active_api_keys_found_in_environment": "⚠️ No active API Keys found in Environment (.env) or Database.",
-    "log_loaded_api_keys_available_from_env_db": "✅ Loaded {{length}} API Keys ({{size}} available from env/DB).",
-    "warn_apikeymanager_background_apistatus_save_error": "[ApiKeyManager] Background APIStatus save error: {{message}}",
-    "warn_suspended_key_for_s_on": "⏳ Suspended key ...{{value}} for {{value2}}s on {{modelId}} ({{reason}})",
-    "error_key_marked_as_leaked_invalid_and_disabled": "🚫 Key ...{{value}} marked as LEAKED/INVALID and disabled.",
-    "error_failed_to_mark_key_leaked": "Failed to mark key leaked:",
-    "error_failed_to_update_key_usage_stats": "Failed to update Key usage stats:",
-    "warn_key_timed_out_sau_ms_tren_chuyen": "⏱️ Key ...{{value}} timed out sau {{timeoutMs}}ms trên {{modelId}}. Chuyển key ngay...",
-    "error_code_syntax_bug_non_retryable": "❌ CODE / SYNTAX BUG (NON-RETRYABLE): {{message}}",
-    "error_application_logic_parsing_error_not_google_api": "❌ APPLICATION LOGIC / PARSING ERROR (NOT GOOGLE API): {{message}}",
-    "error_bad_request_non_retryable": "❌ BAD REQUEST (NON-RETRYABLE): {{errorMessage}}",
-    "warn_generic_error": "⚠️ Generic error {{statusCodeText}}: {{errorMessage}}",
-    "log_rotating_key_in_100ms": "🔄 Rotating key... ({{attempt}}/{{maxRetries}}) in 100ms"
+    "warn_could_not_query_api_keys_from_database": "[ApiKeyManager] Không thể truy vấn API key từ cơ sở dữ liệu:",
+    "warn_no_active_api_keys_found_in_environment": "[ApiKeyManager] Không tìm thấy API key hoạt động trong.env hoặc cơ sở dữ liệu.",
+    "log_loaded_api_keys_available_from_env_db": "[ApiKeyManager] Đã nạp {{length}} API key; {{size}} key khả dụng từ .env/DB.",
+    "warn_apikeymanager_background_apistatus_save_error": "[ApiKeyManager] Lỗi lưu APIStatus nền: {{message}}",
+    "warn_suspended_key_for_s_on": "[ApiKeyManager] ⏳ Tạm khóa key.{{value}} for {{value2}}s on {{modelId}} ({{reason}})",
+    "error_key_marked_as_leaked_invalid_and_disabled": "[ApiKeyManager] Key.{{value}} được đánh dấu LEAKED/INVALID và đã vô hiệu hóa.",
+    "error_failed_to_mark_key_leaked": "[ApiKeyManager] Không thể đánh dấu key bị lộ:",
+    "error_failed_to_update_key_usage_stats": "[ApiKeyManager] Không thể cập nhật thống kê sử dụng key:",
+    "warn_key_timed_out_sau_ms_tren_chuyen": "[ApiKeyManager] ⏱️ Key.{{value}} timed out sau {{timeoutMs}}ms trên {{modelId}}. Chuyển key ngay.",
+    "error_code_syntax_bug_non_retryable": "[ApiKeyManager] Lỗi mã/cú pháp (không thử lại): {{message}}",
+    "error_application_logic_parsing_error_not_google_api": "[ApiKeyManager] Lỗi logic/phân tích dữ liệu ứng dụng (không phải Google API): {{message}}",
+    "error_bad_request_non_retryable": "[ApiKeyManager] Bad request (không thử lại): {{errorMessage}}",
+    "warn_generic_error": "[ApiKeyManager] Lỗi {{statusCodeText}}: {{errorMessage}}",
+    "log_rotating_key_in_100ms": "[ApiKeyManager] Chuyển key sau 100ms | attempt={{attempt}}/{{maxRetries}}"
   },
   "geminilyrics": {
     "info_geminilyrics": "[GeminiLyrics] {{msg}}",
     "error_geminilyrics": "[GeminiLyrics] {{msg}}",
-    "error_model_that_bai_khi_tim_lyrics_dang": "Model {{modelId}} thất bại khi tìm lyrics: {{message}}. Đang thử model tiếp theo..."
+    "error_model_that_bai_khi_tim_lyrics_dang": "[GeminiLyrics] Model {{modelId}} thất bại khi tìm lyrics: {{message}}. Đang thử model tiếp theo."
   },
   "geminimanager": {
     "info_gemini": "[Gemini] {{msg}}",
     "warn_gemini": "[Gemini] {{msg}}",
     "error_gemini": "[Gemini] {{msg}}",
-    "error_khong_the_doc_file_dinh_kem": "Không thể đọc file đính kèm:",
-    "error_error_fetching_musiclog": "Error fetching MusicLog:",
-    "error_error_executing": "Error executing {{name}}:",
-    "info_function_calls_detected": "Function Calls detected: {{callNames}}",
-    "info_geminimanager_toi_uu_2_request_tra_ve": "[GeminiManager] ⚡ Tối ưu 2-Request: Trả về trực tiếp phản hồi từ Agent (bỏ qua Request 3).",
-    "warn_model_gap_su_co_dang_thu_model": "Model {{modelId}} gặp sự cố: {{message}}. Đang thử model tiếp theo..."
+    "error_khong_the_doc_file_dinh_kem": "[Gemini] Không thể đọc file đính kèm:",
+    "error_error_fetching_musiclog": "[Gemini] Lỗi đọc MusicLog:",
+    "error_error_executing": "[Gemini] Lỗi khi thực thi {{name}}:",
+    "info_function_calls_detected": "[Gemini] Phát hiện function call: {{callNames}}",
+    "info_geminimanager_toi_uu_2_request_tra_ve": "[Gemini] Đã nhận kết quả từ agent; bỏ qua lượt tổng hợp cuối để giảm độ trễ.",
+    "warn_model_gap_su_co_dang_thu_model": "[Gemini] Model {{modelId}} gặp sự cố: {{message}}. Đang thử model tiếp theo."
   },
   "chathelper": {
-    "error_error_getting_chat_session": "Error getting chat session:",
-    "warn_found_dangling_functioncall_at_end_of_history": "⚠️ Found dangling FunctionCall at end of history. Removing to fix Error 400.",
-    "error_error_in_gethistory_fixed": "Error in getHistory (Fixed):",
-    "error_failed_to_save_interaction": "Failed to save interaction:",
-    "error_error_getting_agent_session": "Error getting agent session:",
-    "info_agentsession_da_luu_session_kenh_environmentid_lastinteractionid": "[AgentSession] 💾 Đã lưu session kênh [{{channelId}}]: environmentId={{value}}, lastInteractionId={{value3}}, lastScript={{value4}}",
-    "error_agentsession_loi_cap_nhat_agent_session": "[AgentSession] ❌ Lỗi cập nhật agent session:"
+    "error_error_getting_chat_session": "[ChatStore] Lỗi đọc phiên chat:",
+    "warn_found_dangling_functioncall_at_end_of_history": "[ChatStore] Phát hiện FunctionCall chưa khép kín ở cuối lịch sử; loại bỏ để tránh lỗi 400.",
+    "error_error_in_gethistory_fixed": "[ChatStore] Lỗi khi đọc lịch sử chat:",
+    "error_failed_to_save_interaction": "[ChatStore] Không thể lưu interaction:",
+    "error_error_getting_agent_session": "[ChatStore] Lỗi đọc agent session:",
+    "info_agentsession_da_luu_session_kenh_environmentid_lastinteractionid": "[ChatStore] Đã lưu session kênh [{{channelId}}]: environmentId={{value}}, lastInteractionId={{value3}}, lastScript={{value4}}",
+    "error_agentsession_loi_cap_nhat_agent_session": "[ChatStore] Lỗi cập nhật agent session:"
   },
   "prompthelper": {
-    "info_prompthelper_reading_prompt_files_from_disk": "[PromptHelper] Reading prompt files from disk...",
-    "warn_prompthelper_file_missing": "[PromptHelper] ⚠️ File missing: {{filePath}}",
-    "error_prompthelper_error": "[PromptHelper] 🔥 Error: {{message}}",
-    "info_prompthelper_cache_cleared": "[PromptHelper] Cache cleared.",
-    "warn_prompthelper_agent_prompt_file_missing": "[PromptHelper] ⚠️ Agent prompt file missing: {{filePath}}",
-    "error_prompthelper_error_loading_agent_prompt": "[PromptHelper] 🔥 Error loading agent prompt ({{fileName}}): {{message}}"
+    "info_prompthelper_reading_prompt_files_from_disk": "[PromptHelper] Nạp prompt từ đĩa.",
+    "warn_prompthelper_file_missing": "[PromptHelper] Thiếu tệp: {{filePath}}",
+    "error_prompthelper_error": "[PromptHelper] Lỗi: {{message}}",
+    "info_prompthelper_cache_cleared": "[PromptHelper] Đã xóa cache prompt.",
+    "warn_prompthelper_agent_prompt_file_missing": "[PromptHelper] Thiếu tệp agent prompt: {{filePath}}",
+    "error_prompthelper_error_loading_agent_prompt": "[PromptHelper] Lỗi nạp agent prompt ({{fileName}}): {{message}}"
   },
   "skillhelper": {
-    "warn_skillhelper_loi_doc_file_skill": "[SkillHelper] ⚠️ Lỗi đọc file skill ({{matchedFile}}): {{message}}",
-    "warn_skillhelper_loi_quet_thu_muc_skill": "[SkillHelper] ⚠️ Lỗi quét thư mục skill ({{rootDir}}): {{message}}"
+    "warn_skillhelper_loi_doc_file_skill": "[SkillHelper] Lỗi đọc file skill ({{matchedFile}}): {{message}}",
+    "warn_skillhelper_loi_quet_thu_muc_skill": "[SkillHelper] Lỗi quét thư mục skill ({{rootDir}}): {{message}}"
   },
   "apply_engine": {
-    "log_applyengine_bat_dau_quy_trinh_apply_cho": "[ApplyEngine] 🚀 Bắt đầu quy trình Apply cho đề xuất từ Host...",
-    "log_applyengine_khoi_tao_giao_dich": "[ApplyEngine] 📋 Khởi tạo giao dịch {{transactionId}}",
-    "log_applyengine_da_ap_dung": "[ApplyEngine] 📦 Đã áp dụng [{{value}}]: {{targetRelative}}",
-    "log_applyengine_da_xoa_delete": "[ApplyEngine] 🗑️ Đã xóa [DELETE]: {{targetRelative}}",
-    "log_applyengine_giao_dich_da_commit_thanh_cong": "[ApplyEngine] ✨ Giao dịch {{transactionId}} đã COMMIT thành công! Trạng thái: READY_FOR_RELOAD",
-    "error_applyengine_loi_trong_qua_trinh_apply": "[ApplyEngine] ❌ Lỗi trong quá trình Apply: {{message}}"
+    "log_applyengine_bat_dau_quy_trinh_apply_cho": "[ApplyEngine] Bắt đầu quy trình Apply cho đề xuất từ Host.",
+    "log_applyengine_khoi_tao_giao_dich": "[ApplyEngine] Khởi tạo giao dịch {{transactionId}}",
+    "log_applyengine_da_ap_dung": "[ApplyEngine] Đã áp dụng [{{value}}]: {{targetRelative}}",
+    "log_applyengine_da_xoa_delete": "[ApplyEngine] Đã xóa [DELETE]: {{targetRelative}}",
+    "log_applyengine_giao_dich_da_commit_thanh_cong": "[ApplyEngine] Giao dịch {{transactionId}} đã COMMIT thành công. Trạng thái: READY_FOR_RELOAD",
+    "error_applyengine_loi_trong_qua_trinh_apply": "[ApplyEngine] Lỗi trong quá trình Apply: {{message}}"
   },
   "package_installer": {
-    "warn_packageinstaller_ten_package_khong_hop_le_hoac": "[PackageInstaller] ⚠️ Tên package không hợp lệ hoặc không an toàn: \"{{pkgName}}\"",
-    "warn_packageinstaller_package_nam_trong_danh_sach_bao": "[PackageInstaller] ⚠️ Package \"{{cleanName}}\" nằm trong danh sách bảo vệ.",
-    "info_packageinstaller_phat_hien_thu_vien_moi_dang": "[PackageInstaller] 📦 Phát hiện thư viện mới! Đang tự động cài đặt \"{{cleanName}}\" vào dự án...",
-    "info_packageinstaller_da_cai_dat_thanh_cong_du": "[PackageInstaller] ✅ Đã cài đặt thành công \"{{cleanName}}\"! Dự án và Sandbox có thể sử dụng ngay.",
-    "error_packageinstaller_cai_dat_thu_vien_that_bai": "[PackageInstaller] ❌ Cài đặt thư viện \"{{cleanName}}\" thất bại: {{message}}"
+    "warn_packageinstaller_ten_package_khong_hop_le_hoac": "[PackageInstaller] Tên package không hợp lệ hoặc không an toàn: \"{{pkgName}}\"",
+    "warn_packageinstaller_package_nam_trong_danh_sach_bao": "[PackageInstaller] Package \"{{cleanName}}\" nằm trong danh sách bảo vệ.",
+    "info_packageinstaller_phat_hien_thu_vien_moi_dang": "[PackageInstaller] Phát hiện thư viện mới! Đang tự động cài đặt \"{{cleanName}}\" vào dự án.",
+    "info_packageinstaller_da_cai_dat_thanh_cong_du": "[PackageInstaller] Đã cài đặt thành công \"{{cleanName}}\"! Dự án và Sandbox có thể sử dụng ngay.",
+    "error_packageinstaller_cai_dat_thu_vien_that_bai": "[PackageInstaller] Cài đặt thư viện \"{{cleanName}}\" thất bại: {{message}}",
+    "warn_packageinstaller_package_khong_tuong_thich_termux": "[PackageInstaller] Bỏ qua package native không tương thích với Termux: {{cleanName}}"
   },
   "rollback_manager": {
-    "warn_rollbackmanager_dang_kich_hoat_rollback_cho_giao": "[RollbackManager] ⚠️ Đang kích hoạt ROLLBACK cho giao dịch {{transactionId}}... Lý do: {{errorReason}}",
-    "log_rollbackmanager_da_xoa_file_moi_tao_do": "[RollbackManager] 🗑️ Đã xóa file mới tạo dở dang: {{relativePath}}",
-    "log_rollbackmanager_da_khoi_phuc_file_ban_dau": "[RollbackManager] 🔄 Đã khôi phục file ban đầu: {{relativeTargetPath}}",
-    "log_rollbackmanager_rollback_hoan_tat_thanh_cong_production": "[RollbackManager] ✅ Rollback hoàn tất thành công! Production đã quay về trạng thái ban đầu.",
-    "error_rollbackmanager_loi_nghiem_trong_trong_khi_rollback": "[RollbackManager] ❌ LỖI NGHIÊM TRỌNG TRONG KHI ROLLBACK:"
+    "warn_rollbackmanager_dang_kich_hoat_rollback_cho_giao": "[RollbackManager] Đang kích hoạt ROLLBACK cho giao dịch {{transactionId}}. Lý do: {{errorReason}}",
+    "log_rollbackmanager_da_xoa_file_moi_tao_do": "[RollbackManager] Đã xóa file mới tạo dở dang: {{relativePath}}",
+    "log_rollbackmanager_da_khoi_phuc_file_ban_dau": "[RollbackManager] Đã khôi phục file ban đầu: {{relativeTargetPath}}",
+    "log_rollbackmanager_rollback_hoan_tat_thanh_cong_production": "[RollbackManager] Rollback hoàn tất thành công. Production đã quay về trạng thái ban đầu.",
+    "error_rollbackmanager_loi_nghiem_trong_trong_khi_rollback": "[RollbackManager] Rollback gặp lỗi nghiêm trọng:"
   },
   "sandbox_manager": {
-    "warn_sandboxmanager_warning_on_cleansandbox": "[SandboxManager] Warning on cleanSandbox: {{message}}"
+    "warn_sandboxmanager_warning_on_cleansandbox": "[SandboxManager] Cảnh báo khi dọn sandbox: {{message}}"
   },
   "transaction_manager": {
-    "error_transactionmanager_failed_to_save_result_json": "[TransactionManager] Failed to save result.json:"
+    "error_transactionmanager_failed_to_save_result_json": "[TransactionManager] Không thể lưu result.json:"
   },
   "index": {
-    "log_express_server_listening_on_port": "Express server listening on port {{PORT}}",
-    "error_gemini_model_sync_failed": "⚠️ Gemini Model sync failed:",
-    "error_database_connection_failed": "⚠️ Database connection failed:",
-    "log_bot_will_continue_startup_without_database": "Bot will continue startup without Database...",
-    "error_command_loading_deployment_failed": "⚠️ Command loading/deployment failed:",
-    "error_fatal_error_during_startup": "❌ Fatal Error during startup: {{err}}",
-    "error_unhandled_rejection_at": "❌ Unhandled Rejection at:",
-    "error_reason": "reason:",
-    "error_uncaught_exception": "❌ Uncaught Exception:"
+    "log_express_server_listening_on_port": "[Startup] Express server đang lắng nghe tại cổng {{PORT}}.",
+    "error_gemini_model_sync_failed": "[Startup] Đồng bộ model Gemini thất bại:",
+    "error_database_connection_failed": "[Startup] Kết nối cơ sở dữ liệu thất bại:",
+    "log_bot_will_continue_startup_without_database": "[Startup] Tiếp tục khởi động ở chế độ không có cơ sở dữ liệu.",
+    "error_command_loading_deployment_failed": "[Startup] Nạp hoặc deploy lệnh thất bại:",
+    "error_fatal_error_during_startup": "[Startup] Khởi động thất bại: {{err}}",
+    "error_unhandled_rejection_at": "[Startup] Unhandled rejection tại:",
+    "error_reason": "[Startup] nguyên nhân:",
+    "error_uncaught_exception": "[Startup] Uncaught exception:"
   },
   "db": {
-    "log_da_ket_noi_voi_database": "Đã kết nối với Database",
-    "error_loi_ket_noi_voi_database": "Lỗi kết nối với Database"
+    "log_da_ket_noi_voi_database": "[Database] Kết nối cơ sở dữ liệu thành công.",
+    "error_loi_ket_noi_voi_database": "[Database] Kết nối cơ sở dữ liệu thất bại."
   },
   "deploycommands": {
-    "error_loi_nap_lenh_tu": "❌ Lỗi nạp lệnh từ {{name}}:",
+    "error_loi_nap_lenh_tu": "[Deploy] Lỗi nạp lệnh từ {{name}}:",
     "warn_deploy_khong_co_lenh_nao_duoc_tim": "[Deploy] Không có lệnh nào được tìm thấy để deploy.",
-    "warn_deploy_trung_ten_command_chi_lay_phien": "[Deploy] ⚠️ Trùng tên command: /{{name}} — chỉ lấy phiên bản cuối cùng."
+    "warn_deploy_trung_ten_command_chi_lay_phien": "[Deploy] Trùng tên command: /{{name}} — chỉ lấy phiên bản cuối cùng."
   },
   "deployonly": {
-    "error_can_discord_token_va_client_id_trong": "❌ Cần DISCORD_TOKEN và CLIENT_ID trong .env.",
-    "log_ket_noi_db_kiem_tra_lenh": "📂 Kết nối DB kiểm tra lệnh:",
-    "log_collection_commands": "| collection: commands",
-    "warn_khong_the_ket_noi_mongodb_de_so": "⚠️ Không thể kết nối MongoDB để so sánh lệnh, tiếp tục deploy trực tiếp:",
-    "log_guild_da_deploy_lenh": "✅ Guild ({{guildId}}): đã deploy {{length}} lệnh.",
-    "error_loi_deploy_guild": "❌ Lỗi deploy guild:",
-    "error_error": "❌"
+    "error_can_discord_token_va_client_id_trong": "[DeployOnly] Thiếu DISCORD_TOKEN hoặc CLIENT_ID trong .env.",
+    "log_ket_noi_db_kiem_tra_lenh": "[DeployOnly] Kết nối DB kiểm tra lệnh:",
+    "log_collection_commands": "[DeployOnly] Collection: commands",
+    "warn_khong_the_ket_noi_mongodb_de_so": "[DeployOnly] Không thể kết nối MongoDB để so sánh lệnh, tiếp tục deploy trực tiếp:",
+    "log_guild_da_deploy_lenh": "[DeployOnly] Guild ({{guildId}}): đã deploy {{length}} lệnh.",
+    "error_loi_deploy_guild": "[DeployOnly] Lỗi deploy guild:",
+    "error_error": ""
   },
   "logger": {
     "timestamp": "[{{time}}]",
-    "line": "{{timestamp}} {{level}} {{message}}",
+    "line": "{{timestamp}} {{level}} | {{message}}",
     "info": " INFO ",
     "warn": " WARN ",
     "error": " ERROR ",
-    "success": " SUCCESS ",
+    "success": " OK ",
     "debug": " DEBUG ",
     "client": " CLIENT ",
     "system": " SYSTEM "

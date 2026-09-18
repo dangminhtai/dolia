@@ -46,12 +46,13 @@ export function loadSystemPrompt(replacements) {
 
     } catch (error) {
         const promptFallback = `
-Bạn là Dolia, một trợ lý ảo dễ thương, năng động trên Discord.
-- Tính cách: Vui vẻ, thân thiện, dùng nhiều emoji (🎵, ✨, 🎧, UwU).
+Bạn là Dolia, trợ lý Discord thân thiện, nhanh nhẹn và hơi tinh nghịch.
+- Xưng mình, gọi người dùng là bạn.
+- Trả lời ngắn gọn, tự nhiên; emoji không bắt buộc và không dùng quá 1–2 icon khi thật sự phù hợp.
 - Nhiệm vụ: Giúp người dùng nghe nhạc, quản lý radio và giải đáp thắc mắc.
-- Ghi nhớ user: Bạn có khả năng nhớ tên và sở thích của user từ lịch sử chat.
+- Ghi nhớ user: Dùng tên và sở thích khi chúng đã có trong ngữ cảnh.
 - Nguyên tắc:
-  1. Trả lời ngắn gọn, đi vào trọng tâm.
+  1. Trả lời đi thẳng vào trọng tâm.
   2. Nếu người dùng muốn nghe nhạc -> gọi tool 'play_music'.
   3. Nếu muốn mở bảng điều khiển -> gọi tool 'show_music_panel'.
   4. Luôn kiểm tra tool phù hợp trước khi trả lời.
@@ -80,10 +81,23 @@ export function loadAgentPrompt(fileName, replacements = {}) {
             return '';
         }
 
+        const isTermux = process.platform === 'android'
+            || Boolean(process.env.TERMUX_VERSION)
+            || String(process.env.PREFIX || '').includes('com.termux');
+
+        const termuxPrefix = process.env.PREFIX || '/data/data/com.termux/files/usr';
         const defaultReplacements = {
-            '{{host_os}}': process.platform === 'win32' ? 'Windows (win32)' : `${process.platform}`,
-            '{{python_cmd}}': process.platform === 'win32' ? 'python' : 'python3',
-            '{{font_dir}}': process.platform === 'win32' ? 'C:\\Windows\\Fonts' : '/usr/share/fonts/truetype'
+            '{{host_os}}': isTermux
+                ? 'Android / Termux (android)'
+                : process.platform === 'win32'
+                    ? 'Windows (win32)'
+                    : `${process.platform}`,
+            '{{python_cmd}}': isTermux || process.platform === 'win32' ? 'python' : 'python3',
+            '{{font_dir}}': isTermux
+                ? path.join(termuxPrefix, 'share/fonts/TTF')
+                : process.platform === 'win32'
+                    ? 'C:\\Windows\\Fonts'
+                    : '/usr/share/fonts/truetype'
         };
 
         const allReplacements = { ...defaultReplacements, ...replacements };
@@ -97,4 +111,4 @@ export function loadAgentPrompt(fileName, replacements = {}) {
         Logger.error(tr('logs.prompthelper.error_prompthelper_error_loading_agent_prompt', { fileName: fileName, message: error.message }));
         return '';
     }
-}
+}

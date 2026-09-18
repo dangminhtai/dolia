@@ -1,5 +1,16 @@
 # Chỉnh câu chữ của Dolia
 
+
+## Chuẩn câu chữ của bản này
+
+- `logs.json`: log dành cho terminal, viết ngắn gọn, trung tính, có tên component và dữ liệu chẩn đoán cần thiết. Không dùng emoji, không dùng lời thoại nhân vật, không viết kiểu “nè/á/UwU”.
+- Các file còn lại: là nội dung người dùng có thể nhìn thấy trên Discord. Giữ giọng Dolia thân thiện, xưng **mình – bạn**, hơi tinh nghịch nhưng không trẻ con quá mức.
+- Emoji là phụ trợ, không phải dấu câu. Một thông báo ngắn thường dùng **0–1 emoji**; chỉ tiêu đề/trạng thái cần nhận diện nhanh mới nên có icon.
+- Không dùng chuỗi icon liên tiếp như `✨💖🫧🐬`, không rải emoji ở mọi dòng.
+- Khi báo lỗi cho người dùng, nói rõ tình trạng và cách thử lại; không dùng cách nói mơ hồ kiểu “đầu mình quay quay” hoặc “node nhạc đang mệt”.
+- Giữ nguyên mọi placeholder `{{...}}` khi sửa text.
+
+
 Anh chỉ cần sửa giá trị bên phải trong JSON, giữ nguyên tên khóa và các biến `{{...}}`. File dùng UTF-8. Có thể tìm nguyên câu đang thấy bằng Ctrl+Shift+F trong thư mục `resources`.
 
 ## Chọn đúng file

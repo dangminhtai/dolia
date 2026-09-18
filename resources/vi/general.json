@@ -3,13 +3,13 @@
     "modal_title": "🎵 Tìm lời bài hát",
     "input_label": "Nhập tên bài hoặc một đoạn lời nha",
     "input_placeholder": "Ví dụ: \"Em của ngày hôm qua\" hoặc \"đừng làm trái tim anh đau\"...",
-    "not_found": "🥺 Mình tìm hoài mà chưa thấy bài nào giống: `{{query}}`",
-    "error": "💦 Ui... mình tìm lời bài hát không được rồi. Bạn thử lại sau nha!",
-    "full_lyrics_hint": "📄 *(Lời đầy đủ ở file đính kèm bên dưới nha!)*",
-    "full_lyrics_header": "🎶 Đây là lời đầy đủ của **{{title}}** nè!",
-    "footer": "🎵 Lyrics",
-    "year_field": "📅 Phát hành",
-    "link_field": "🎧 Nghe tại",
-    "link_text": "Mở nghe nè ✨"
+    "not_found": "Mình tìm hoài mà chưa thấy bài nào giống: `{{query}}`",
+    "error": "Ơ, mình tìm lời bài hát không được rồi. Bạn thử lại sau nha!",
+    "full_lyrics_hint": "*(Lời đầy đủ ở file đính kèm bên dưới nha!)*",
+    "full_lyrics_header": "Đây là lời đầy đủ của **{{title}}** nè!",
+    "footer": "Lyrics",
+    "year_field": "Phát hành",
+    "link_field": "Nghe tại",
+    "link_text": "Mở nghe nè"
   }
 }

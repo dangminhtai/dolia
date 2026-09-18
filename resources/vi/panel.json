@@ -1,51 +1,51 @@
 {
   "home": {
-    "title_playing": "🎶 Đang phát nhạc nè",
-    "title_idle": "😴 Mình đang nghỉ xíu á",
-    "desc_idle": "Chưa có bài nào hết nè.\nBạn chọn nhạc ở mấy Tab bên dưới hoặc dùng `/play` nha 💕",
-    "field_artist": "🎤 Ca sĩ",
-    "field_requester": "💖 Người chọn",
-    "field_time": "⏰ Thời gian ({{current}} / {{total}})",
-    "field_status": "✨ Trạng thái",
-    "status_value": "🔊 **{{volume}}%** • 🔁 **{{loop}}** • 📻 24/7: **{{autoplay}}**",
-    "autoplay_on": "Bật rồi nè 💖",
-    "autoplay_off": "Tắt rồi á 💤"
+    "title_playing": "🎵 Đang phát",
+    "title_idle": "Dolia Music",
+    "desc_idle": "Chưa có bài nào đang phát.\nBạn chọn nhạc ở các tab bên dưới hoặc dùng `/play` nha.",
+    "field_artist": "Ca sĩ / Kênh",
+    "field_requester": "Người chọn",
+    "field_time": "Thời gian ({{current}} / {{total}})",
+    "field_status": "Trạng thái",
+    "status_value": "Âm lượng **{{volume}}%** • Lặp **{{loop}}** • Radio 24/7 **{{autoplay}}**",
+    "autoplay_on": "Đang bật",
+    "autoplay_off": "Đang tắt"
   },
   "settings": {
-    "title": "🎛️ Chỉnh nhạc nè",
-    "description": "Bạn thích kiểu nào thì cứ chỉnh nha.\nMình sẽ nhớ luôn cho bạn á! ✨",
-    "nightcore_on": "Đang bật nè 🐿️",
-    "nightcore_off": "Tắt rồi á 💤",
-    "bassboost_on": "Đang bật nè 🥁",
-    "bassboost_off": "Tắt rồi á 💤",
-    "footer": "Bấm một cái là mình đổi ngay luôn 💕"
+    "title": "🎛️ Cài đặt nhạc",
+    "description": "Bạn chỉnh theo ý mình nha. Mình sẽ nhớ cài đặt cho lần sau.",
+    "nightcore_on": "Đang bật",
+    "nightcore_off": "Đang tắt",
+    "bassboost_on": "Đang bật",
+    "bassboost_off": "Đang tắt",
+    "footer": "Bấm để thay đổi ngay."
   },
   "radio": {
-    "title": "📻 Kho nhạc Radio 24/7 ({{total}} bài nè)",
-    "status_running": "Đang phát nhạc nè 🟢",
-    "status_stopped": "Đang nghỉ ngơi á 🔴",
-    "empty_list": "🥺 Kho Radio chưa có bài nào hết trơn á!\nBạn bấm nút bên dưới để thêm bài cùng mình nha 💕",
-    "footer_page": "Trang {{page}}/{{totalPages}} ✨",
-    "toggle_on": "Tắt 24/7 nha 💤",
-    "toggle_off": "Bật 24/7 nè 📻"
+    "title": "📻 Radio 24/7 · {{total}} bài",
+    "status_running": "Đang phát",
+    "status_stopped": "Đang dừng",
+    "empty_list": "Kho Radio chưa có bài nào. Bạn thêm một bài bên dưới nha.",
+    "footer_page": "Trang {{page}}/{{totalPages}}",
+    "toggle_on": "Tắt Radio 24/7",
+    "toggle_off": "Bật Radio 24/7"
   },
   "playlist": {
-    "title": "💖 Playlist của bạn",
-    "no_playlist": "Bạn chưa có playlist nào hết á 🥺\nBấm **Tạo mới** để tạo một cái nha!",
-    "click_to_view": "Bấm vào playlist để xem nha ✨",
+    "title": "Playlist của bạn",
+    "no_playlist": "Bạn chưa có playlist nào. Bấm **Tạo mới** để bắt đầu nha.",
+    "click_to_view": "Chọn playlist để xem.",
     "select_placeholder": "Chọn playlist của bạn",
-    "selected_info": "💗 **Đang xem:** {{name}}\n\n{{trackList}}\n...và còn **{{remaining}}** bài nữa đó ✨",
-    "not_found": "Ơ... playlist này không còn nữa rồi 🥺",
-    "select_prompt": "Bạn chọn một playlist bên dưới nha 💕"
+    "selected_info": "**Đang xem:** {{name}}\n\n{{trackList}}\n...còn **{{remaining}}** bài nữa.",
+    "not_found": "Playlist này không còn tồn tại rồi.",
+    "select_prompt": "Bạn chọn một playlist bên dưới nha."
   },
   "queue": {
-    "title": "📜 Hàng chờ bài hát ({{count}} bài nè)",
+    "title": "Hàng chờ · {{count}} bài",
     "now_playing": "▶️ **Đang phát:** [{{title}}]({{uri}})",
-    "not_playing": "😴 **Hiện tại chưa có bài nào đang phát nè~**",
-    "next_header": "**Hàng chờ tiếp theo nè:**",
+    "not_playing": "**Hiện chưa có bài nào đang phát.**",
+    "next_header": "**Tiếp theo:**",
     "now_playing_desc": "{{title}}\n\n{{list}}",
-    "empty": "Hàng chờ đang trống trơn nè 🥺\nBạn thêm bài hát vào để mình hát cho nghe nha 💕",
-    "footer": "Trang {{page}}/{{totalPages}} • Tổng thời gian: {{totalTime}} ✨"
+    "empty": "Hàng chờ đang trống. Bạn thêm bài để mình phát nha.",
+    "footer": "Trang {{page}}/{{totalPages}} • Tổng thời gian: {{totalTime}}"
   },
   "buttons": {
     "vol_down": "Giảm âm xíu",
@@ -59,13 +59,13 @@
     "radio_add_current": "Thêm bài đang nghe",
     "radio_add_query": "Tìm bài thêm vào",
     "radio_remove": "Bỏ bớt bài",
-    "pl_create": "Tạo playlist mới nè ✨",
-    "pl_create_short": "Tạo mới nha 💕",
+    "pl_create": "Tạo playlist mới",
+    "pl_create_short": "Tạo mới",
     "pl_play": "Phát playlist này",
     "pl_add_current": "Thêm bài đang nghe",
     "pl_add_query": "Tìm bài thêm vào",
     "pl_delete": "Xóa playlist này",
-    "queue_shuffle": "Xáo trộn nè",
+    "queue_shuffle": "Xáo trộn",
     "queue_clear": "Xóa hết chờ",
     "queue_add_priority": "Ưu tiên phát ngay",
     "nav_settings": "Cài đặt",
@@ -73,20 +73,20 @@
     "nav_queue": "Hàng chờ",
     "nav_radio": "Radio 24/7",
     "nav_playlist": "Playlist",
-    "nav_close": "Đóng bảng nha"
+    "nav_close": "Đóng bảng"
   },
   "modals": {
-    "title_pl_create": "✨ Tạo Playlist mới nè",
-    "label_pl_name": "Tên playlist dễ thương của bạn:",
-    "title_queue_priority": "🚀 Ưu tiên phát ngay bài này nè",
-    "label_query": "Link hoặc tên bài hát nha:",
-    "title_pl_add": "💖 Thêm bài vào Playlist nè",
-    "title_radio_add": "📻 Thêm bài vào kho Radio 24/7",
-    "title_radio_remove": "🗑️ Xóa bài khỏi kho Radio 24/7",
-    "label_radio_index": "Số thứ tự bài muốn xóa nè:"
+    "title_pl_create": "Tạo playlist mới",
+    "label_pl_name": "Tên playlist:",
+    "title_queue_priority": "Ưu tiên phát bài này",
+    "label_query": "Link hoặc tên bài hát:",
+    "title_pl_add": "Thêm bài vào playlist",
+    "title_radio_add": "Thêm bài vào Radio 24/7",
+    "title_radio_remove": "Xóa bài khỏi Radio 24/7",
+    "label_radio_index": "Số thứ tự bài muốn xóa:"
   },
   "errors": {
-    "data_error": "🥺 Ui... dữ liệu bị lỗi mất rồi.\nBạn tạo lại giúp mình nha!",
-    "process_error": "💦 Ui có lỗi rồi... thử lại giúp mình nha!"
+    "data_error": "Mình gặp lỗi khi đọc dữ liệu. Bạn thử tạo lại giúp mình nha.",
+    "process_error": "Mình gặp chút trục trặc khi xử lý. Bạn thử lại nha."
   }
 }

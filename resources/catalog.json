@@ -3285,5 +3285,11 @@
   "self_dev.only_owner": {
     "source": "services/selfDevService.js",
     "parameters": []
+  },
+  "logs.package_installer.warn_packageinstaller_package_khong_tuong_thich_termux": {
+    "source": "core/sandbox/package-installer.js",
+    "parameters": [
+      "cleanName"
+    ]
   }
 }
