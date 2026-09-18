@@ -5,6 +5,7 @@ import { musicTools } from '../schema/musicTools.js';
 import { devTools } from '../schema/devTools.js';
 import * as MusicFunctions from '../utils/musicFunctions.js';
 import * as DevFunctions from '../utils/devFunctions.js';
+import * as DiscordFunctions from '../utils/discordFunctions.js';
 import * as ChatHelper from '../helpers/chatHelper.js';
 import { loadSystemPrompt } from '../helpers/promptHelper.js';
 import { poru } from '../utils/LavalinkManager.js';
@@ -31,7 +32,12 @@ class GeminiManager {
             'manage_radio': MusicFunctions.manage_radio,
             'show_music_panel': MusicFunctions.show_music_panel,
             'agent_code': DevFunctions.agent_code,
-            'web_search': DevFunctions.web_search
+            'web_search': DevFunctions.web_search,
+            'get_avatar': DiscordFunctions.get_avatar,
+            'moderate_discord': DiscordFunctions.moderate_discord,
+            'manage_member': DiscordFunctions.manage_member,
+            'manage_message': DiscordFunctions.manage_message,
+            'manage_channel': DiscordFunctions.manage_channel
         };
     }
 
@@ -372,9 +378,10 @@ ${topSongsStr || "- Chưa có bài nào nổi bật"}
                         contents.push(functionResponseTurn);
                         newTurns.push(functionResponseTurn);
 
-                        // D. TỐI ƯU HÓA 2-REQUEST: Bỏ qua Request 3 nếu Agent đã thực thi xong và có phản hồi Persona hoàn chỉnh
-                        const hasAgentCall = responseParts.some(p => p.functionCall?.name === 'agent_code');
-                        if (hasAgentCall && lastToolResult) {
+                        // D. TỐI ƯU HÓA 2-REQUEST: Bỏ qua Request 3 nếu Agent hoặc Discord direct tools đã thực thi xong
+                        const DIRECT_REPLY_TOOLS = ['agent_code', 'get_avatar', 'moderate_discord', 'manage_member', 'manage_message', 'manage_channel'];
+                        const hasDirectToolCall = responseParts.some(p => DIRECT_REPLY_TOOLS.includes(p.functionCall?.name));
+                        if (hasDirectToolCall && lastToolResult) {
                             let agentReplyText = null;
                             let agentFiles = [];
                             let alreadySent = false;

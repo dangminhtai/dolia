@@ -274,6 +274,11 @@
     "error_loi_deploy_guild": "[DeployOnly] Lỗi deploy guild:",
     "error_error": ""
   },
+  "discordfunctions": {
+    "info_tool_invoked": " [DiscordTool] {{tool}} | action={{action}} | user={{userId}}",
+    "error_tool_failed": " [DiscordTool] {{tool}} lỗi: {{error}}",
+    "warn_forbidden": " [DiscordTool] Từ chối {{tool}} — người dùng không có quyền"
+  },
   "logger": {
     "timestamp": "[{{time}}]",
     "line": "{{timestamp}} {{level}} | {{message}}",

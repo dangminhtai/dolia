@@ -167,6 +167,14 @@
     "text_dolia_da_ghi_nhan_va_xu_ly": "Mình đã xử lý yêu cầu rồi nha.",
     "text_tada_dolia_da_hoan_thanh_xong_tac": "Mình làm xong rồi nha."
   },
+  "discordfunctions": {
+    "text_forbidden": "Tính năng này bạn chưa có quyền sử dụng đâu.",
+    "text_guild_required": "Bạn cần dùng yêu cầu này trong máy chủ.",
+    "text_no_permission": "Mình chưa có quyền Discord để thực hiện việc này.",
+    "text_invalid_action": "Hành động không hợp lệ.",
+    "text_user_mention_required": "Bạn hãy nhắc lại đúng người cần xử lý bằng @ hoặc ID trong yêu cầu này.",
+    "text_protected_user": "Mình không thể thực hiện thao tác đó với tài khoản này."
+  },
   "music": {
     "live": "LIVE",
     "radio_requester": "Radio 24/7",
