@@ -6,9 +6,6 @@
   "switch_provider": {
     "error_error_switching_provider": "[MusicProvider] Lỗi chuyển nguồn nhạc:"
   },
-  "tictactoe": {
-    "error_tictactoe": ""
-  },
   "interactioncreate": {
     "error_error_resolving_playlist_track": "[Interaction] Lỗi resolve bài trong playlist:",
     "error_music_panel_error": "[Interaction] Music Panel Lỗi:",

@@ -91,11 +91,6 @@
     "setdescription_xoa_bai_hat_khoi_kho_nhac_radio": "Xóa bài hát khỏi kho nhạc Radio 24/7",
     "setdescription_so_thu_tu_bai_hat_xem_trong": "Số thứ tự bài hát (Xem trong /radio-list247)"
   },
-  "self_dev": {
-    "setdescription_yeu_cau_dolia_tu_lap_trinh_tinh": "Yêu cầu Dolia tự lập trình tính năng/lệnh mới (Chỉ dành cho Chủ nhân)",
-    "setdescription_mo_ta_tinh_nang_tro_choi_hoac": "Mô tả tính năng, trò chơi hoặc lệnh bạn muốn Dolia tự lập trình",
-    "setdescription_ten_lenh_goi_y_viet_thuong_khong": "Tên lệnh gợi ý (viết thường không dấu, ví dụ: dice, coinflip, userinfo)"
-  },
   "skip": {
     "setdescription_bo_qua_bai_hien_tai_lavalink": "Bỏ qua bài hiện tại (Lavalink)"
   },
@@ -109,10 +104,5 @@
     "name_youtube_music_khuyen_dung": "YouTube Music (Khuyên dùng)",
     "name_soundcloud_remix_edm": "SoundCloud (Remix / EDM)",
     "name_spotify": "Spotify"
-  },
-  "tictactoe": {
-    "setdescription_choi_tic_tac_toe_cung_nhau": "Chơi Tic-Tac-Toe cùng nhau",
-    "setdescription_chon_ban_de_choi_cung": "Chọn bạn để chơi cùng",
-    "empty_cell_label": "​"
   }
 }

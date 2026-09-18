@@ -343,21 +343,6 @@
     "parameters": [],
     "maxLength": 100
   },
-  "commands.self_dev.setdescription_yeu_cau_dolia_tu_lap_trinh_tinh": {
-    "source": "commands/slash/self_dev.js",
-    "parameters": [],
-    "maxLength": 100
-  },
-  "commands.self_dev.setdescription_mo_ta_tinh_nang_tro_choi_hoac": {
-    "source": "commands/slash/self_dev.js",
-    "parameters": [],
-    "maxLength": 100
-  },
-  "commands.self_dev.setdescription_ten_lenh_goi_y_viet_thuong_khong": {
-    "source": "commands/slash/self_dev.js",
-    "parameters": [],
-    "maxLength": 100
-  },
   "commands.skip.setdescription_bo_qua_bai_hien_tai_lavalink": {
     "source": "commands/slash/skip.js",
     "parameters": [],
@@ -392,20 +377,6 @@
   },
   "commands.switch_provider.name_spotify": {
     "source": "commands/slash/switch-provider.js",
-    "parameters": []
-  },
-  "commands.tictactoe.setdescription_choi_tic_tac_toe_cung_nhau": {
-    "source": "commands/slash/tictactoe.js",
-    "parameters": [],
-    "maxLength": 100
-  },
-  "commands.tictactoe.setdescription_chon_ban_de_choi_cung": {
-    "source": "commands/slash/tictactoe.js",
-    "parameters": [],
-    "maxLength": 100
-  },
-  "commands.tictactoe.empty_cell_label": {
-    "source": "commands/slash/tictactoe.js",
     "parameters": []
   },
   "common.dm_not_supported": {
@@ -550,62 +521,6 @@
     "source": "resources/vi/errors.json",
     "parameters": []
   },
-  "games.tictactoe.waiting": {
-    "source": "commands/slash/tictactoe.js",
-    "parameters": [
-      "player1"
-    ]
-  },
-  "games.tictactoe.turn": {
-    "source": "commands/slash/tictactoe.js",
-    "parameters": [
-      "player1",
-      "player2",
-      "current",
-      "symbol"
-    ]
-  },
-  "games.tictactoe.winner": {
-    "source": "commands/slash/tictactoe.js",
-    "parameters": [
-      "winner",
-      "symbol",
-      "selfComment"
-    ]
-  },
-  "games.tictactoe.self_comment": {
-    "source": "commands/slash/tictactoe.js",
-    "parameters": []
-  },
-  "games.tictactoe.draw": {
-    "source": "commands/slash/tictactoe.js",
-    "parameters": []
-  },
-  "games.tictactoe.game_over": {
-    "source": "commands/slash/tictactoe.js",
-    "parameters": []
-  },
-  "games.tictactoe.room_full": {
-    "source": "commands/slash/tictactoe.js",
-    "parameters": []
-  },
-  "games.tictactoe.not_your_turn": {
-    "source": "commands/slash/tictactoe.js",
-    "parameters": []
-  },
-  "games.tictactoe.timeout": {
-    "source": "commands/slash/tictactoe.js",
-    "parameters": []
-  },
-  "games.tictactoe.error": {
-    "source": "commands/slash/tictactoe.js",
-    "parameters": []
-  },
-  "games.tictactoe.join_button": {
-    "source": "commands/slash/tictactoe.js",
-    "parameters": [],
-    "maxLength": 80
-  },
   "general.lyrics.modal_title": {
     "source": "commands/slash/lyrics.js",
     "parameters": [],
@@ -667,10 +582,6 @@
   },
   "logs.switch_provider.error_error_switching_provider": {
     "source": "commands/slash/switch-provider.js",
-    "parameters": []
-  },
-  "logs.tictactoe.error_tictactoe": {
-    "source": "commands/slash/tictactoe.js",
     "parameters": []
   },
   "logs.interactioncreate.error_error_resolving_playlist_track": {

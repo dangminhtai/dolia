@@ -3,7 +3,7 @@ import { Type } from "@google/genai";
 export const devTools = [
     {
         name: "agent_code",
-        description: "Công cụ thông minh của Dolia để: (1) KHỞI CHẠY LỆNH/TRÒ CHƠI ĐÃ CÓ SẴN (action: 'run_feature'): Khi người dùng muốn chơi một trò chơi hoặc dùng tính năng ĐÃ CÓ SẴN trong danh sách hệ thống/sandbox (ví dụ: 'mình muốn chơi 7 viên ngọc rồng' -> gọi run_feature với feature_name: 'dragon_ball_quiz'; 'chơi nối từ' -> feature_name: 'word_chain'; 'chơi đố vui' -> feature_name: 'trivia'; 'chơi cờ caro' -> feature_name: 'tictactoe'). BẮT BUỘC gọi tool này để mở giao diện nút bấm và Embed ra kênh chat cho người dùng chơi ngay. TUYỆT ĐỐI KHÔNG TỰ TẠO TRÒ CHƠI BẰNG VĂN BẢN (TEXT)!; (2) KIỂM TRA DỮ LIỆU NỘI BỘ KHÔNG CÓ DIRECT TOOL (action: 'inspect_data' hoặc 'create_script'): Chỉ dùng cho file/workspace, DB riêng, log hoặc sandbox; dữ liệu Discord như thành viên, bot, presence, voice, profile phải dùng discord_query; (3) TỰ ĐỘNG LẬP TRÌNH TẠO MỚI (action: 'create_game'/'create_feature'): Khi người dùng yêu cầu một game/tính năng HOÀN TOÀN MỚI CHƯA CÓ TRONG DANH SÁCH; (4) XOÁ LỆNH (action: 'delete_feature').",
+        description: "Công cụ thông minh của Dolia để: (1) KHỞI CHẠY LỆNH/TRÒ CHƠI ĐÃ CÓ SẴN (action: 'run_feature'): Khi người dùng muốn chơi một trò chơi hoặc dùng tính năng ĐÃ CÓ SẴN trong danh sách hệ thống/sandbox (ví dụ: 'mình muốn chơi 7 viên ngọc rồng' -> gọi run_feature với feature_name: 'dragon_ball_quiz'; 'chơi nối từ' -> feature_name: 'word_chain'; 'chơi đố vui' -> feature_name: 'trivia'). BẮT BUỘC gọi tool này để mở giao diện nút bấm và Embed ra kênh chat cho người dùng chơi ngay. TUYỆT ĐỐI KHÔNG TỰ TẠO TRÒ CHƠI BẰNG VĂN BẢN (TEXT)!; (2) KIỂM TRA DỮ LIỆU NỘI BỘ KHÔNG CÓ DIRECT TOOL (action: 'inspect_data' hoặc 'create_script'): Chỉ dùng cho file/workspace, DB riêng, log hoặc sandbox; dữ liệu Discord như thành viên, bot, presence, voice, profile phải dùng discord_query; (3) TỰ ĐỘNG LẬP TRÌNH TẠO MỚI (action: 'create_game'/'create_feature'): Khi người dùng yêu cầu một game/tính năng HOÀN TOÀN MỚI CHƯA CÓ TRONG DANH SÁCH; (4) XOÁ LỆNH (action: 'delete_feature').",
         parameters: {
             type: Type.OBJECT,
             properties: {
@@ -13,7 +13,7 @@ export const devTools = [
                 },
                 feature_name: {
                     type: Type.STRING,
-                    description: "Tên định danh ngắn gọn của lệnh/tính năng (ví dụ: dragon_ball_quiz, word_chain, trivia, tictactoe, inspect_members, dice)."
+                    description: "Tên định danh ngắn gọn của lệnh/tính năng (ví dụ: dragon_ball_quiz, word_chain, trivia, inspect_members, dice)."
                 },
                 action: {
                     type: Type.STRING,

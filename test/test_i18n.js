@@ -15,6 +15,6 @@ console.log('Test panel.queue.title:', t('panel.queue.title', { count: 3 }));
 console.log('Test panel.buttons.pl_create:', t('panel.buttons.pl_create'));
 console.log('Test panel.modals.title_pl_create:', t('panel.modals.title_pl_create'));
 console.log('Test music.radio.track_not_found:', t('music.radio.track_not_found'));
-console.log('Test games.tictactoe.winner:', t('games.tictactoe.winner', { winner: 'Tai', symbol: 'X', selfComment: '(Tự kỷ đỉnh cao)' }));
+console.log('Test common.server_running:', t('common.server_running'));
 
 console.log('\n--- ALL TESTS PASSED! ---');
