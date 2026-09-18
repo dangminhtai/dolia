@@ -1,3 +1,6 @@
 export function isOwner(userId) {
-    return Boolean(process.env.OWNER_ID && userId && userId === process.env.OWNER_ID);
+    if (!userId) return false;
+    const raw = process.env.OWNER_ID || process.env.OWNER_IDS || '';
+    const owners = raw.split(/[,;\s]+/).map(s => s.trim()).filter(Boolean);
+    return owners.includes(String(userId));
 }

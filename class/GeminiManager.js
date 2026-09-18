@@ -14,6 +14,7 @@ import MusicSetting from '../models/MusicSetting.js';
 import MusicLog from '../models/MusicLog.js';
 import geminiModelService from '../services/geminiModelService.js';
 import { prepareDiscordAttachments } from '../helpers/discordAttachmentHelper.js';
+import { isOwner } from '../services/authorizationService.js';
 
 class GeminiManager {
     constructor() {
@@ -221,6 +222,8 @@ ${topSongsStr || "- Chưa có bài nào nổi bật"}
             '{{user}}': message.member?.displayName || message.author.globalName || message.author.username || 'User',
             '{{user_name}}': message.member?.displayName || message.author.username || 'User',
             '{{user_id}}': userId,
+            '{{is_owner}}': isOwner(userId) ? 'Có (Chủ nhân / Bot Owner)' : 'Không',
+            '{{user_role}}': isOwner(userId) ? 'Chủ nhân (Bot Owner)' : 'Thành viên server',
             '{{server_name}}': message.guild?.name || 'DM',
             '{{guild_name}}': message.guild?.name || 'Direct Message',
             '{{channel_name}}': message.channel.name || 'Private Chat',

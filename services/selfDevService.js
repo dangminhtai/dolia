@@ -17,16 +17,14 @@ import {
     PackageInstaller
 } from '../core/sandbox/index.js';
 import { getAgentSession, updateAgentSession } from '../helpers/chatHelper.js';
-
-const OWNER_ID = process.env.OWNER_ID;
-
+import { isOwner } from './authorizationService.js';
 
 export class SelfDevService {
     /**
      * Kiểm tra user có phải là Owner không
      */
     static isOwner(userId) {
-        return userId === OWNER_ID;
+        return isOwner(userId);
     }
 
     /**
@@ -665,7 +663,7 @@ export class SelfDevService {
             await confirmMsg.edit({ embeds: [successEmbed], components: [] }).catch(() => { });
             // Tin nhắn ngắn hạn: Tự động xóa sau 8 giây
             setTimeout(() => {
-                confirmMsg?.delete().catch(() => { });
+                confirmMsg?.delete?.().catch(() => { });
             }, 8000);
 
             // Deploy lại commands lên Discord API (forceDeploy: true)

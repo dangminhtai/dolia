@@ -10,6 +10,7 @@ import {
     ActivityType,
     PermissionFlagsBits
 } from 'discord.js';
+import { isOwner } from '../services/authorizationService.js';
 
 function uniqueRoles(member) {
     if (!member?.roles?.cache) return [];
@@ -122,10 +123,6 @@ function messageSnapshot(msg) {
             answers: msg.poll.answers?.values ? [...msg.poll.answers.values()].map(a => ({ id: a.id, text: a.text, votes: a.voteCount })) : []
         } : null
     };
-}
-
-function isOwner(userId) {
-    return Boolean(process.env.OWNER_ID && userId && String(userId) === String(process.env.OWNER_ID));
 }
 
 function excerpt(text, max = 56) {

@@ -9,6 +9,7 @@ console.log('--- BẮT ĐẦU KIỂM THỬ TÍCH HỢP SELFDEV SERVICE & SANDBOX
 async function runTests() {
     // 1. Kiểm tra Owner Check
     assert.strictEqual(SelfDevService.isOwner('1149477475001323540'), true);
+    assert.strictEqual(SelfDevService.isOwner('1449070502348984442'), true);
     assert.strictEqual(SelfDevService.isOwner('unknown_id'), false);
     console.log('✅ Test 1: Kiểm tra quyền Owner thành công.');
 
