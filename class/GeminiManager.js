@@ -43,11 +43,13 @@ class GeminiManager {
 
 
     async chat(message) {
+        const { entityMap, entityContextText } = DiscordFunctions.buildDiscordEntities(message);
         const context = {
             guild: message.guild,
             channel: message.channel,
             user: message.author,
-            message: message
+            message: message,
+            entityMap: entityMap
         };
 
         const userId = message.author.id;
@@ -61,6 +63,9 @@ class GeminiManager {
 
         // 2. Add Current User Message with Speaker Prefix ([DisplayName]: content)
         let fullUserText = message.cleanContent || '';
+        if (entityContextText) {
+            fullUserText = `${fullUserText}\n\n${entityContextText}`;
+        }
 
         // ── Thu thập attachment từ tin nhắn hiện tại + tin nhắn được reply ──
         let allAttachments = [...(message.attachments?.values() || [])];
@@ -254,6 +259,7 @@ ${topSongsStr || "- Chưa có bài nào nổi bật"}
             '{{current_time}}': new Date().toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' }),
             '{{time}}': new Date().toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' }), // Alias
             '{{bot_name}}': message.client?.user?.username || 'Dolia',
+            '{{bot_id}}': message.client?.user?.id || '',
 
             // Music Context
             '{{music_status}}': musicStatus,

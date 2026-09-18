@@ -40,20 +40,20 @@ export const devTools = [
     },
     {
         name: "get_avatar",
-        description: "Lấy URL ảnh đại diện (avatar) thật của người gọi hoặc thành viên được chỉ định trong máy chủ. Không yêu cầu quyền chủ nhân.",
+        description: "Lấy URL ảnh đại diện (avatar) thật của người gọi hoặc thành viên được chỉ định. Không yêu cầu quyền chủ nhân.",
         parameters: {
             type: Type.OBJECT,
             properties: {
-                user_id: {
+                target: {
                     type: Type.STRING,
-                    description: "ID của thành viên cần lấy avatar; bỏ trống để lấy avatar của chính người đang nhắn tin."
+                    description: "Entity handle từ [DISCORD_ENTITIES] ('author', 'bot', 'u1', 'u2'...). Mặc định bỏ trống là 'author'."
                 }
             }
         }
     },
     {
         name: "moderate_discord",
-        description: "Chỉ chủ nhân bot: xóa tin nhắn trong kênh hiện tại, kick, ban, timeout (tạm khóa) hoặc untimeout (gỡ tạm khóa) thành viên. BẮT BUỘC chỉ gọi khi chủ nhân yêu cầu rõ ràng. Kick/ban/timeout cần @mention hoặc ID cụ thể trong tin nhắn hiện tại.",
+        description: "Chỉ chủ nhân bot: xóa tin nhắn trong kênh hiện tại, kick, ban, timeout (tạm khóa) hoặc untimeout (gỡ tạm khóa) thành viên. BẮT BUỘC chỉ gọi khi chủ nhân yêu cầu rõ ràng. Kick/ban/timeout cần target là thành viên được mention (u1, u2...).",
         parameters: {
             type: Type.OBJECT,
             properties: {
@@ -62,17 +62,13 @@ export const devTools = [
                     description: "Hành động quản trị: delete_messages (xóa tin), kick (đuổi khỏi server), ban (cấm khỏi server), timeout (tạm khóa chat/voice), untimeout (gỡ tạm khóa).",
                     enum: ["delete_messages", "kick", "ban", "timeout", "untimeout"]
                 },
-                user_id: {
+                target: {
                     type: Type.STRING,
-                    description: "ID người bị kick, ban, timeout hoặc untimeout. Không được dùng tên tự đoán, bắt buộc có ID số."
+                    description: "Entity handle của đối tượng từ [DISCORD_ENTITIES]: người bị xử lý ('u1', 'u2'...) hoặc tin nhắn cần xóa ('current_message', 'replied_message')."
                 },
                 count: {
                     type: Type.INTEGER,
-                    description: "Số lượng tin nhắn gần nhất trong kênh cần xóa (từ 1 đến 100). Dùng cho action delete_messages."
-                },
-                message_id: {
-                    type: Type.STRING,
-                    description: "ID một tin nhắn cụ thể trong kênh cần xóa (dùng cho delete_messages thay vì count)."
+                    description: "Số lượng tin nhắn gần nhất trong kênh cần xóa (từ 1 đến 100). Dùng cho action delete_messages theo số lượng."
                 },
                 duration_minutes: {
                     type: Type.INTEGER,
@@ -97,21 +93,21 @@ export const devTools = [
                     description: "Hành động: set_nickname (đổi hoặc xóa biệt danh), add_role (thêm role), remove_role (gỡ role), move_voice (chuyển kênh thoại), disconnect_voice (ngắt kết nối thoại).",
                     enum: ["set_nickname", "add_role", "remove_role", "move_voice", "disconnect_voice"]
                 },
-                user_id: {
+                target: {
                     type: Type.STRING,
-                    description: "ID của thành viên cần thao tác."
+                    description: "Entity handle của thành viên từ [DISCORD_ENTITIES] (ví dụ: 'bot' để đổi tên bot Dolia, 'author' cho người gọi, 'u1', 'u2' cho người được @ nhắc tên). Mặc định là 'bot'."
                 },
                 nickname: {
                     type: Type.STRING,
                     description: "Biệt danh mới muốn đặt. Bỏ trống hoặc để rỗng nếu muốn xóa biệt danh hiện tại về tên gốc."
                 },
-                role_id: {
+                role: {
                     type: Type.STRING,
-                    description: "ID vai trò (role) cần thêm hoặc gỡ."
+                    description: "Entity handle của vai trò từ [DISCORD_ENTITIES] (ví dụ: 'r1', 'r2'...). Dùng cho add_role, remove_role."
                 },
-                target_channel_id: {
+                target_channel: {
                     type: Type.STRING,
-                    description: "ID kênh thoại đích cần chuyển thành viên tới (dùng cho action move_voice)."
+                    description: "Entity handle của kênh thoại đích từ [DISCORD_ENTITIES] (ví dụ: 'c1', 'current_channel'). Dùng cho action move_voice."
                 },
                 reason: {
                     type: Type.STRING,
@@ -132,9 +128,9 @@ export const devTools = [
                     description: "Hành động: react (thả emoji), unreact (gỡ emoji của bot), pin (ghim tin), unpin (bỏ ghim), create_thread (tạo thread từ tin nhắn).",
                     enum: ["react", "unreact", "pin", "unpin", "create_thread"]
                 },
-                message_id: {
+                target: {
                     type: Type.STRING,
-                    description: "ID của tin nhắn cần thao tác. Nếu bỏ trống sẽ áp dụng lên tin nhắn hiện tại."
+                    description: "Entity handle của tin nhắn từ [DISCORD_ENTITIES]: 'current_message' (tin nhắn hiện tại) hoặc 'replied_message' (tin nhắn được reply). Mặc định là 'current_message'."
                 },
                 emoji: {
                     type: Type.STRING,
@@ -159,9 +155,9 @@ export const devTools = [
                     description: "Hành động: rename (đổi tên), set_topic (cập nhật chủ đề), slowmode (chế độ chậm), lock (khóa gửi tin), unlock (mở khóa), create_channel (tạo kênh mới), delete_channel (xóa kênh).",
                     enum: ["rename", "set_topic", "slowmode", "lock", "unlock", "create_channel", "delete_channel"]
                 },
-                channel_id: {
+                target: {
                     type: Type.STRING,
-                    description: "ID kênh cần thao tác. Nếu bỏ trống sẽ áp dụng lên kênh chat hiện tại."
+                    description: "Entity handle của kênh từ [DISCORD_ENTITIES]: 'current_channel' (kênh chat hiện tại) hoặc 'c1', 'c2' (kênh được nhắc tới). Mặc định là 'current_channel'."
                 },
                 name: {
                     type: Type.STRING,

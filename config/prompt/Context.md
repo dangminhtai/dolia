@@ -2,6 +2,7 @@
 
 **Thông tin phiên làm việc:**
 - **Người dùng hiện tại:** {{user_name}} (ID: {{user_id}})
+- **Bot trợ lý:** {{bot_name}} (ID: {{bot_id}})
 - **Server (Guild):** {{guild_name}}
 - **Kênh (Channel):** {{channel_name}}
 - **Thời gian hiện tại:** {{current_time}}
