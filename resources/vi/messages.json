@@ -112,7 +112,7 @@
     "text_dolia_dang_chuan_bi_mau_ve_va": "Mình đang chuẩn bị tài nguyên cần thiết...",
     "text_dolia_dang_hoan_thien_va_ket_xuat": "Mình đang hoàn thiện và kết xuất kết quả...",
     "text_da_hoan_thanh_xuat_sac_dang_dong": "Mình làm xong rồi, đang chuẩn bị gửi cho bạn.",
-    "text_tinh_nang_moi_duoc_lap_trinh_boi": "Tính năng mới được lập trình bởi Dolia",
+    "text_tinh_nang_moi_duoc_lap_trinh_boi": "Tính năng mới được lập trình bởi Gemini Coding Agent",
     "text_chua_co_tinh_nang_nao_duoc_tao": "*Chưa có tính năng nào được tạo*",
     "text_dolia_dang_chuan_bi_ma_nguon_trong": "Mình đang chuẩn bị tính năng cho bạn...",
     "text_dolia_khong_the_tao_script_phu_hop": "Mình chưa thực hiện được yêu cầu này. Bạn mô tả rõ hơn giúp mình nha.",
@@ -166,14 +166,6 @@
   "geminimanager": {
     "text_dolia_da_ghi_nhan_va_xu_ly": "Mình đã xử lý yêu cầu rồi nha.",
     "text_tada_dolia_da_hoan_thanh_xong_tac": "Mình làm xong rồi nha."
-  },
-  "discordfunctions": {
-    "text_forbidden": "Tính năng này bạn chưa có quyền sử dụng đâu.",
-    "text_guild_required": "Bạn cần dùng yêu cầu này trong máy chủ.",
-    "text_no_permission": "Mình chưa có quyền Discord để thực hiện việc này.",
-    "text_invalid_action": "Hành động không hợp lệ.",
-    "text_user_mention_required": "Bạn hãy nhắc lại đúng người cần xử lý bằng @ hoặc ID trong yêu cầu này.",
-    "text_protected_user": "Mình không thể thực hiện thao tác đó với tài khoản này."
   },
   "music": {
     "live": "LIVE",

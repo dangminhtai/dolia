@@ -183,17 +183,15 @@
     "error_model_that_bai_khi_tim_lyrics_dang": "[GeminiLyrics] Model {{modelId}} thất bại khi tìm lyrics: {{message}}. Đang thử model tiếp theo."
   },
   "geminimanager": {
-    "info_gemini": " {{msg}}",
-    "warn_gemini": " {{msg}}",
-    "error_gemini": " {{msg}}",
-    "error_khong_the_doc_file_dinh_kem": " Không thể đọc file đính kèm:",
-    "error_error_fetching_musiclog": " Lỗi đọc MusicLog:",
-    "error_error_executing": " Lỗi khi thực thi {{name}}:",
-    "info_function_calls_detected": " Phát hiện function call: {{callNames}}",
-    "info_geminimanager_toi_uu_2_request_tra_ve": " Đã nhận kết quả từ agent; bỏ qua lượt tổng hợp cuối để giảm độ trễ.",
-    "warn_model_gap_su_co_dang_thu_model": " Model {{modelId}} gặp sự cố: {{message}}. Đang thử model tiếp theo.",
-    "info_vision_image_loaded": " 👁️ Đã tải ảnh {{name}} ({{size}} KB) cho Gemini Vision.",
-    "warn_vision_image_failed": " ⚠️ Không thể tải ảnh {{name}}: {{error}}"
+    "info_gemini": "[Gemini] {{msg}}",
+    "warn_gemini": "[Gemini] {{msg}}",
+    "error_gemini": "[Gemini] {{msg}}",
+    "error_khong_the_doc_file_dinh_kem": "[Gemini] Không thể đọc file đính kèm:",
+    "error_error_fetching_musiclog": "[Gemini] Lỗi đọc MusicLog:",
+    "error_error_executing": "[Gemini] Lỗi khi thực thi {{name}}:",
+    "info_function_calls_detected": "[Gemini] Phát hiện function call: {{callNames}}",
+    "info_geminimanager_toi_uu_2_request_tra_ve": "[Gemini] Đã nhận kết quả từ agent; bỏ qua lượt tổng hợp cuối để giảm độ trễ.",
+    "warn_model_gap_su_co_dang_thu_model": "[Gemini] Model {{modelId}} gặp sự cố: {{message}}. Đang thử model tiếp theo."
   },
   "chathelper": {
     "error_error_getting_chat_session": "[ChatStore] Lỗi đọc phiên chat:",
@@ -273,11 +271,6 @@
     "log_guild_da_deploy_lenh": "[DeployOnly] Guild ({{guildId}}): đã deploy {{length}} lệnh.",
     "error_loi_deploy_guild": "[DeployOnly] Lỗi deploy guild:",
     "error_error": ""
-  },
-  "discordfunctions": {
-    "info_tool_invoked": " [DiscordTool] {{tool}} | action={{action}} | user={{userId}}",
-    "error_tool_failed": " [DiscordTool] {{tool}} lỗi: {{error}}",
-    "warn_forbidden": " [DiscordTool] Từ chối {{tool}} — người dùng không có quyền"
   },
   "logger": {
     "timestamp": "[{{time}}]",

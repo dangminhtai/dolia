@@ -1526,20 +1526,6 @@
       "message"
     ]
   },
-  "logs.geminimanager.info_vision_image_loaded": {
-    "source": "class/GeminiManager.js",
-    "parameters": [
-      "name",
-      "size"
-    ]
-  },
-  "logs.geminimanager.warn_vision_image_failed": {
-    "source": "class/GeminiManager.js",
-    "parameters": [
-      "name",
-      "error"
-    ]
-  },
   "logs.chathelper.error_error_getting_chat_session": {
     "source": "helpers/chatHelper.js",
     "parameters": []
@@ -2550,30 +2536,6 @@
     "source": "class/GeminiManager.js",
     "parameters": []
   },
-  "messages.discordfunctions.text_forbidden": {
-    "source": "utils/discordFunctions.js",
-    "parameters": []
-  },
-  "messages.discordfunctions.text_guild_required": {
-    "source": "utils/discordFunctions.js",
-    "parameters": []
-  },
-  "messages.discordfunctions.text_no_permission": {
-    "source": "utils/discordFunctions.js",
-    "parameters": []
-  },
-  "messages.discordfunctions.text_invalid_action": {
-    "source": "utils/discordFunctions.js",
-    "parameters": []
-  },
-  "messages.discordfunctions.text_user_mention_required": {
-    "source": "utils/discordFunctions.js",
-    "parameters": []
-  },
-  "messages.discordfunctions.text_protected_user": {
-    "source": "utils/discordFunctions.js",
-    "parameters": []
-  },
   "messages.music.live": {
     "source": "commands/slash/nowplaying.js",
     "parameters": []
@@ -3328,27 +3290,6 @@
     "source": "core/sandbox/package-installer.js",
     "parameters": [
       "cleanName"
-    ]
-  },
-  "logs.discordfunctions.info_tool_invoked": {
-    "source": "utils/discordFunctions.js",
-    "parameters": [
-      "action",
-      "tool",
-      "userId"
-    ]
-  },
-  "logs.discordfunctions.error_tool_failed": {
-    "source": "utils/discordFunctions.js",
-    "parameters": [
-      "error",
-      "tool"
-    ]
-  },
-  "logs.discordfunctions.warn_forbidden": {
-    "source": "utils/discordFunctions.js",
-    "parameters": [
-      "tool"
     ]
   }
 }

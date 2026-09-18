@@ -145,15 +145,11 @@ async function showBlockMenu(interaction, allModels, duration) {
 
     const options = availableModels.slice(0, 25).map(m => {
         const typeLabel = m.type === 'flash' ? tr('commands.block_agent.text_flash') : tr('commands.block_agent.text_lite');
-        const emoji = (m.type === 'flash'
-            ? tr('commands.block_agent.type_flash_icon')
-            : tr('commands.block_agent.type_lite_icon'))?.trim();
-
         return {
             label: m.modelId,
             description: tr('commands.block_agent.description_v', { typeLabel: typeLabel, version: m.version }),
             value: `blockagent_${m.modelId}_${duration}`,
-            ...(emoji ? { emoji } : {})
+            emoji: m.type === 'flash' ? tr('commands.block_agent.type_flash_icon') : tr('commands.block_agent.type_lite_icon')
         };
     });
 
@@ -194,13 +190,11 @@ async function showUnblockMenu(interaction, allModels) {
         const remaining = m.agentBlockedUntil - now;
         const hours = Math.floor(remaining / 3600000);
         const minutes = Math.floor((remaining % 3600000) / 60000);
-        const emoji = tr('commands.block_agent.emoji_emoji')?.trim();
-
         return {
             label: m.modelId,
             description: tr('commands.block_agent.description_con_hm', { hours: hours, minutes: minutes, value: m.agentBlockReason || 'N/A' }),
             value: `blockagent_unblock_${m.modelId}`,
-            ...(emoji ? { emoji } : {})
+            emoji: tr('commands.block_agent.emoji_emoji')
         };
     });
 
