@@ -34,7 +34,8 @@ class GeminiManager {
             'show_music_panel': MusicFunctions.show_music_panel,
             'agent_code': DevFunctions.agent_code,
             'web_search': DevFunctions.web_search,
-            'discord_query': DiscordFunctions.discord_query
+            'discord_query': DiscordFunctions.discord_query,
+            'discord_action': DiscordFunctions.discord_action
         };
     }
 
@@ -61,18 +62,9 @@ class GeminiManager {
 
         // Discord entity references are request-scoped handles for direct tools.
         // The model never needs raw Snowflake IDs and the executor never fuzzy-matches names.
-        const discordEntityLines = [
-            `- author = @${displayName}`,
-            `- bot = @${message.guild?.members?.me?.displayName || message.client?.user?.username || 'Dolia'}`,
-            `- current_channel = #${message.channel?.name || 'unknown'}`
-        ];
-        if (message.mentions?.members?.size) {
-            let entityIndex = 1;
-            for (const member of message.mentions.members.values()) {
-                discordEntityLines.push(`- u${entityIndex++} = @${member.displayName || member.user?.username || 'Unknown'}`);
-            }
-        }
-        const discordEntityContext = discordEntityLines.join('\n');
+        const discordRuntime = await DiscordFunctions.buildDiscordRuntimeContext(message);
+        const discordEntityContext = discordRuntime.text;
+        context.discordEntities = discordRuntime.entities;
 
         // Tự động đọc nội dung file đính kèm nếu người dùng tải lên code/text file (.js, .bak, .txt, .json, .py, v.v.)
         if (message.attachments && message.attachments.size > 0) {
