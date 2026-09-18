@@ -1526,6 +1526,20 @@
       "message"
     ]
   },
+  "logs.geminimanager.info_vision_image_loaded": {
+    "source": "class/GeminiManager.js",
+    "parameters": [
+      "name",
+      "size"
+    ]
+  },
+  "logs.geminimanager.warn_vision_image_failed": {
+    "source": "class/GeminiManager.js",
+    "parameters": [
+      "name",
+      "error"
+    ]
+  },
   "logs.chathelper.error_error_getting_chat_session": {
     "source": "helpers/chatHelper.js",
     "parameters": []
