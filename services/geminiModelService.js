@@ -140,6 +140,7 @@ class GeminiModelService {
      */
     async reportModelFailure(modelId, reason = 'error', cooldownMs = 60 * 60 * 1000) {
         if (!modelId) return;
+        if (this.isManualChatBlocked(modelId)) return;
         const until = new Date(Date.now() + cooldownMs);
 
         // 1. Cập nhật in-memory cache ngay lập tức
@@ -163,6 +164,7 @@ class GeminiModelService {
      */
     reportModelSuccess(modelId) {
         if (!modelId) return;
+        if (this.isManualChatBlocked(modelId)) return;
         if (this.blockCache.has(modelId)) {
             this.blockCache.delete(modelId);
             // Non-blocking DB clear
@@ -191,6 +193,40 @@ class GeminiModelService {
             return false;
         }
         return true;
+    }
+
+    isManualChatBlocked(modelId) {
+        const cached = this.blockCache.get(modelId);
+        return Boolean(cached && cached.until > new Date() && String(cached.reason || '').startsWith('MANUAL_CHAT_BLOCK'));
+    }
+
+    /** Block thủ công chỉ cho chat thường; Agent dùng agentBlockedUntil riêng. */
+    async blockChatModel(modelId, reason = 'MANUAL_CHAT_BLOCK', cooldownMs = 24 * 60 * 60 * 1000) {
+        if (!modelId) return;
+        const until = new Date(Date.now() + cooldownMs);
+        await GeminiModel.updateOne(
+            { modelId },
+            { $set: { blockedUntil: until, blockReason: reason } }
+        ).exec();
+        this.blockCache.set(modelId, { until, reason });
+        this.cachedModels = {};
+        Logger.warn(tr('logs.geminimodelservice.warn_chat_model_manually_blocked', {
+            modelId,
+            value: Math.round(cooldownMs / 1000),
+            reason
+        }));
+    }
+
+    /** Gỡ block chat, không đụng agentBlockedUntil/agentBlockReason. */
+    async unblockChatModel(modelId) {
+        if (!modelId) return;
+        await GeminiModel.updateOne(
+            { modelId },
+            { $set: { blockedUntil: null, blockReason: null } }
+        ).exec();
+        this.blockCache.delete(modelId);
+        this.cachedModels = {};
+        Logger.info(tr('logs.geminimodelservice.info_chat_model_manually_unblocked', { modelId }));
     }
 
     /**
@@ -252,10 +288,14 @@ class GeminiModelService {
 
             // Fallback: model đang bị block (chỉ dùng nếu tất cả model đều bị block)
             const fallbackBlockField = scope === 'agent' ? 'agentBlockedUntil' : 'blockedUntil';
+            const fallbackReasonCondition = scope === 'chat'
+                ? { blockReason: { $not: /^MANUAL_CHAT_BLOCK/ } }
+                : {};
             const blockedPrimary = await GeminiModel.find({
                 isActive: true,
                 type: primaryType,
-                [fallbackBlockField]: { $gt: now }
+                [fallbackBlockField]: { $gt: now },
+                ...fallbackReasonCondition
             })
                 .sort({ [fallbackBlockField]: 1 }) // Sắp xếp theo thời gian hết block sớm nhất
                 .select('modelId')
@@ -264,7 +304,8 @@ class GeminiModelService {
             const blockedSecondary = await GeminiModel.find({
                 isActive: true,
                 type: secondaryType,
-                [fallbackBlockField]: { $gt: now }
+                [fallbackBlockField]: { $gt: now },
+                ...fallbackReasonCondition
             })
                 .sort({ [fallbackBlockField]: 1 })
                 .select('modelId')
@@ -284,9 +325,12 @@ class GeminiModelService {
             Logger.error(tr('logs.geminimodelservice.error_geminimodelservice_loi_truy_van_candidate_models', { message: dbError.message }));
         }
 
-        return preferType === 'flash'
+        const emergencyFallback = preferType === 'flash'
             ? ['gemini-2.5-flash', 'gemini-3.6-flash', 'gemini-3.7-flash', 'gemini-3.8-flash', 'gemini-2.5-flash-lite']
             : ['gemini-2.5-flash-lite', 'gemini-3.5-flash-lite', 'gemini-2.5-flash', 'gemini-3.6-flash'];
+        return scope === 'chat'
+            ? emergencyFallback.filter(modelId => !this.isManualChatBlocked(modelId))
+            : emergencyFallback;
     }
 
     /**

@@ -7,6 +7,8 @@
     "error_error_switching_provider": "[MusicProvider] Lỗi chuyển nguồn nhạc:"
   },
   "interactioncreate": {
+    "error_memory_panel": "[Interaction] Lỗi khi xử lý bảng bộ nhớ:",
+    "error_block_model_menu": "[Interaction] Lỗi khi xử lý bảng block model chat:",
     "error_error_resolving_playlist_track": "[Interaction] Lỗi resolve bài trong playlist:",
     "error_music_panel_error": "[Interaction] Music Panel Lỗi:",
     "error_lyrics_modal_error": "[Interaction] Lyrics Modal Lỗi:",
@@ -94,6 +96,8 @@
     "info_deploy_da_deploy_thanh_cong_slash_command": "[Deploy] Đã deploy {{length}} slash command lên Discord."
   },
   "geminimodelservice": {
+    "warn_chat_model_manually_blocked": "[GeminiModel] Đã block {{modelId}} khỏi chat trong {{value}} giây: {{reason}}",
+    "info_chat_model_manually_unblocked": "[GeminiModel] Đã gỡ block chat cho {{modelId}}.",
     "warn_geminimodelservice_failed_to_auto_clear_expired_block": "[GeminiModelService] Failed to auto-clear expired block: {{message}}",
     "warn_geminimodelservice_failed_to_auto_clear_expired_agent": "[GeminiModelService] Failed to auto-clear expired agent block: {{message}}",
     "warn_geminimodelservice_failed_to_sync_block_cache": "[GeminiModelService] Failed to sync block cache: {{message}}",
@@ -190,7 +194,11 @@
     "info_geminimanager_toi_uu_2_request_tra_ve": "[Gemini] Đã nhận kết quả từ agent; bỏ qua lượt tổng hợp cuối để giảm độ trễ.",
     "warn_model_gap_su_co_dang_thu_model": "[Gemini] Model {{modelId}} gặp sự cố: {{message}}. Đang thử model tiếp theo.",
     "info_vision_ready": "[Gemini] Đã chuẩn bị {{count}} ảnh cho Vision ({{sizeKb}} KB).",
-    "warn_attachment_processing": "[Gemini] Xử lý attachment: {{message}}"
+    "warn_attachment_processing": "[Gemini] Xử lý attachment: {{message}}",
+    "warn_memory_context_failed": "[Gemini] Không thể nạp ngữ cảnh bộ nhớ: {{message}}"
+  },
+  "memoryservice": {
+    "error_revision_failed": "[Memory] Không thể lưu lịch sử cho {{memoryId}}: {{message}}"
   },
   "chathelper": {
     "error_error_getting_chat_session": "[ChatStore] Lỗi đọc phiên chat:",

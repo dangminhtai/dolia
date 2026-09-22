@@ -10,6 +10,7 @@
         "deploy": "node deployCommands.js",
         "check:resources": "node scripts/check-resources.js",
         "test:resources": "node --test test/test_resources.mjs",
+        "test:memory": "node --test test/test_memory.mjs",
         "start:termux": "bash scripts/termux-run.sh",
         "setup:termux": "bash scripts/termux-setup.sh",
         "check:termux": "node scripts/check-termux.js"

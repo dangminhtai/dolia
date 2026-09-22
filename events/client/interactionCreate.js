@@ -1,6 +1,7 @@
 import { t as tr } from '../../services/i18nService.js';
 import { Events, MessageFlags } from "discord.js";
 import { handleBlockAgentMenu } from '../../commands/slash/block-agent.js';
+import { handleBlockModelMenu } from '../../commands/slash/block-model.js';
 
 // Music Panel Imports
 import PanelState from '../../models/PanelState.js';
@@ -17,9 +18,22 @@ import GeminiLyrics from '../../class/GeminiLyrics.js';
 import { sendSafeMessage } from '../../utils/messageHelper.js';
 import { t } from '../../services/i18nService.js';
 import { getUserMusicSource, isFailed, isEmpty, isPlaylist, isSuccess } from '../../utils/lavalinkHelper.js';
+import { handleMemoryInteraction } from '../../services/memoryPanelService.js';
 
 export default (client) => {
     client.on(Events.InteractionCreate, async interaction => {
+        if (interaction.customId?.startsWith('memory:')) {
+            try {
+                await handleMemoryInteraction(interaction);
+            } catch (error) {
+                console.error(tr('logs.interactioncreate.error_memory_panel'), error);
+                if (!interaction.replied && !interaction.deferred) {
+                    await interaction.reply({ content: t('memory.errors.generic'), flags: MessageFlags.Ephemeral }).catch(() => {});
+                }
+            }
+            return;
+        }
+
         // --- 0.1 XỬ LÝ MUSIC PANEL (BẤT TỬ) ---
         if (interaction.customId?.startsWith('music_')) {
             try {
@@ -417,6 +431,20 @@ export default (client) => {
                 console.error(tr('logs.interactioncreate.error_block_agent_menu_error'), err);
                 if (!interaction.replied && !interaction.deferred) {
                     await interaction.reply({ content: tr('messages.interactioncreate.content_loi_khi_xu_ly_block_unblock_model'), flags: MessageFlags.Ephemeral }).catch(() => {});
+                }
+            }
+            return;
+        }
+
+        if (interaction.isStringSelectMenu() && interaction.customId?.startsWith('blockchat_')) {
+            try {
+                await handleBlockModelMenu(interaction);
+            } catch (err) {
+                console.error(tr('logs.interactioncreate.error_block_model_menu'), err);
+                if (!interaction.replied && !interaction.deferred) {
+                    await interaction.reply({ content: tr('commands.block_model.process_error'), flags: MessageFlags.Ephemeral }).catch(() => {});
+                } else if (interaction.deferred) {
+                    await interaction.editReply({ content: tr('commands.block_model.process_error'), embeds: [], components: [] }).catch(() => {});
                 }
             }
             return;

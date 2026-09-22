@@ -9,6 +9,7 @@ const UserSchema = new mongoose.Schema({
         default: 'ytsearch',
         enum: ['ytsearch', 'ytmsearch', 'scsearch', 'spsearch']
     },
+    memoryEnabled: { type: Boolean, default: true },
     // ytsearch = YouTube, ytmsearch = YouTube Music, scsearch = SoundCloud, spsearch = Spotify
 }, { timestamps: true });
 

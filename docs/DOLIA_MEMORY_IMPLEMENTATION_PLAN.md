@@ -1,9 +1,18 @@
 # DOLIA MEMORY — Kế hoạch triển khai bộ nhớ dài hạn và bảng quản lý Discord
 
-> **Trạng thái:** Kế hoạch thiết kế, chưa thay đổi source code.  
+> **Trạng thái:** Đã triển khai MVP trong source ngày 22/09/2026; cần kiểm thử smoke trên Discord và MongoDB thật trước khi phát hành.
 > **Source đối chiếu:** `dolia-stable-termux(3).zip` do người dùng gửi.  
 > **Mục tiêu:** Bot riêng cho 2–5 người; ưu tiên phản hồi nhanh, tính nhất quán, dữ liệu đáng tin và người dùng kiểm soát được điều Dolia nhớ. Chạy trên Windows và Android/Termux, sử dụng MongoDB hiện có.  
 > **Không làm:** Xây agent riêng để ghi một dòng memory; lưu toàn bộ transcript/ảnh dạng base64; tự ý biến câu nói của một người thành luật áp dụng cho toàn server.
+
+## 0. Kết quả triển khai
+
+- MongoDB: `Memory` tách khỏi chat history, có unique index chống trùng và `MemoryRevision` lưu lịch sử thay đổi.
+- Gemini: có direct tool `memory_query`, `memory_action`; memory được lọc quyền và đưa vào prompt dưới dạng dữ liệu không đáng tin cậy.
+- Quyền riêng tư: memory cá nhân chỉ chủ sở hữu đọc; memory kênh/server bị giới hạn đúng phạm vi; quyền server được kiểm tra ở runtime.
+- Người dùng: hỗ trợ thêm, sửa, quên, khôi phục, bật/tắt ghi nhớ; `/memory` có phân trang, modal thêm/sửa/xóa, lịch sử và xuất JSON.
+- An toàn: không nhận ID chủ sở hữu từ model, chặn secret/chỉ dẫn vượt quyền, không xác nhận thành công trước khi MongoDB ghi xong.
+- Kiểm tra: `npm run test:memory`, `npm run check:resources`, `npm run test:resources`.
 
 ## 1. Hiện trạng trong bản ZIP
 

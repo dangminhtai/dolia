@@ -4,9 +4,11 @@ import Logger from './Logger.js';
 import { musicTools } from '../schema/musicTools.js';
 import { devTools } from '../schema/devTools.js';
 import { discordTools } from '../schema/discordTools.js';
+import { memoryTools } from '../schema/memoryTools.js';
 import * as MusicFunctions from '../utils/musicFunctions.js';
 import * as DevFunctions from '../utils/devFunctions.js';
 import * as DiscordFunctions from '../utils/discordFunctions.js';
+import { actOnMemory, buildMemoryContext, queryVisibleMemories } from '../services/memoryService.js';
 import * as ChatHelper from '../helpers/chatHelper.js';
 import { loadSystemPrompt } from '../helpers/promptHelper.js';
 import { poru } from '../utils/LavalinkManager.js';
@@ -25,7 +27,7 @@ class GeminiManager {
             log: (msg) => Logger.info(tr('logs.geminimanager.info_gemini', { msg: msg }))
         };
         // Tools definition
-        this.tools = [{ functionDeclarations: [...musicTools, ...discordTools, ...devTools] }];
+        this.tools = [{ functionDeclarations: [...musicTools, ...discordTools, ...memoryTools, ...devTools] }];
 
         // Function mapping
         this.functions = {
@@ -37,7 +39,9 @@ class GeminiManager {
             'agent_code': DevFunctions.agent_code,
             'web_search': DevFunctions.web_search,
             'discord_query': DiscordFunctions.discord_query,
-            'discord_action': DiscordFunctions.discord_action
+            'discord_action': DiscordFunctions.discord_action,
+            'memory_query': queryVisibleMemories,
+            'memory_action': actOnMemory
         };
     }
 
@@ -71,6 +75,19 @@ class GeminiManager {
         // Attachments: text files become text context; images are sent as Gemini multimodal inlineData.
         // Image bytes are deliberately NOT persisted to MongoDB history.
         const attachmentContext = await prepareDiscordAttachments(message);
+
+        let memoryContext = tr('memory.context.empty');
+        try {
+            memoryContext = await buildMemoryContext({
+                message,
+                user: message.author,
+                guild: message.guild,
+                channel: message.channel,
+                query: fullUserText
+            });
+        } catch (error) {
+            this.logger.warn(tr('logs.geminimanager.warn_memory_context_failed', { message: error.message }));
+        }
 
         if (attachmentContext.textBlocks.length > 0) {
             fullUserText = `${fullUserText}\n\n${attachmentContext.textBlocks.join('\n\n')}`.trim();
@@ -242,7 +259,8 @@ ${topSongsStr || "- Chưa có bài nào nổi bật"}
 
             // Available Commands & Sandbox Features
             '{{available_features}}': availableFeaturesSummary,
-            '{{discord_entities}}': discordEntityContext
+            '{{discord_entities}}': discordEntityContext,
+            '{{memory_context}}': memoryContext
         };
 
         const systemInstruction = loadSystemPrompt(replacements);
