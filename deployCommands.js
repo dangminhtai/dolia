@@ -33,7 +33,7 @@ async function scanCommandDirectory(dir, client, isSandbox = false) {
                     cmd.isSandbox = isSandbox;
                     client?.commands?.set(cmd.data.name, cmd);
 
-                    const cmdData = cmd.data.toJSON();
+                    const cmdData = typeof cmd.data?.toJSON === 'function' ? cmd.data.toJSON() : cmd.data;
                     commandsToDeploy.push(cmdData);
                 }
             } catch (err) {
