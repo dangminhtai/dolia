@@ -18,6 +18,7 @@ import {
 } from '../core/sandbox/index.js';
 import { getAgentSession, updateAgentSession } from '../helpers/chatHelper.js';
 import { isOwner } from './authorizationService.js';
+import { classifyGeminiError, shouldStopModelFallback } from './geminiErrorClassifier.js';
 
 export class SelfDevService {
     /**
@@ -390,13 +391,16 @@ export class SelfDevService {
      */
     static async callGeminiCodingModel(userPrompt, suggestedName, preferredModelId = null, errorFeedback = null, previousCode = null) {
         const candidates = await geminiModelService.getCandidateModels('flash-lite', 'agent');
+        const requestBudget = ApiKeyManager.createBudget(3);
         if (preferredModelId && !candidates.includes(preferredModelId)) {
             candidates.unshift(preferredModelId);
         }
 
         let lastError = null;
 
-        for (const modelId of candidates) {
+        for (let modelIndex = 0; modelIndex < candidates.length && modelIndex < 2 && requestBudget.used < requestBudget.max; modelIndex++) {
+            const modelId = candidates[modelIndex];
+            if (modelIndex > 0) ApiKeyManager.recordModelSwitch(requestBudget);
             if (geminiModelService.isAgentBlocked(modelId)) continue;
             try {
                 Logger.info(tr('logs.selfdevservice.info_selfdev_dang_goi_gemini_coding_model_cho', { modelId: modelId, suggestedName: suggestedName }));
@@ -411,32 +415,38 @@ export class SelfDevService {
                     promptContent += `\n\n[LƯU Ý SỬA LỖI TỰ ĐỘNG]: Lần sinh mã trước gặp lỗi kiểm thử sau:\n${errorFeedback}\n\nMã nguồn bị lỗi trước đó:\n\`\`\`javascript\n${previousCode}\n\`\`\`\nHãy phân tích nguyên nhân lỗi và sinh lại mã nguồn hoàn chỉnh, sửa triệt để tất cả các lỗi trên!`;
                 }
 
-                const outputText = await ApiKeyManager.execute(modelId, async (apiKey) => {
+                const outputText = await ApiKeyManager.execute(modelId, async (apiKey, requestContext) => {
                     const ai = ApiKeyManager.getClient(apiKey);
                     const response = await ai.models.generateContent({
                         model: modelId,
                         contents: promptContent,
-                        config: {
+                        config: ApiKeyManager.requestConfig({
                             systemInstruction: systemInstruction,
                             temperature: 0.2,
                             responseMimeType: "application/json"
-                        }
+                        }, requestContext)
                     });
                     return response.text || '';
-                }, { timeoutMs: 60000 });
+                }, { timeoutMs: 60000, budget: requestBudget });
 
                 Logger.info(tr('logs.selfdevservice.info_selfdev_gemini_coding_model_da_phan_hoi', { modelId: modelId, length: outputText.length }));
                 geminiModelService.reportModelSuccess(modelId);
 
                 const parsedData = SelfDevService.safeJsonParse(outputText);
+                ApiKeyManager.completeBudget(requestBudget, true);
                 return { data: this.normalizeGeneratedData(parsedData, suggestedName), usedModel: modelId };
             } catch (modelErr) {
                 lastError = modelErr;
-                geminiModelService.reportModelFailure(modelId, modelErr.message);
+                const classification = classifyGeminiError(modelErr);
+                if (shouldStopModelFallback(classification)) {
+                    ApiKeyManager.completeBudget(requestBudget, false);
+                    throw modelErr;
+                }
                 Logger.warn(tr('logs.selfdevservice.warn_selfdev_model_gap_su_co_tu_dong', { modelId: modelId, message: modelErr.message }));
             }
         }
 
+        ApiKeyManager.completeBudget(requestBudget, false);
         throw new Error(`Tất cả các model Gemini đều không thể xử lý yêu cầu. Lỗi cuối: ${lastError?.message}`);
     }
 
@@ -697,6 +707,7 @@ export class SelfDevService {
     static async runDynamicScript({ prompt, context, action = 'create_script', onProgress = null }) {
         const { client, guild, channel, user, message } = context;
         const candidates = await geminiModelService.getCandidateModels('flash', 'agent');
+        const requestBudget = ApiKeyManager.createBudget(3);
 
         onProgress?.({ stage: 'thinking', text: tr('messages.selfdevservice.text_dolia_dang_phan_tich_yeu_cau_va') });
 
@@ -765,24 +776,26 @@ export class SelfDevService {
 
         // Ưu tiên 2: Fallback chế độ sinh mã nội bộ (generateContent) nếu Antigravity Cloud chưa sinh được code
         if (!scriptCode) {
-            for (const modelId of candidates) {
+            for (let modelIndex = 0; modelIndex < candidates.length && modelIndex < 2 && requestBudget.used < requestBudget.max; modelIndex++) {
+                const modelId = candidates[modelIndex];
+                if (modelIndex > 0) ApiKeyManager.recordModelSwitch(requestBudget);
                 if (geminiModelService.isAgentBlocked(modelId)) continue;
                 try {
                     Logger.info(tr('logs.selfdevservice.info_selfdev_dang_goi_model_sinh_script_kiem', { modelId: modelId, prompt: prompt }));
                     onProgress?.({ stage: 'coding', text: tr('messages.selfdevservice.text_dolia_dang_ti_mi_chuan_bi_va') });
-                    const rawOutput = await ApiKeyManager.execute(modelId, async (apiKey) => {
+                    const rawOutput = await ApiKeyManager.execute(modelId, async (apiKey, requestContext) => {
                         const ai = ApiKeyManager.getClient(apiKey);
                         const response = await ai.models.generateContent({
                             model: modelId,
                             contents: [{ role: 'user', parts: [{ text: promptContent }] }],
-                            config: {
+                            config: ApiKeyManager.requestConfig({
                                 systemInstruction,
                                 responseMimeType: 'application/json',
                                 temperature: 0.1
-                            }
+                            }, requestContext)
                         });
                         return response.text;
-                    }, { timeoutMs: 40000 });
+                    }, { timeoutMs: 40000, budget: requestBudget });
 
                     try {
                         const parsed = JSON.parse(rawOutput);
@@ -855,10 +868,15 @@ export class SelfDevService {
                     }
 
                     geminiModelService.reportModelSuccess(modelId);
+                    ApiKeyManager.completeBudget(requestBudget, true);
                     break; // Sinh script thành công, thoát vòng lặp model
                 } catch (modelErr) {
                     lastError = modelErr;
-                    geminiModelService.reportModelFailure(modelId, modelErr.message, 5 * 60 * 1000);
+                    const classification = classifyGeminiError(modelErr);
+                    if (shouldStopModelFallback(classification)) {
+                        ApiKeyManager.completeBudget(requestBudget, false);
+                        throw modelErr;
+                    }
                     Logger.warn(tr('logs.selfdevservice.warn_selfdev_model_gap_su_co_khi_sinh', { modelId: modelId, message: modelErr.message }));
                     onProgress?.({ stage: 'coding', text: tr('messages.selfdevservice.text_dolia_dang_dieu_chinh_lai_mot_xiu') });
                 }
@@ -866,6 +884,7 @@ export class SelfDevService {
         }
 
         if (!scriptCode) {
+            ApiKeyManager.completeBudget(requestBudget, false);
             Logger.error(tr('logs.selfdevservice.error_selfdev_tat_ca_cac_model_deu_khong', { message: lastError?.message }));
             return {
                 error: lastError?.message || 'Không thể tạo script',

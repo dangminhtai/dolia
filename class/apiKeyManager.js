@@ -2,77 +2,83 @@ import { t as tr } from '../services/i18nService.js';
 import { GoogleGenAI } from '@google/genai';
 import APIKey from '../models/APIKeys.js';
 import APIStatus from '../models/APIStatus.js';
+import apiRequestScheduler from '../services/apiRequestScheduler.js';
+import { attachGeminiClassification, classifyGeminiError, CATEGORIES } from '../services/geminiErrorClassifier.js';
 
-class ApiKeyManager {
-    constructor() {
+export class ApiKeyManager {
+    constructor({ scheduler = apiRequestScheduler } = {}) {
         this.pool = [];
         this.isInitialized = false;
-        this.index = 0; // Round-Robin pointer
-        this.suspensionCache = new Map(); // `${key}_${modelId}` -> timestamp (ms)
-        this.clientPool = new Map(); // apiKey -> GoogleGenAI instance (connection reuse)
+        this.index = 0;
+        this.suspensionCache = new Map();
+        this.clientPool = new Map();
+        this.scheduler = scheduler;
     }
 
-    /**
-     * Nạp toàn bộ API key từ biến môi trường (.env) và Database
-     */
+    envMetadata(envName) {
+        const alias = envName === 'GEMINI_API_KEY' ? 'GEMINI' : envName.replace(/_KEY$/, '');
+        return {
+            name: alias,
+            projectId: process.env[`${alias}_PROJECT`]?.trim() || 'unverified',
+            projectNumber: process.env[`${alias}_PROJECT_NUMBER`]?.trim() || null,
+            keyType: process.env[`${alias}_TYPE`]?.trim() || 'api_key',
+            priority: Number(process.env[`${alias}_PRIORITY`]) || 0
+        };
+    }
+
     async loadKeys() {
         const poolMap = new Map();
-
-        // 1. Nạp từ process.env (hỗ trợ GEMINI_*_KEY và GEMINI_API_KEY)
-        Object.entries(process.env).forEach(([envName, val]) => {
-            if ((envName.startsWith('GEMINI_') && envName.endsWith('_KEY')) || envName === 'GEMINI_API_KEY') {
-                if (val && typeof val === 'string' && val.trim()) {
-                    const cleanKey = val.trim();
-                    poolMap.set(cleanKey, {
-                        key: cleanKey,
-                        name: envName,
-                        exhausted: false,
-                        lastUsed: 0
-                    });
-                }
-            }
-        });
-
-        // 2. Nạp thêm từ Database nếu có
+        for (const [envName, value] of Object.entries(process.env)) {
+            if (!((envName.startsWith('GEMINI_') && envName.endsWith('_KEY')) || envName === 'GEMINI_API_KEY')) continue;
+            const key = typeof value === 'string' ? value.trim() : '';
+            if (key) poolMap.set(key, { key, ...this.envMetadata(envName), exhausted: false, lastUsed: 0 });
+        }
         try {
-            const keys = await APIKey.find({ isActive: true });
-            if (keys && keys.length > 0) {
-                keys.forEach(k => {
-                    if (k.key && !poolMap.has(k.key)) {
-                        poolMap.set(k.key, {
-                            key: k.key,
-                            name: k.name || 'DB_KEY',
-                            exhausted: false,
-                            lastUsed: 0
-                        });
-                    }
+            const envKeys = [...poolMap.keys()];
+            const query = envKeys.length
+                ? { $or: [{ isActive: true }, { key: { $in: envKeys } }] }
+                : { isActive: true };
+            const keys = await APIKey.find(query).lean();
+            for (const row of keys || []) {
+                if (!row.key) continue;
+                // Trạng thái vô hiệu hóa đã persist phải thắng .env sau khi bot restart.
+                if (row.isActive === false) {
+                    poolMap.delete(row.key);
+                    this.clientPool.delete(row.key);
+                    continue;
+                }
+                const previous = poolMap.get(row.key) || {};
+                poolMap.set(row.key, {
+                    key: row.key,
+                    name: row.name || previous.name || 'DB_KEY',
+                    projectId: row.projectId || previous.projectId || 'unverified',
+                    projectNumber: row.projectNumber || previous.projectNumber || null,
+                    keyType: row.keyType || previous.keyType || 'api_key',
+                    priority: Number(row.priority ?? previous.priority) || 0,
+                    exhausted: false,
+                    lastUsed: previous.lastUsed || 0
                 });
             }
         } catch (error) {
             console.warn(tr('logs.apikeymanager.warn_could_not_query_api_keys_from_database'), error.message);
         }
-
-        // Giữ lại trạng thái exhausted nếu trước đó đã bị đánh dấu
-        const prevExhausted = new Set(this.pool.filter(p => p.exhausted).map(p => p.key));
-        this.pool = Array.from(poolMap.values()).map(entry => {
-            if (prevExhausted.has(entry.key)) {
-                entry.exhausted = true;
-            }
-            return entry;
-        });
-
-        if (this.pool.length === 0) {
-            console.warn(tr('logs.apikeymanager.warn_no_active_api_keys_found_in_environment'));
-            return;
-        }
-
-        this.isInitialized = true;
-        console.log(tr('logs.apikeymanager.log_loaded_api_keys_available_from_env_db', { length: this.pool.length, size: poolMap.size }));
+        const exhausted = new Set(this.pool.filter(entry => entry.exhausted).map(entry => entry.key));
+        this.pool = [...poolMap.values()].map(entry => ({ ...entry, exhausted: exhausted.has(entry.key) }));
+        this.isInitialized = this.pool.length > 0;
+        await this.scheduler.hydrate?.();
+        if (!this.pool.length) console.warn(tr('logs.apikeymanager.warn_no_active_api_keys_found_in_environment'));
+        else console.log(tr('logs.apikeymanager.log_loaded_api_keys_available_from_env_db', { length: this.pool.length, size: poolMap.size }));
     }
 
-    /**
-     * Kiểm tra xem key có đang bị suspend trên model cụ thể hay không
-     */
+    getClient(apiKey) {
+        if (!this.clientPool.has(apiKey)) this.clientPool.set(apiKey, new GoogleGenAI({ apiKey }));
+        return this.clientPool.get(apiKey);
+    }
+
+    entryForKey(key) {
+        return this.pool.find(entry => entry.key === key) || null;
+    }
+
     isSuspended(key, modelId, now = Date.now()) {
         const cacheKey = `${key}_${modelId}`;
         const until = this.suspensionCache.get(cacheKey);
@@ -84,266 +90,205 @@ class ApiKeyManager {
         return true;
     }
 
-    /**
-     * Lấy hoặc tạo GoogleGenAI client instance từ pool (reuse connection, tránh TLS handshake mỗi request)
-     * @param {string} apiKey
-     * @returns {GoogleGenAI}
-     */
-    getClient(apiKey) {
-        if (!this.clientPool.has(apiKey)) {
-            this.clientPool.set(apiKey, new GoogleGenAI({ apiKey }));
-        }
-        return this.clientPool.get(apiKey);
+    async ensurePool() {
+        if (!this.isInitialized || !this.pool.length) await this.loadKeys();
+        if (!this.pool.length) throw new Error('No active Gemini API keys are available.');
     }
 
-    /**
-     * Lấy key tiếp theo theo thuật toán Round-Robin tuần tự.
-     * Cân bằng tải hoàn hảo qua tất cả các key khả dụng mà không bị dồn tải.
-     */
-    async _getNextKey(modelId) {
-        if (!this.isInitialized || this.pool.length === 0) {
-            await this.loadKeys();
-        }
-
-        if (this.pool.length === 0) {
-            throw new Error('No active API keys available in environment or database.');
-        }
-
+    async _getNextEntry(modelId, exclusions = {}) {
+        await this.ensurePool();
         const now = Date.now();
-        const activePool = this.pool.filter(e => !e.exhausted);
-        if (activePool.length === 0) {
-            throw new Error('All API keys are permanently exhausted or marked leaked.');
+        const active = this.pool.filter(entry => !entry.exhausted && !this.isSuspended(entry.key, modelId, now));
+        const ranked = this.scheduler.rank(active, modelId, exclusions);
+        if (!ranked.length) {
+            const error = new Error(`NO_HEALTHY_PROJECT: No eligible project/key for ${modelId}.`);
+            error.code = 'NO_HEALTHY_PROJECT';
+            throw error;
         }
-
-        // Quét tuần tự Round-Robin bắt đầu từ this.index
-        for (let i = 0; i < activePool.length; i++) {
-            const idx = (this.index + i) % activePool.length;
-            const entry = activePool[idx];
-
-            if (!this.isSuspended(entry.key, modelId, now)) {
-                this.index = (idx + 1) % activePool.length;
-                entry.lastUsed = now;
-                return entry.key;
-            }
-        }
-
-        // Nếu tất cả các keys đều đang cooldown cho model này:
-        let minUntil = Infinity;
-        for (const entry of activePool) {
-            const cacheKey = `${entry.key}_${modelId}`;
-            const until = this.suspensionCache.get(cacheKey) || 0;
-            if (until < minUntil) {
-                minUntil = until;
-            }
-        }
-
-        const waitSec = Math.max(1, Math.round((minUntil - now) / 1000));
-        throw new Error(`ALL_KEYS_SUSPENDED: All ${activePool.length} keys are cooling down for model ${modelId} (shortest wait: ${waitSec}s).`);
+        ranked[0].lastUsed = now;
+        return ranked[0];
     }
 
-    /**
-     * Suspend key với thời gian xác định (ms)
-     * Lưu trữ in-memory và cập nhật MongoDB bất đồng bộ (non-blocking)
-     */
+    async _getNextKey(modelId) {
+        return (await this._getNextEntry(modelId)).key;
+    }
+
     suspendKey(key, modelId, ms, reason = 'RATE_LIMIT') {
         const until = Date.now() + ms;
-        const cacheKey = `${key}_${modelId}`;
-        this.suspensionCache.set(cacheKey, until);
-
-        // Non-blocking update to Database
+        this.suspensionCache.set(`${key}_${modelId}`, until);
+        const entry = this.entryForKey(key) || { name: 'UNKNOWN', projectId: 'unverified' };
+        if (APIStatus.db.readyState !== 1) return;
         APIStatus.findOneAndUpdate(
-            { key, model: modelId },
-            { suspendedUntil: until, reason: reason },
+            { projectId: entry.projectId, keyAlias: entry.name, modelId },
+            { $set: {
+                key: entry.name, model: modelId, projectId: entry.projectId, keyAlias: entry.name, modelId,
+                scope: 'KEY', state: 'OPEN', cooldownUntil: new Date(until), suspendedUntil: new Date(until), reason
+            } },
             { upsert: true }
-        ).catch(e => console.warn(tr('logs.apikeymanager.warn_apikeymanager_background_apistatus_save_error', { message: e.message })));
-
-        console.warn(tr('logs.apikeymanager.warn_suspended_key_for_s_on', { value: key.slice(-4), value2: Math.round(ms / 1000), modelId: modelId, reason: reason }));
+        ).exec().catch(() => {});
     }
 
-    /**
-     * Vô hiệu hóa vĩnh viễn key bị rò rỉ hoặc không hợp lệ (403)
-     */
+    async disableKey(key, reason = 'CREDENTIAL_INVALID') {
+        const entry = this.entryForKey(key);
+        if (entry) entry.exhausted = true;
+        this.clientPool.delete(key);
+        if (APIKey.db.readyState === 1) {
+            await APIKey.updateOne({ key }, { $set: { isActive: false, disabledReason: reason, lastFailureAt: new Date() } });
+        }
+        console.error(tr('logs.apikeymanager.error_key_disabled', { alias: entry?.name || 'UNKNOWN', reason }));
+    }
+
+    async markCredentialInvalid(key, reason = 'CREDENTIAL_INVALID') {
+        return this.disableKey(key, reason);
+    }
+
     async markLeaked(key) {
-        try {
-            console.error(tr('logs.apikeymanager.error_key_marked_as_leaked_invalid_and_disabled', { value: key.slice(-4) }));
-            const entry = this.pool.find(e => e.key === key);
-            if (entry) entry.exhausted = true;
-            this.pool = this.pool.filter(e => e.key !== key);
-            this.clientPool.delete(key); // Xóa cached client
-            await APIKey.updateOne({ key }, { isActive: false, name: 'LEAKED - DISABLED' });
-        } catch (e) {
-            console.error(tr('logs.apikeymanager.error_failed_to_mark_key_leaked'), e);
-        }
+        return this.disableKey(key, 'LEAKED_KEY_CONFIRMED');
     }
 
-    /**
-     * Thực thi tác vụ gọi API Gemini với:
-     * - Round-Robin load balancing
-     * - Chuyển key tức thì (100ms) khi gặp 429/503/timeout
-     * - Khớp thời gian cooldown 60s cho 429 (reset theo RPM của Google)
-     * - Timeout guard (mặc định 25s) qua Promise.race
-     * - Phát hiện quá tải 503 để kích hoạt model fallback
-     */
+    createBudget(max = Number(process.env.GEMINI_MAX_API_ATTEMPTS) || 3) {
+        return { max, used: 0, started: false, finalized: false, projectSwitches: 0, modelSwitches: 0 };
+    }
+
+    requestConfig(config = {}, requestContext = {}) {
+        return {
+            ...config,
+            abortSignal: requestContext.abortSignal,
+            httpOptions: {
+                ...(config.httpOptions || {}),
+                timeout: requestContext.timeoutMs,
+                retryOptions: { ...(config.httpOptions?.retryOptions || {}), attempts: 1 }
+            }
+        };
+    }
+
     async execute(modelId, task, options = {}) {
-        if (!this.isInitialized || this.pool.length === 0) {
-            await this.loadKeys();
-        }
-
-        const maxRetries = options.maxRetries ?? Math.min(this.pool.length > 0 ? this.pool.length : 5, 5);
-        const timeoutMs = options.timeoutMs ?? 15000;
-        let attempt = 0;
-        let count503 = 0;
+        await this.ensurePool();
+        const configuredMax = options.maxAttempts ?? options.maxRetries ?? (Number(process.env.GEMINI_MAX_API_ATTEMPTS) || 3);
+        const maxAttempts = Math.max(1, Math.min(configuredMax, 5));
+        const ownsBudget = !options.budget;
+        const budget = options.budget || this.createBudget(maxAttempts);
+        const timeoutMs = Math.max(1000, options.timeoutMs || 25000);
+        const excludedProjects = new Set();
+        const excludedKeys = new Set();
+        let attempts = 0;
+        let projectSwitches = 0;
+        let previousProject = null;
+        let overloadAttempts = 0;
         let lastError = null;
+        if (!budget.started) {
+            this.scheduler.startRequest();
+            budget.started = true;
+        }
 
-        while (attempt < maxRetries) {
-            let key;
+        while (attempts < maxAttempts && budget.used < budget.max) {
+            let entry;
             try {
-                key = await this._getNextKey(modelId);
-            } catch (e) {
-                // Toàn bộ key cho model này đang cooldown, throw để caller chuyển model fallback
-                throw e;
+                entry = await this._getNextEntry(modelId, { projects: excludedProjects, keys: excludedKeys });
+            } catch (selectionError) {
+                if (!lastError) lastError = selectionError;
+                break;
             }
-
+            if (previousProject && previousProject !== entry.projectId) projectSwitches += 1;
+            previousProject = entry.projectId;
+            attempts += 1;
+            budget.used += 1;
+            const started = Date.now();
+            const controller = new AbortController();
+            let release;
+            let timeout;
             try {
-                // Timeout Guard bằng Promise.race để ngăn chặn việc bị treo socket
-                let timer;
+                release = await this.scheduler.acquire(entry.projectId, modelId, { maxWaitMs: options.queueTimeoutMs || 10000 });
+                const timeoutError = new Error(`Gemini request timed out after ${timeoutMs}ms`);
+                timeoutError._isTimeout = true;
                 const timeoutPromise = new Promise((_, reject) => {
-                    timer = setTimeout(() => {
-                        reject(Object.assign(new Error(`KEY_TIMEOUT_${timeoutMs}ms`), { _isTimeout: true }));
+                    timeout = setTimeout(() => {
+                        controller.abort();
+                        reject(timeoutError);
                     }, timeoutMs);
-                    timer.unref?.();
                 });
-
-                const result = await Promise.race([task(key), timeoutPromise]);
-                if (timer) clearTimeout(timer);
-
-                // Cập nhật thống kê sử dụng (Async non-blocking)
-                APIKey.updateOne({ key: key }, {
-                    $inc: { usageCount: 1 },
-                    $set: { lastUsed: Date.now() }
-                }).exec().catch(err => console.error(tr('logs.apikeymanager.error_failed_to_update_key_usage_stats'), err.message));
-
-                return result;
-            } catch (e) {
-                lastError = e;
-
-                // Xử lý khi request bị timeout
-                if (e._isTimeout) {
-                    console.warn(tr('logs.apikeymanager.warn_key_timed_out_sau_ms_tren_chuyen', { value: key.slice(-4), timeoutMs: timeoutMs, modelId: modelId }));
-                    this.suspendKey(key, modelId, 30 * 1000, 'TIMEOUT_30s');
-                    attempt++;
-                    if (attempt < maxRetries) {
-                        await new Promise(r => setTimeout(r, 100));
-                    }
-                    continue;
+                const requestContext = {
+                    abortSignal: controller.signal, timeoutMs, attempt: attempts,
+                    keyAlias: entry.name, projectId: entry.projectId, modelId
+                };
+                const response = await Promise.race([task(entry.key, requestContext), timeoutPromise]);
+                clearTimeout(timeout);
+                this.scheduler.recordSuccess(entry, modelId, Date.now() - started);
+                if (APIKey.db.readyState === 1) {
+                    APIKey.updateOne({ key: entry.key }, {
+                        $inc: { usageCount: 1, successCount: 1 },
+                        $set: { lastUsed: new Date(), lastSuccessAt: new Date() }
+                    }).exec().catch(() => {});
+                }
+                budget.projectSwitches += projectSwitches;
+                if (ownsBudget) this.completeBudget(budget, true);
+                return response;
+            } catch (rawError) {
+                clearTimeout(timeout);
+                const classification = classifyGeminiError(rawError);
+                const error = attachGeminiClassification(rawError, classification);
+                lastError = error;
+                this.scheduler.recordFailure(entry, modelId, classification);
+                if (APIKey.db.readyState === 1) {
+                    APIKey.updateOne({ key: entry.key }, {
+                        $inc: { errorCount: 1 }, $set: { lastFailureAt: new Date() }
+                    }).exec().catch(() => {});
                 }
 
-                // Không retry với lỗi cú pháp code lập trình
-                if (e instanceof TypeError || e instanceof ReferenceError || e instanceof SyntaxError) {
-                    console.error(tr('logs.apikeymanager.error_code_syntax_bug_non_retryable', { message: e.message }), e.stack);
-                    throw e;
+                if (classification.category === CATEGORIES.AUTH_INVALID) {
+                    await this.markCredentialInvalid(entry.key, classification.reason);
+                    excludedKeys.add(entry.key);
+                } else if (classification.category === CATEGORIES.RATE_LIMIT) {
+                    excludedProjects.add(entry.projectId);
+                } else if (classification.category === CATEGORIES.SERVICE_OVERLOADED) {
+                    overloadAttempts += 1;
+                    if (overloadAttempts >= 2) break;
                 }
 
-                // Kiểm tra xem lỗi có phải thực sự xuất phát từ Google API hay không
-                const isGoogleApiError = (
-                    typeof e.status === 'number' || 
-                    typeof e.status === 'string' || 
-                    typeof e.statusCode === 'number' || 
-                    !!e.httpMeta || 
-                    !!e.error?.code || 
-                    !!e.error?.status ||
-                    (typeof e.message === 'string' && (
-                        e.message.includes('GoogleGenAI') ||
-                        e.message.includes('RESOURCE_EXHAUSTED') ||
-                        e.message.includes('429') ||
-                        e.message.includes('503') ||
-                        e.message.includes('500') ||
-                        e.message.includes('quota') ||
-                        e.message.includes('overloaded') ||
-                        e.message.includes('API_KEY_INVALID') ||
-                        e.message.includes('PERMISSION_DENIED')
-                    ))
-                );
-
-                if (!isGoogleApiError) {
-                    console.error(tr('logs.apikeymanager.error_application_logic_parsing_error_not_google_api', { message: e.message }));
-                    throw e; // Ném ra ngay, KHÔNG phạt key, KHÔNG retry tốn quota!
+                const retryAnotherCredential = classification.category === CATEGORIES.AUTH_INVALID;
+                if ((!classification.retryable && !retryAnotherCredential) || ['REQUEST', 'APPLICATION'].includes(classification.scope)
+                    || classification.category === CATEGORIES.MODEL_NOT_FOUND) {
+                    budget.projectSwitches += projectSwitches;
+                    if (ownsBudget) this.completeBudget(budget, false);
+                    throw error;
                 }
-
-                const statusCode = typeof e.status === 'number' 
-                    ? e.status 
-                    : (e.statusCode || e.httpMeta?.response?.status || e.error?.code || (e.status === 'RESOURCE_EXHAUSTED' ? 429 : 0));
-                const errorMessage = (e.message || '') + ' ' + (e.error?.message || '');
-
-                let suspendMs = 0;
-                let reason = 'ERROR';
-                let shouldSuspend = false;
-
-                // --- 429: Rate Limit / Quota ---
-                if (statusCode === 429 || errorMessage.includes('429') || errorMessage.includes('quota') || errorMessage.includes('RESOURCE_EXHAUSTED')) {
-                    let waitSeconds = 60; // Mặc định 60 giây (khớp chu kỳ 15 RPM/phút của Google)
-                    try {
-                        const retryInfo = e?.error?.details?.find?.(d => d['@type']?.includes('RetryInfo'));
-                        if (retryInfo?.retryDelay) {
-                            const parsed = parseFloat(retryInfo.retryDelay);
-                            if (!isNaN(parsed) && parsed > 0) {
-                                waitSeconds = Math.ceil(parsed) + 1;
-                            }
-                        }
-                    } catch (_) {}
-
-                    suspendMs = waitSeconds * 1000;
-                    reason = 'RATE_LIMIT_429';
-                    shouldSuspend = true;
-                }
-                // --- 400: Bad Request / Invalid Argument (Lỗi phía client/prompt) ---
-                else if (statusCode === 400 || errorMessage.includes('invalid_request') || errorMessage.includes('INVALID_ARGUMENT')) {
-                    console.error(tr('logs.apikeymanager.error_bad_request_non_retryable', { errorMessage: errorMessage }));
-                    throw e; // Dừng ngay, không thử key khác
-                }
-                // --- 503: Service Unavailable / High Demand / Overloaded (Phía Google bị nghẽn) ---
-                else if (statusCode === 503 || errorMessage.includes('503') || errorMessage.includes('overloaded') || errorMessage.includes('UNAVAILABLE') || errorMessage.includes('high demand')) {
-                    suspendMs = 5 * 60 * 1000; // 5 phút
-                    reason = 'SERVICE_UNAVAILABLE_503';
-                    this.suspendKey(key, modelId, suspendMs, reason);
-                    // Lỗi quá tải model xảy ra trên toàn bộ server Google cho model đó, không retry key khác mà chuyển model ngay
-                    throw new Error(`MODEL_OVERLOADED: Model ${modelId} is currently experiencing high demand/overloaded (503 Service Unavailable).`);
-                }
-                // --- 500: Internal Server Error ---
-                else if (statusCode === 500 || errorMessage.includes('500') || errorMessage.includes('INTERNAL')) {
-                    suspendMs = 30 * 1000; // 30s
-                    reason = 'INTERNAL_ERROR_500';
-                    shouldSuspend = true;
-                }
-                // --- 403: Key bị thu hồi hoặc Permission Denied ---
-                else if (statusCode === 403 || errorMessage.includes('PERMISSION_DENIED') || errorMessage.includes('API_KEY_INVALID')) {
-                    await this.markLeaked(key);
-                    shouldSuspend = false;
-                }
-                // --- Lỗi khác ---
-                else {
-                    const statusCodeText = statusCode ? statusCode.toString() : 'UNKNOWN';
-                    console.warn(tr('logs.apikeymanager.warn_generic_error', { statusCodeText: statusCodeText, errorMessage: errorMessage }));
-                    suspendMs = 30 * 1000;
-                    reason = `GENERIC_${statusCodeText}`;
-                    shouldSuspend = true;
-                }
-
-                if (shouldSuspend && suspendMs > 0) {
-                    this.suspendKey(key, modelId, suspendMs, reason);
-                }
-
-                attempt++;
-
-                // Chuyển key kế tiếp tức thì chỉ sau 100ms (loại bỏ hoàn toàn exponential backoff vô lý)
-                if (attempt < maxRetries) {
-                    console.log(tr('logs.apikeymanager.log_rotating_key_in_100ms', { attempt: attempt, maxRetries: maxRetries }));
-                    await new Promise(r => setTimeout(r, 100));
-                }
+                if (attempts >= maxAttempts || budget.used >= budget.max) break;
+                await this.scheduler.backoff(attempts, classification.retryAfterMs);
+            } finally {
+                clearTimeout(timeout);
+                release?.();
             }
         }
 
-        throw new Error(`Failed after ${attempt} attempts on model ${modelId}. Last error: ${lastError?.message}`);
+        budget.projectSwitches += projectSwitches;
+        if (ownsBudget) this.completeBudget(budget, false);
+        throw attachGeminiClassification(lastError || new Error(`Gemini request failed for ${modelId}`));
+    }
+
+    getMetrics() {
+        return this.scheduler.snapshotMetrics();
+    }
+
+    getModelCircuit(modelId) {
+        const state = this.scheduler.modelStateFor(modelId);
+        this.scheduler.refreshCircuit(state);
+        return { state: state.circuitState, until: state.circuitUntil };
+    }
+
+    recordModelSwitch(budget = null) {
+        if (budget) budget.modelSwitches += 1;
+        else this.scheduler.metrics.modelSwitches += 1;
+    }
+
+    completeBudget(budget, success) {
+        if (!budget || budget.finalized) return;
+        budget.finalized = true;
+        this.scheduler.finishRequest({
+            success,
+            attempts: budget.used,
+            projectSwitches: budget.projectSwitches,
+            modelSwitches: budget.modelSwitches
+        });
     }
 }
 

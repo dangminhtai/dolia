@@ -17,6 +17,7 @@ import MusicLog from '../models/MusicLog.js';
 import geminiModelService from '../services/geminiModelService.js';
 import { prepareDiscordAttachments } from '../helpers/discordAttachmentHelper.js';
 import { isOwner } from '../services/authorizationService.js';
+import { classifyGeminiError, shouldStopModelFallback } from '../services/geminiErrorClassifier.js';
 
 class GeminiManager {
     constructor() {
@@ -266,9 +267,12 @@ ${topSongsStr || "- Chưa có bài nào nổi bật"}
         const systemInstruction = loadSystemPrompt(replacements);
 
         const candidates = await geminiModelService.getCandidateModels('flash-lite');
+        const requestBudget = ApiKeyManager.createBudget(3);
         let lastError = null;
 
-        for (const modelId of candidates) {
+        for (let modelIndex = 0; modelIndex < candidates.length && modelIndex < 2 && requestBudget.used < requestBudget.max; modelIndex++) {
+            const modelId = candidates[modelIndex];
+            if (modelIndex > 0) ApiKeyManager.recordModelSwitch(requestBudget);
             try {
                 // Tạo bản sao độc lập cho turn hiện tại và danh sách newTurns
                 const contents = [
@@ -286,20 +290,20 @@ ${topSongsStr || "- Chưa có bài nào nổi bật"}
 
                 // Loop for Function Calling (Max 5 turns)
                 while (functionCallAttempts < 5) {
-                    const response = await ApiKeyManager.execute(modelId, async (key) => {
+                    const response = await ApiKeyManager.execute(modelId, async (key, requestContext) => {
                         const ai = ApiKeyManager.getClient(key);
                         return await ai.models.generateContent({
                             model: modelId,
                             contents: contents,
-                            config: {
+                            config: ApiKeyManager.requestConfig({
                                 tools: this.tools,
                                 systemInstruction: systemInstruction,
                                 temperature: 0.7,
                                 topK: 40,
                                 topP: 0.95
-                            }
+                            }, requestContext)
                         });
-                    }, { timeoutMs: 35000 });
+                    }, { timeoutMs: 35000, budget: requestBudget });
 
                     const candidate = response.candidates?.[0];
                     const content = candidate?.content;
@@ -336,8 +340,12 @@ ${topSongsStr || "- Chưa có bài nào nổi bật"}
 
                         // B. Execute Functions & Prepare Response
                         const functionResponseParts = [];
-                        const directDiscordActionReplies = [];
-                        let directDiscordActionOnly = true;
+                        const directToolReplies = [];
+                        let directToolOnly = true;
+                        const fastPathTools = new Set([
+                            'discord_query', 'discord_action', 'memory_action', 'control_playback',
+                            'adjust_audio_settings', 'manage_radio'
+                        ]);
 
                         for (const part of responseParts) {
                             if (part.functionCall) {
@@ -351,15 +359,12 @@ ${topSongsStr || "- Chưa có bài nào nổi bật"}
                                         const result = await fn(args);
                                         apiResponse = { result: result };
                                         lastToolResult = result;
-                                        if (call.name === 'discord_action' && result?.reply) {
-                                            directDiscordActionReplies.push(String(result.reply));
-                                        } else if (call.name !== 'discord_action') {
-                                            directDiscordActionOnly = false;
-                                        } else if (!result?.reply) {
-                                            directDiscordActionOnly = false;
-                                        }
+                                        const directReply = typeof result === 'string' ? result : result?.reply;
+                                        if (fastPathTools.has(call.name) && directReply) directToolReplies.push(String(directReply));
+                                        else directToolOnly = false;
                                     } catch (error) {
                                         apiResponse = { error: error.message };
+                                        directToolOnly = false;
                                         console.error(tr('logs.geminimanager.error_error_executing', { name: call.name }), error);
                                     }
                                 } else {
@@ -387,9 +392,9 @@ ${topSongsStr || "- Chưa có bài nào nổi bật"}
 
                         // Direct Discord mutations are deterministic. Nếu mọi function call trong turn này
                         // đều là discord_action và executor đã trả reply thật, trả luôn để giảm 1 Gemini request.
-                        if (directDiscordActionOnly && directDiscordActionReplies.length > 0 &&
-                            responseParts.filter(p => p.functionCall).length === directDiscordActionReplies.length) {
-                            finalResponseText = directDiscordActionReplies.join('\n');
+                        if (directToolOnly && directToolReplies.length > 0 &&
+                            responseParts.filter(p => p.functionCall).length === directToolReplies.length) {
+                            finalResponseText = directToolReplies.join('\n');
                             break;
                         }
 
@@ -484,6 +489,7 @@ ${topSongsStr || "- Chưa có bài nào nổi bật"}
 
                 // Model phản hồi thành công -> gỡ cooldown nếu có và return
                 geminiModelService.reportModelSuccess(modelId);
+                ApiKeyManager.completeBudget(requestBudget, true);
                 if (attachedFiles.length > 0 || alreadySentToChannel) {
                     return {
                         reply: finalResponseText,
@@ -495,11 +501,20 @@ ${topSongsStr || "- Chưa có bài nào nổi bật"}
 
             } catch (err) {
                 lastError = err;
-                geminiModelService.reportModelFailure(modelId, err.message, 2 * 60 * 1000);
+                const classification = classifyGeminiError(err);
+                const circuit = ApiKeyManager.getModelCircuit(modelId);
+                if (classification.scope === 'MODEL' && classification.retryable && circuit.state === 'OPEN') {
+                    geminiModelService.reportModelFailure(modelId, classification.reason, Math.max(1000, circuit.until - Date.now()));
+                }
+                if (shouldStopModelFallback(classification)) {
+                    ApiKeyManager.completeBudget(requestBudget, false);
+                    throw err;
+                }
                 this.logger.warn(tr('logs.geminimanager.warn_model_gap_su_co_dang_thu_model', { modelId: modelId, message: err.message }));
             }
         }
 
+        ApiKeyManager.completeBudget(requestBudget, false);
         throw lastError || new Error('Tất cả các model Gemini đều không khả dụng lúc này.');
     }
 }

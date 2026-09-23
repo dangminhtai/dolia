@@ -3,6 +3,7 @@ import { EmbedBuilder } from 'discord.js';
 import { SelfDevService } from '../services/selfDevService.js';
 import Logger from '../class/Logger.js';
 import ApiKeyManager from '../class/apiKeyManager.js';
+import { classifyGeminiError, shouldStopModelFallback } from '../services/geminiErrorClassifier.js';
 import geminiModelService from '../services/geminiModelService.js';
 
 /**
@@ -288,30 +289,40 @@ export async function web_search({ query }) {
         let lastError = null;
         let searchResult = null;
 
-        for (const modelId of candidateModels) {
+        const requestBudget = ApiKeyManager.createBudget(3);
+        for (let modelIndex = 0; modelIndex < candidateModels.length && modelIndex < 2 && requestBudget.used < requestBudget.max; modelIndex++) {
+            const modelId = candidateModels[modelIndex];
+            if (modelIndex > 0) ApiKeyManager.recordModelSwitch(requestBudget);
             try {
-                searchResult = await ApiKeyManager.execute(modelId, async (key) => {
+                searchResult = await ApiKeyManager.execute(modelId, async (key, requestContext) => {
                     const ai = ApiKeyManager.getClient(key);
                     return await ai.models.generateContent({
                         model: modelId,
                         contents: `Hãy tìm kiếm Google và tổng hợp thông tin chính xác, cập nhật nhất về câu hỏi/từ khóa sau:\n"${query}"\n\nYêu cầu: Tóm tắt các ý chính, số liệu thực tế, mốc thời gian và sự kiện cụ thể.`,
-                        config: {
+                        config: ApiKeyManager.requestConfig({
                             tools: [{ googleSearch: {} }],
                             temperature: 0.2
-                        }
+                        }, requestContext)
                     });
-                }, { timeoutMs: 30000, maxRetries: 2 });
+                }, { timeoutMs: 30000, maxAttempts: 2, budget: requestBudget });
 
                 if (searchResult) break;
             } catch (err) {
                 lastError = err;
+                const classification = classifyGeminiError(err);
+                if (shouldStopModelFallback(classification)) {
+                    ApiKeyManager.completeBudget(requestBudget, false);
+                    throw err;
+                }
                 Logger.warn(tr('logs.devfunctions.warn_devfunctions_model_gap_su_co_khi_web', { modelId: modelId, message: err.message }));
             }
         }
 
         if (!searchResult) {
+            ApiKeyManager.completeBudget(requestBudget, false);
             throw lastError || new Error(tr('messages.devfunctions.text_khong_co_model_nao_thuc_hien_duoc'));
         }
+        ApiKeyManager.completeBudget(requestBudget, true);
 
         const text = searchResult.text || '';
         const groundingMeta = searchResult.candidates?.[0]?.groundingMetadata;

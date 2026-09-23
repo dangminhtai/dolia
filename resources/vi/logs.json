@@ -166,6 +166,7 @@
     "warn_could_not_query_api_keys_from_database": "[ApiKeyManager] Không thể truy vấn API key từ cơ sở dữ liệu:",
     "warn_no_active_api_keys_found_in_environment": "[ApiKeyManager] Không tìm thấy API key hoạt động trong.env hoặc cơ sở dữ liệu.",
     "log_loaded_api_keys_available_from_env_db": "[ApiKeyManager] Đã nạp {{length}} API key; {{size}} key khả dụng từ .env/DB.",
+    "error_key_disabled": "[ApiKeyManager] Đã vô hiệu hóa {{alias}}: {{reason}}",
     "warn_apikeymanager_background_apistatus_save_error": "[ApiKeyManager] Lỗi lưu APIStatus nền: {{message}}",
     "warn_suspended_key_for_s_on": "[ApiKeyManager] ⏳ Tạm khóa key.{{value}} for {{value2}}s on {{modelId}} ({{reason}})",
     "error_key_marked_as_leaked_invalid_and_disabled": "[ApiKeyManager] Key.{{value}} được đánh dấu LEAKED/INVALID và đã vô hiệu hóa.",

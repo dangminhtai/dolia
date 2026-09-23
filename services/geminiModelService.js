@@ -356,11 +356,13 @@ class GeminiModelService {
         try {
             Logger.info(tr('logs.geminimodelservice.info_geminimodelservice_dang_quet_danh_sach_model_tu'));
 
-            const validModels = await ApiKeyManager.execute('model-sync', async (key) => {
+            const validModels = await ApiKeyManager.execute('model-sync', async (key, requestContext) => {
                 const ai = ApiKeyManager.getClient(key);
                 const matched = [];
 
-                for await (const m of await ai.models.list()) {
+                for await (const m of await ai.models.list({
+                    config: ApiKeyManager.requestConfig({}, requestContext)
+                })) {
                     const rawName = m.name || '';
                     const cleanId = rawName.replace(/^models\//, '');
                     const match = cleanId.match(GEMINI_PATTERN);
@@ -384,7 +386,7 @@ class GeminiModelService {
                     }
                 }
                 return matched;
-            });
+            }, { timeoutMs: 30000, maxAttempts: 2 });
 
             if (validModels && validModels.length > 0) {
                 // Upsert vào MongoDB (không ghi đè blockedUntil/blockReason nếu đang block)
