@@ -48,3 +48,12 @@ test('request/application errors stop model fallback while model-not-found may s
     assert.equal(shouldStopModelFallback(classifyGeminiError(new SyntaxError('bad json'))), true);
     assert.equal(shouldStopModelFallback(classifyGeminiError(Object.assign(new Error('model not found'), { status: 404 }))), false);
 });
+
+test('local scheduler exhaustion can switch model without pretending to be a remote error', () => {
+    const error = Object.assign(new Error('NO_HEALTHY_PROJECT'), { code: 'NO_HEALTHY_PROJECT' });
+    const result = classifyGeminiError(error);
+    assert.equal(result.category, 'NO_CAPACITY');
+    assert.equal(result.scope, 'MODEL');
+    assert.equal(result.retryable, false);
+    assert.equal(shouldStopModelFallback(result), false);
+});

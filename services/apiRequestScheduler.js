@@ -1,4 +1,5 @@
 import APIStatus from '../models/APIStatus.js';
+import { t as tr } from './i18nService.js';
 
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -278,7 +279,8 @@ class ApiRequestScheduler {
     persist(entry, modelId, state, classification) {
         if (APIStatus.db.readyState !== 1) return;
         APIStatus.findOneAndUpdate(
-            { projectId: entry.projectId, keyAlias: entry.name, modelId },
+            // Collection còn unique index legacy { key, model }; cập nhật đúng row cũ thay vì upsert row trùng.
+            { key: entry.name, model: modelId },
             {
                 $set: {
                     key: entry.name, model: modelId,
@@ -297,7 +299,7 @@ class ApiRequestScheduler {
                 }
             },
             { upsert: true }
-        ).exec().catch(() => {});
+        ).exec().catch(error => console.warn(tr('logs.apikeymanager.warn_apikeymanager_background_apistatus_save_error', { message: error.message })));
     }
 
     backoffMs(attempt, retryAfterMs = 0, random = Math.random) {

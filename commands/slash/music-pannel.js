@@ -36,6 +36,7 @@ export default {
             guildId: interaction.guild.id,
             channelId: interaction.channel.id,
             messageId: message.id,
+            ownerId: interaction.user.id,
             ...initialState
         });
     },

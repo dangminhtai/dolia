@@ -8,6 +8,7 @@ const CATEGORIES = Object.freeze({
     AUTH_INVALID: 'AUTH_INVALID',
     PERMISSION_DENIED: 'PERMISSION_DENIED',
     MODEL_NOT_FOUND: 'MODEL_NOT_FOUND',
+    NO_CAPACITY: 'NO_CAPACITY',
     APPLICATION_ERROR: 'APPLICATION_ERROR',
     UNKNOWN: 'UNKNOWN'
 });
@@ -82,6 +83,9 @@ export function classifyGeminiError(error) {
     const lower = message.toLowerCase();
 
     if (error?.classification?.category) return error.classification;
+    if (['NO_HEALTHY_PROJECT', 'CIRCUIT_OPEN'].includes(error?.code)) {
+        return result(CATEGORIES.NO_CAPACITY, 'MODEL', false, 0, error.code, error);
+    }
     if (error instanceof SyntaxError || error instanceof ReferenceError) {
         return result(CATEGORIES.APPLICATION_ERROR, 'APPLICATION', false, statusCode, 'LOCAL_CODE_ERROR', error);
     }

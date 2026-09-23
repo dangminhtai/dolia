@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { ApiKeyManager } from '../class/apiKeyManager.js';
+import { ApiKeyManager, resolveProjectMetadata } from '../class/apiKeyManager.js';
 
 function fakeScheduler() {
     const calls = { failures: [], successes: [], finished: [] };
@@ -34,6 +34,26 @@ function managerWithProjects() {
     manager.isInitialized = true;
     return { manager, scheduler };
 }
+
+test('verified environment project metadata wins over stale database placeholders', () => {
+    assert.deepEqual(
+        resolveProjectMetadata(
+            { projectId: 'unverified', projectNumber: null },
+            { projectId: 'projects/486922974842', projectNumber: '486922974842' }
+        ),
+        { projectId: 'projects/486922974842', projectNumber: '486922974842' }
+    );
+});
+
+test('database project metadata remains a fallback when environment metadata is absent', () => {
+    assert.deepEqual(
+        resolveProjectMetadata(
+            { projectId: 'projects/27087077670', projectNumber: '27087077670' },
+            { projectId: 'unverified', projectNumber: null }
+        ),
+        { projectId: 'projects/27087077670', projectNumber: '27087077670' }
+    );
+});
 
 test('429 switches project instead of trying a second key in the same project', async () => {
     const { manager } = managerWithProjects();

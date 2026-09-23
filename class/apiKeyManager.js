@@ -5,6 +5,22 @@ import APIStatus from '../models/APIStatus.js';
 import apiRequestScheduler from '../services/apiRequestScheduler.js';
 import { attachGeminiClassification, classifyGeminiError, CATEGORIES } from '../services/geminiErrorClassifier.js';
 
+function isVerifiedProjectId(value) {
+    const normalized = String(value || '').trim().toLowerCase();
+    return Boolean(normalized && !['unknown', 'unverified'].includes(normalized));
+}
+
+export function resolveProjectMetadata(databaseRow = {}, environmentEntry = {}) {
+    const envProjectId = environmentEntry.projectId;
+    const dbProjectId = databaseRow.projectId;
+    return {
+        projectId: isVerifiedProjectId(envProjectId)
+            ? envProjectId
+            : (isVerifiedProjectId(dbProjectId) ? dbProjectId : 'unverified'),
+        projectNumber: environmentEntry.projectNumber || databaseRow.projectNumber || null
+    };
+}
+
 export class ApiKeyManager {
     constructor({ scheduler = apiRequestScheduler } = {}) {
         this.pool = [];
@@ -48,11 +64,11 @@ export class ApiKeyManager {
                     continue;
                 }
                 const previous = poolMap.get(row.key) || {};
+                const projectMetadata = resolveProjectMetadata(row, previous);
                 poolMap.set(row.key, {
                     key: row.key,
                     name: row.name || previous.name || 'DB_KEY',
-                    projectId: row.projectId || previous.projectId || 'unverified',
-                    projectNumber: row.projectNumber || previous.projectNumber || null,
+                    ...projectMetadata,
                     keyType: row.keyType || previous.keyType || 'api_key',
                     priority: Number(row.priority ?? previous.priority) || 0,
                     exhausted: false,
@@ -119,13 +135,14 @@ export class ApiKeyManager {
         const entry = this.entryForKey(key) || { name: 'UNKNOWN', projectId: 'unverified' };
         if (APIStatus.db.readyState !== 1) return;
         APIStatus.findOneAndUpdate(
-            { projectId: entry.projectId, keyAlias: entry.name, modelId },
+            // Dùng unique key cũ để nâng cấp bản ghi `unverified` tại chỗ, tránh duplicate-key khi metadata project đổi.
+            { key: entry.name, model: modelId },
             { $set: {
                 key: entry.name, model: modelId, projectId: entry.projectId, keyAlias: entry.name, modelId,
                 scope: 'KEY', state: 'OPEN', cooldownUntil: new Date(until), suspendedUntil: new Date(until), reason
             } },
             { upsert: true }
-        ).exec().catch(() => {});
+        ).exec().catch(error => console.warn(tr('logs.apikeymanager.warn_apikeymanager_background_apistatus_save_error', { message: error.message })));
     }
 
     async disableKey(key, reason = 'CREDENTIAL_INVALID') {

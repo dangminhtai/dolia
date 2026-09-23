@@ -29,6 +29,10 @@ const DURATION_LABELS = {
     'permanent': tr('commands.block_agent.permanent_vinh_vien')
 };
 
+const typeEmoji = model => (model.type === 'flash'
+    ? tr('commands.block_agent.type_flash_icon')
+    : tr('commands.block_agent.type_lite_icon'))?.trim();
+
 export default {
     data: new SlashCommandBuilder()
         .setName('block-agent')
@@ -145,16 +149,17 @@ async function showBlockMenu(interaction, allModels, duration) {
 
     const options = availableModels.slice(0, 25).map(m => {
         const typeLabel = m.type === 'flash' ? tr('commands.block_agent.text_flash') : tr('commands.block_agent.text_lite');
+        const emoji = typeEmoji(m);
         return {
             label: m.modelId,
             description: tr('commands.block_agent.description_v', { typeLabel: typeLabel, version: m.version }),
             value: `blockagent_${m.modelId}_${duration}`,
-            emoji: m.type === 'flash' ? tr('commands.block_agent.type_flash_icon') : tr('commands.block_agent.type_lite_icon')
+            ...(emoji ? { emoji } : {})
         };
     });
 
     const selectMenu = new StringSelectMenuBuilder()
-        .setCustomId('blockagent_block_menu')
+        .setCustomId(`blockagent_block_menu:${interaction.user.id}`)
         .setPlaceholder(tr('commands.block_agent.setplaceholder_chon_model_de_block_agent', { value: DURATION_LABELS[duration] }))
         .setMinValues(1)
         .setMaxValues(Math.min(options.length, 25))
@@ -190,16 +195,17 @@ async function showUnblockMenu(interaction, allModels) {
         const remaining = m.agentBlockedUntil - now;
         const hours = Math.floor(remaining / 3600000);
         const minutes = Math.floor((remaining % 3600000) / 60000);
+        const emoji = tr('commands.block_agent.emoji_emoji')?.trim();
         return {
             label: m.modelId,
             description: tr('commands.block_agent.description_con_hm', { hours: hours, minutes: minutes, value: m.agentBlockReason || 'N/A' }),
             value: `blockagent_unblock_${m.modelId}`,
-            emoji: tr('commands.block_agent.emoji_emoji')
+            ...(emoji ? { emoji } : {})
         };
     });
 
     const selectMenu = new StringSelectMenuBuilder()
-        .setCustomId('blockagent_unblock_menu')
+        .setCustomId(`blockagent_unblock_menu:${interaction.user.id}`)
         .setPlaceholder(tr('commands.block_agent.setplaceholder_chon_model_de_unblock_cho_agent'))
         .setMinValues(1)
         .setMaxValues(Math.min(options.length, 25))
@@ -229,9 +235,16 @@ export async function handleBlockAgentMenu(interaction) {
         });
     }
 
+    const [customId, menuOwnerId] = String(interaction.customId || '').split(':');
+    if (!menuOwnerId || menuOwnerId !== interaction.user.id) {
+        return interaction.reply({
+            content: tr('commands.block_agent.content_ban_khong_co_quyen_thuc_hien_thao'),
+            flags: MessageFlags.Ephemeral
+        });
+    }
+
     await interaction.deferUpdate();
 
-    const customId = interaction.customId;
     const selectedValues = interaction.values;
 
     if (customId === 'blockagent_block_menu') {

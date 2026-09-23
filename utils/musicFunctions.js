@@ -325,6 +325,7 @@ export async function show_music_panel({ guild, channel, user }) {
         guildId: guild.id,
         channelId: channel.id,
         messageId: message.id,
+        ownerId: user.id,
         ...initialState
     });
 

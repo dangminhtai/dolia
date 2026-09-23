@@ -119,7 +119,7 @@ async function showBlockMenu(interaction, models, duration) {
         model => tr('commands.block_model.model_description', { type: typeLabel(model), version: model.version })
     );
     const menu = new StringSelectMenuBuilder()
-        .setCustomId('blockchat_block_menu')
+        .setCustomId(`blockchat_block_menu:${interaction.user.id}`)
         .setPlaceholder(tr('commands.block_model.block_placeholder', { duration: durationLabel(duration) }))
         .setMinValues(1)
         .setMaxValues(options.length)
@@ -149,7 +149,7 @@ async function showUnblockMenu(interaction, models) {
         }
     );
     const menu = new StringSelectMenuBuilder()
-        .setCustomId('blockchat_unblock_menu')
+        .setCustomId(`blockchat_unblock_menu:${interaction.user.id}`)
         .setPlaceholder(tr('commands.block_model.unblock_placeholder'))
         .setMinValues(1)
         .setMaxValues(options.length)
@@ -164,6 +164,10 @@ async function showUnblockMenu(interaction, models) {
 
 export async function handleBlockModelMenu(interaction) {
     if (!SelfDevService.isOwner(interaction.user.id)) {
+        return interaction.reply({ content: tr('commands.block_model.owner_only'), flags: MessageFlags.Ephemeral });
+    }
+    const [customId, menuOwnerId] = String(interaction.customId || '').split(':');
+    if (!menuOwnerId || menuOwnerId !== interaction.user.id) {
         return interaction.reply({ content: tr('commands.block_model.owner_only'), flags: MessageFlags.Ephemeral });
     }
     await interaction.deferUpdate();
@@ -186,7 +190,7 @@ export async function handleBlockModelMenu(interaction) {
             results.push(tr('commands.block_model.unblocked_item', { modelId }));
         }
     }
-    const blocked = interaction.customId === 'blockchat_block_menu';
+    const blocked = customId === 'blockchat_block_menu';
     const embed = new EmbedBuilder()
         .setTitle(tr(blocked ? 'commands.block_model.block_done_title' : 'commands.block_model.unblock_done_title'))
         .setDescription(results.join('\n'))

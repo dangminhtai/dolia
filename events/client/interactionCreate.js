@@ -1,5 +1,5 @@
 import { t as tr } from '../../services/i18nService.js';
-import { Events, MessageFlags } from "discord.js";
+import { Events, MessageFlags, PermissionFlagsBits } from "discord.js";
 import { handleBlockAgentMenu } from '../../commands/slash/block-agent.js';
 import { handleBlockModelMenu } from '../../commands/slash/block-model.js';
 
@@ -20,6 +20,21 @@ import { t } from '../../services/i18nService.js';
 import { getUserMusicSource, isFailed, isEmpty, isPlaylist, isSuccess } from '../../utils/lavalinkHelper.js';
 import { handleMemoryInteraction } from '../../services/memoryPanelService.js';
 
+function parseOwnedMusicCustomId(rawCustomId) {
+    const raw = String(rawCustomId || '');
+    const separator = raw.lastIndexOf(':');
+    if (separator <= 0) return { actionId: raw, ownerId: null };
+    return { actionId: raw.slice(0, separator), ownerId: raw.slice(separator + 1) || null };
+}
+
+const ADMIN_RADIO_ACTIONS = new Set([
+    'music_radio_add_current',
+    'music_radio_add_query',
+    'music_modal_radio_add',
+    'music_radio_remove',
+    'music_modal_radio_remove'
+]);
+
 export default (client) => {
     client.on(Events.InteractionCreate, async interaction => {
         if (interaction.customId?.startsWith('memory:')) {
@@ -37,7 +52,18 @@ export default (client) => {
         // --- 0.1 XỬ LÝ MUSIC PANEL (BẤT TỬ) ---
         if (interaction.customId?.startsWith('music_')) {
             try {
-                const customId = interaction.customId;
+                const { actionId: customId, ownerId } = parseOwnedMusicCustomId(interaction.customId);
+                if (!ownerId || interaction.user.id !== ownerId) {
+                    if (!interaction.replied && !interaction.deferred) {
+                        await interaction.reply({ content: t('common.not_your_menu'), flags: MessageFlags.Ephemeral });
+                    }
+                    return;
+                }
+                if (ADMIN_RADIO_ACTIONS.has(customId)
+                    && !interaction.memberPermissions?.has?.(PermissionFlagsBits.Administrator)) {
+                    await interaction.reply({ content: t('errors.no_permission'), flags: MessageFlags.Ephemeral });
+                    return;
+                }
 
                 // ================== A. XỬ LÝ MODAL SUBMIT ==================
                 if (interaction.isModalSubmit()) {
@@ -51,7 +77,7 @@ export default (client) => {
                         await interaction.editReply({ content: t('music.playlist.created', { name }) });
 
                         // Refresh UI Panel (nếu tìm được tin nhắn gốc)
-                        const state = await PanelState.findOne({ messageId: interaction.message?.id });
+                        const state = await PanelState.findOne({ messageId: interaction.message?.id, ownerId });
                         if (state) {
                             const newPayload = await renderMusicPanel(guildId, state, interaction.user.id);
                             if (interaction.message) await interaction.message.edit(newPayload).catch(() => { });
@@ -67,7 +93,7 @@ export default (client) => {
                         await interaction.editReply(result.message);
 
                         // Refresh UI
-                        const state = await PanelState.findOne({ messageId: interaction.message?.id });
+                        const state = await PanelState.findOne({ messageId: interaction.message?.id, ownerId });
                         if (state) {
                             const newPayload = await renderMusicPanel(guildId, state, interaction.user.id);
                             if (interaction.message) await interaction.message.edit(newPayload).catch(() => { });
@@ -91,12 +117,12 @@ export default (client) => {
                         }
 
                         // Get Playlist ID from State (state đã được tìm ở trên, nhưng cần load lại để chắc chắn)
-                        const state = await PanelState.findOne({ messageId: interaction.message?.id });
+                        const state = await PanelState.findOne({ messageId: interaction.message?.id, ownerId });
                         if (!state || !state.selectedPlaylistId) {
                             return interaction.editReply(t('music.playlist.no_selected'));
                         }
 
-                        const pl = await UserPlaylist.findById(state.selectedPlaylistId);
+                        const pl = await UserPlaylist.findOne({ _id: state.selectedPlaylistId, userId: ownerId });
                         if (!pl) return interaction.editReply(t('music.playlist.not_found'));
 
                         let count = 0;
@@ -137,7 +163,7 @@ export default (client) => {
                         await interaction.editReply(t('music.radio.added_247', { title: tTrack.info.title }));
 
                         // Refresh UI
-                        const state = await PanelState.findOne({ messageId: interaction.message?.id });
+                        const state = await PanelState.findOne({ messageId: interaction.message?.id, ownerId });
                         if (state) {
                             const newPayload = await renderMusicPanel(guildId, state, interaction.user.id);
                             if (interaction.message) await interaction.message.edit(newPayload).catch(() => { });
@@ -157,7 +183,7 @@ export default (client) => {
                         await interaction.editReply(t('music.radio.removed', { title: song.title }));
 
                         // Refresh UI
-                        const state = await PanelState.findOne({ messageId: interaction.message?.id });
+                        const state = await PanelState.findOne({ messageId: interaction.message?.id, ownerId });
                         if (state) {
                             const newPayload = await renderMusicPanel(guildId, state, interaction.user.id);
                             if (interaction.message) await interaction.message.edit(newPayload).catch(() => { });
@@ -169,7 +195,7 @@ export default (client) => {
                 // ================== B. XỬ LÝ BUTTON & MENU ==================
                 if (interaction.isButton() || interaction.isStringSelectMenu()) {
                     // 1. Check State xem còn sống không
-                    let state = await PanelState.findOne({ messageId: interaction.message.id });
+                    let state = await PanelState.findOne({ messageId: interaction.message.id, ownerId });
                     if (!state && customId !== 'music_nav_close') {
                         return interaction.reply({ content: t('panel.errors.data_error'), ephemeral: true });
                     }
@@ -183,31 +209,31 @@ export default (client) => {
 
                     // 3. Handle đặc biệt: Mở Modal (KHÔNG ĐƯỢC DEFER UPDATE)
                     if (customId === 'music_pl_create') {
-                        const modal = new ModalBuilder().setCustomId('music_modal_pl_create').setTitle(t('panel.modals.title_pl_create'));
+                        const modal = new ModalBuilder().setCustomId(`music_modal_pl_create:${ownerId}`).setTitle(t('panel.modals.title_pl_create'));
                         const nameInput = new TextInputBuilder().setCustomId('pl_name_input').setLabel(t('panel.modals.label_pl_name')).setStyle(TextInputStyle.Short);
                         modal.addComponents(new ActionRowBuilder().addComponents(nameInput));
                         return interaction.showModal(modal);
                     }
                     if (customId === 'music_queue_add_priority') {
-                        const modal = new ModalBuilder().setCustomId('music_modal_queue_add_priority').setTitle(t('panel.modals.title_queue_priority'));
+                        const modal = new ModalBuilder().setCustomId(`music_modal_queue_add_priority:${ownerId}`).setTitle(t('panel.modals.title_queue_priority'));
                         const urlInput = new TextInputBuilder().setCustomId('q_url_input').setLabel(t('panel.modals.label_query')).setStyle(TextInputStyle.Short);
                         modal.addComponents(new ActionRowBuilder().addComponents(urlInput));
                         return interaction.showModal(modal);
                     }
                     if (customId === 'music_pl_add_query') {
-                        const modal = new ModalBuilder().setCustomId('music_modal_pl_add_query').setTitle(t('panel.modals.title_pl_add'));
+                        const modal = new ModalBuilder().setCustomId(`music_modal_pl_add_query:${ownerId}`).setTitle(t('panel.modals.title_pl_add'));
                         const urlInput = new TextInputBuilder().setCustomId('pl_query_input').setLabel(t('panel.modals.label_query')).setStyle(TextInputStyle.Short);
                         modal.addComponents(new ActionRowBuilder().addComponents(urlInput));
                         return interaction.showModal(modal);
                     }
                     if (customId === 'music_radio_add_query') {
-                        const modal = new ModalBuilder().setCustomId('music_modal_radio_add').setTitle(t('panel.modals.title_radio_add'));
+                        const modal = new ModalBuilder().setCustomId(`music_modal_radio_add:${ownerId}`).setTitle(t('panel.modals.title_radio_add'));
                         const urlInput = new TextInputBuilder().setCustomId('radio_query_input').setLabel(t('panel.modals.label_query')).setStyle(TextInputStyle.Short);
                         modal.addComponents(new ActionRowBuilder().addComponents(urlInput));
                         return interaction.showModal(modal);
                     }
                     if (customId === 'music_radio_remove') {
-                        const modal = new ModalBuilder().setCustomId('music_modal_radio_remove').setTitle(t('panel.modals.title_radio_remove'));
+                        const modal = new ModalBuilder().setCustomId(`music_modal_radio_remove:${ownerId}`).setTitle(t('panel.modals.title_radio_remove'));
                         const indexInput = new TextInputBuilder().setCustomId('radio_index_input').setLabel(t('panel.modals.label_radio_index')).setStyle(TextInputStyle.Short);
                         modal.addComponents(new ActionRowBuilder().addComponents(indexInput));
                         return interaction.showModal(modal);
@@ -292,11 +318,11 @@ export default (client) => {
                     if (state.currentTab === 'playlist') {
                         if (customId === 'music_pl_select') state.selectedPlaylistId = interaction.values[0];
                         if (customId === 'music_pl_delete' && state.selectedPlaylistId) {
-                            await UserPlaylist.findByIdAndDelete(state.selectedPlaylistId);
+                            await UserPlaylist.findOneAndDelete({ _id: state.selectedPlaylistId, userId: ownerId });
                             state.selectedPlaylistId = null;
                         }
                         if (customId === 'music_pl_add_current' && state.selectedPlaylistId && player?.currentTrack) {
-                            const pl = await UserPlaylist.findById(state.selectedPlaylistId);
+                            const pl = await UserPlaylist.findOne({ _id: state.selectedPlaylistId, userId: ownerId });
                             if (pl) {
                                 pl.tracks.push({ title: player.currentTrack.info.title, url: player.currentTrack.info.uri, author: player.currentTrack.info.author, duration: player.currentTrack.info.length });
                                 await pl.save();
@@ -304,7 +330,7 @@ export default (client) => {
                             }
                         }
                         if (customId === 'music_pl_play' && state.selectedPlaylistId) {
-                            const pl = await UserPlaylist.findById(state.selectedPlaylistId);
+                            const pl = await UserPlaylist.findOne({ _id: state.selectedPlaylistId, userId: ownerId });
                             if (pl && pl.tracks.length > 0) {
                                 let targetPlayer = player;
 
