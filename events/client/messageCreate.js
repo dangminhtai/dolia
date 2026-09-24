@@ -3,6 +3,7 @@ import fs from 'fs';
 import { Events } from 'discord.js';
 import GeminiManager from '../../class/GeminiManager.js';
 import { t } from '../../services/i18nService.js';
+import { handleMessageAutomation } from '../../services/automationEventRouter.js';
 
 export default (client) => {
     client.on(Events.MessageCreate, async (message) => {
@@ -13,6 +14,12 @@ export default (client) => {
         if (message.channel.type === 1) { // 1 = ChannelType.DM
             return message.reply(t('common.dm_not_supported'));
         }
+
+        // Automation nhận event ở mọi kênh guild trước gate AI chat #dolia.
+        // Lỗi automation không được làm mất luồng chat hiện tại.
+        await handleMessageAutomation(message).catch(error => {
+            console.error(tr('automation.logs.event_failed', { type: 'messageCreate', message: error.message }));
+        });
 
         if (message.channel.name !== 'dolia') return; // Chỉ chat trong kênh 'dolia'
 

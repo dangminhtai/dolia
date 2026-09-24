@@ -5,6 +5,7 @@ import { musicTools } from '../schema/musicTools.js';
 import { devTools } from '../schema/devTools.js';
 import { discordTools } from '../schema/discordTools.js';
 import { memoryTools } from '../schema/memoryTools.js';
+import { automationTools } from '../schema/automationTools.js';
 import * as MusicFunctions from '../utils/musicFunctions.js';
 import * as DevFunctions from '../utils/devFunctions.js';
 import * as DiscordFunctions from '../utils/discordFunctions.js';
@@ -18,6 +19,7 @@ import geminiModelService from '../services/geminiModelService.js';
 import { prepareDiscordAttachments } from '../helpers/discordAttachmentHelper.js';
 import { isOwner } from '../services/authorizationService.js';
 import { classifyGeminiError, shouldStopModelFallback } from '../services/geminiErrorClassifier.js';
+import { automationAction, automationQuery } from '../services/automationService.js';
 
 class GeminiManager {
     constructor() {
@@ -28,7 +30,7 @@ class GeminiManager {
             log: (msg) => Logger.info(tr('logs.geminimanager.info_gemini', { msg: msg }))
         };
         // Tools definition
-        this.tools = [{ functionDeclarations: [...musicTools, ...discordTools, ...memoryTools, ...devTools] }];
+        this.tools = [{ functionDeclarations: [...musicTools, ...discordTools, ...memoryTools, ...automationTools, ...devTools] }];
 
         // Function mapping
         this.functions = {
@@ -42,7 +44,9 @@ class GeminiManager {
             'discord_query': DiscordFunctions.discord_query,
             'discord_action': DiscordFunctions.discord_action,
             'memory_query': queryVisibleMemories,
-            'memory_action': actOnMemory
+            'memory_action': actOnMemory,
+            'automation_query': automationQuery,
+            'automation_action': automationAction
         };
     }
 
@@ -343,7 +347,7 @@ ${topSongsStr || "- Chưa có bài nào nổi bật"}
                         const directToolReplies = [];
                         let directToolOnly = true;
                         const fastPathTools = new Set([
-                            'discord_query', 'discord_action', 'memory_action', 'control_playback',
+                            'discord_query', 'discord_action', 'memory_action', 'automation_query', 'automation_action', 'control_playback',
                             'adjust_audio_settings', 'manage_radio'
                         ]);
 

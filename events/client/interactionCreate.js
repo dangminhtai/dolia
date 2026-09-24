@@ -19,6 +19,7 @@ import { sendSafeMessage } from '../../utils/messageHelper.js';
 import { t } from '../../services/i18nService.js';
 import { getUserMusicSource, isFailed, isEmpty, isPlaylist, isSuccess } from '../../utils/lavalinkHelper.js';
 import { handleMemoryInteraction } from '../../services/memoryPanelService.js';
+import { handleAutomationInteraction } from '../../services/automationPanelService.js';
 
 function parseOwnedMusicCustomId(rawCustomId) {
     const raw = String(rawCustomId || '');
@@ -37,6 +38,18 @@ const ADMIN_RADIO_ACTIONS = new Set([
 
 export default (client) => {
     client.on(Events.InteractionCreate, async interaction => {
+        if (interaction.customId?.startsWith('automation:')) {
+            try {
+                await handleAutomationInteraction(interaction);
+            } catch (error) {
+                console.error(tr('automation.logs.panel_failed', { message: error.message }), error);
+                if (!interaction.replied && !interaction.deferred) {
+                    await interaction.reply({ content: error.message || t('automation.errors.generic'), flags: MessageFlags.Ephemeral }).catch(() => {});
+                }
+            }
+            return;
+        }
+
         if (interaction.customId?.startsWith('memory:')) {
             try {
                 await handleMemoryInteraction(interaction);

@@ -14,8 +14,11 @@ import sodium from 'libsodium-wrappers';
 import onReady from './events/client/onReady.js';
 import interactionCreate from './events/client/interactionCreate.js';
 import messageCreate from './events/client/messageCreate.js';
+import guildMemberAdd from './events/client/guildMemberAdd.js';
+import autoModerationActionExecution from './events/client/autoModerationActionExecution.js';
 import { initI18n, t } from './services/i18nService.js';
 import geminiModelService from './services/geminiModelService.js';
+import automationScheduler from './services/automationScheduler.js';
 
 // Khởi tạo hệ thống tài nguyên (Resource / i18n)
 initI18n();
@@ -58,6 +61,8 @@ client.commands = new Collection()
 onReady(client);
 interactionCreate(client);
 messageCreate(client);
+guildMemberAdd(client);
+autoModerationActionExecution(client);
 import express from 'express';
 
 const app = express();
@@ -111,5 +116,13 @@ process.on('uncaughtException', (err) => {
     Logger.error(tr('logs.index.error_uncaught_exception'), err);
     // Không exit process
 });
+
+for (const signal of ['SIGINT', 'SIGTERM']) {
+    process.once(signal, () => {
+        automationScheduler.stop();
+        client.destroy();
+        process.exit(0);
+    });
+}
 
 main();

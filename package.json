@@ -13,6 +13,7 @@
         "test:memory": "node --test test/test_memory.mjs",
         "test:gemini-reliability": "node --test test/test_gemini_error_classifier.mjs test/test_api_scheduler.mjs test/test_api_key_manager.mjs",
         "test:music-panel": "node --test test/test_music_panel_ownership.mjs",
+        "test:automation": "node --test test/test_automation_*.mjs",
         "migrate:gemini-keys": "node scripts/migrate-gemini-key-metadata.js",
         "start:termux": "bash scripts/termux-run.sh",
         "setup:termux": "bash scripts/termux-setup.sh",

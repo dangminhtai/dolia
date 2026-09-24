@@ -1,0 +1,105 @@
+{
+  "command": {
+    "description": "Tạo và quản lý trigger tự động của Dolia",
+    "action": "Thao tác cần thực hiện",
+    "rule_id": "ID rule khi xem, bật, tắt, xóa hoặc chạy",
+    "spec": "Automation spec dạng JSON khi tạo rule",
+    "choices": {
+      "panel": "Mở bảng quản lý",
+      "create": "Tạo rule tắt mặc định",
+      "update": "Sửa rule",
+      "show": "Xem chi tiết rule",
+      "enable": "Bật rule",
+      "disable": "Tắt rule",
+      "delete": "Xóa rule",
+      "run_once": "Chạy thủ công một lần"
+    }
+  },
+  "errors": {
+    "guild_required": "Automation chỉ được quản lý trong server và cần xác định đúng người dùng.",
+    "manage_required": "Bạn cần quyền Quản lý máy chủ để tạo hoặc quản lý automation này.",
+    "admin_required": "Automation có hành động kiểm duyệt cần chủ bot hoặc quản trị viên xác nhận.",
+    "not_found": "Mình không tìm thấy rule đó, hoặc bạn không có quyền quản lý nó.",
+    "invalid_action": "Thao tác automation này chưa được hỗ trợ.",
+    "generated_disabled": "Module JavaScript tự sinh đang bị vô hiệu hóa vì chưa có runtime cô lập an toàn.",
+    "panel_owner": "Bảng này thuộc về người đã mở nó. Bạn hãy dùng `/automation` để mở bảng riêng nhé.",
+    "invalid_json": "Spec không phải JSON hợp lệ.",
+    "generic": "Mình chưa thể xử lý automation lúc này."
+  },
+  "query": {
+    "found": "Mình tìm thấy {{count}} rule bạn được phép quản lý.",
+    "empty": "Bạn chưa có automation nào trong phạm vi này.",
+    "detail": "Đây là cấu hình hiện tại của “{{name}}”.",
+    "history": "Mình tìm thấy {{count}} lần thực thi.",
+    "preview": "Spec hợp lệ và chưa được lưu."
+  },
+  "action": {
+    "created": "Mình đã tạo “{{name}}” với ID `{{id}}`. Rule đang tắt để anh kiểm tra trước khi bật.",
+    "updated": "Mình đã cập nhật “{{name}}”, tăng revision và tắt rule để duyệt lại.",
+    "enabled": "Mình đã bật “{{name}}”.",
+    "disabled": "Mình đã tắt “{{name}}”.",
+    "deleted": "Mình đã xóa “{{name}}”.",
+    "ran": "Đã chạy “{{name}}” với trạng thái: {{status}}."
+  },
+  "panel": {
+    "title": "Automation của Dolia",
+    "empty": "Chưa có rule nào trong phạm vi bạn được quản lý.",
+    "item": "**{{name}}** · `{{id}}`\n{{trigger}} · {{status}} · r{{revision}} · lần tới: {{nextRun}}",
+    "no_next_run": "không có",
+    "footer": "Trang {{page}}/{{pages}} · {{total}} rule",
+    "previous": "Trước",
+    "next": "Sau",
+    "refresh": "Làm mới",
+    "create": "Tạo",
+    "enable": "Bật",
+    "disable": "Tắt",
+    "edit": "Sửa",
+    "history": "Lịch sử",
+    "delete": "Xóa"
+  },
+  "modal": {
+    "create_title": "Tạo automation",
+    "edit_title": "Sửa automation",
+    "enable_title": "Bật automation",
+    "disable_title": "Tắt automation",
+    "delete_title": "Xóa automation",
+    "history_title": "Lịch sử automation",
+    "rule_id": "ID rule",
+    "spec": "Automation spec JSON",
+    "spec_hint": "{\"name\":\"...\",\"trigger\":{...},\"steps\":[...]}"
+  },
+  "history": {
+    "item": "{{date}} · {{status}} · lỗi: {{error}}",
+    "empty": "Rule này chưa có lịch sử thực thi."
+  },
+  "research": {
+    "sources": "Nguồn tham khảo:"
+  },
+  "logs": {
+    "event_failed": "[Automation] Event {{type}} thất bại: {{message}}",
+    "scheduler_failed": "[Automation] Scheduler thất bại: {{message}}",
+    "panel_failed": "[Automation] Panel thất bại: {{message}}",
+    "research_model_failed": "[Automation] Model {{modelId}} tra cứu thất bại: {{message}}"
+  },
+  "validation": {
+    "INVALID_TIMEZONE": "Múi giờ IANA không hợp lệ.",
+    "INVALID_TRIGGER": "Loại trigger chưa được hỗ trợ.",
+    "INVALID_TIME": "daily_at cần giờ dạng HH:mm.",
+    "INVALID_WINDOW": "daily_window cần start/end dạng HH:mm.",
+    "INVALID_ONCE": "once cần thời điểm ISO hợp lệ.",
+    "INVALID_STEP": "Workflow chứa bước chưa được hỗ trợ.",
+    "INVALID_EMOJI": "Reaction cần emoji.",
+    "MISSING_CONTENT": "Hành động gửi tin cần nội dung hoặc template.",
+    "MISSING_QUERY": "Bước tra cứu web cần truy vấn.",
+    "INVALID_DELAY": "delay_until cần thời điểm hoặc số giây chờ.",
+    "INVALID_WORKFLOW_FIELD": "Workflow chỉ được đọc trường event đã cho phép.",
+    "INVALID_STATE_KEY": "Khóa state không hợp lệ.",
+    "INVALID_SPEC": "Automation spec phải là object.",
+    "INVALID_TYPE": "Loại automation không hợp lệ.",
+    "MISSING_STEPS": "Automation cần ít nhất một hành động.",
+    "TOO_MANY_STEPS": "Automation có quá nhiều bước.",
+    "INVALID_CONDITION": "Điều kiện automation chưa được hỗ trợ.",
+    "INVALID_SPAM_THRESHOLD": "Chống spam cần count 2–50 và windowSeconds 2–300.",
+    "SPAM_THRESHOLD_REQUIRED": "Moderation từ tin nhắn cần ngưỡng spam rõ ràng."
+  }
+}
